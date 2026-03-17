@@ -18,30 +18,35 @@ const FEATURED_PRODUCTS: Product[] = [
 ];
 
 export default function ProductCarousel() {
-  return (
-    <div className="px-4 py-16 md:py-24">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {FEATURED_PRODUCTS.map((product) => (
-            <div
-              key={product.id}
-              className="backdrop-blur-xl bg-white/30 border border-white/40 shadow-lg rounded-2xl p-4 md:p-6 hover:scale-105 hover:bg-white/40 transition-all duration-300 cursor-pointer group"
-            >
-              {/* Product Image Placeholder */}
-              <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mb-4 group-hover:shadow-lg transition-shadow">
-                <div className="w-20 h-20 rounded-full bg-white/50 flex items-center justify-center">
-                  <div className="w-12 h-16 bg-gradient-to-b from-gray-300 to-gray-400 rounded-lg"></div>
-                </div>
-              </div>
+  // Duplicate products for infinite scroll effect
+  const scrollProducts = [...FEATURED_PRODUCTS, ...FEATURED_PRODUCTS];
 
-              {/* Product Info */}
-              <h3 className="text-sm md:text-base font-semibold text-gray-900 truncate">
-                {product.name}
-              </h3>
-              <p className="text-lg font-bold text-gray-900 mt-2">{product.price}</p>
+  return (
+    <div className="w-full py-4 md:py-6 overflow-hidden">
+      {/* Auto-scrolling Container */}
+      <div className="auto-scroll flex gap-6 md:gap-8">
+        {scrollProducts.map((product, index) => (
+          <div
+            key={`${product.id}-${index}`}
+            className="flex-shrink-0 w-32 md:w-40 bg-white rounded-lg shadow-md p-4 md:p-6 hover:shadow-lg transition-shadow cursor-pointer flex flex-col items-center"
+          >
+            {/* Product Image */}
+            <div className="w-full aspect-square flex items-center justify-center mb-3">
+              <div className="relative w-20 h-24 md:w-24 md:h-28">
+                {/* Bottle cap */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-3 bg-gray-300 rounded-full"></div>
+                {/* Bottle body */}
+                <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-14 h-20 md:w-16 md:h-24 bg-gradient-to-b from-gray-200 to-gray-300 rounded-b-lg border border-gray-400"></div>
+              </div>
             </div>
-          ))}
-        </div>
+
+            {/* Product Info */}
+            <h3 className="text-xs md:text-sm font-semibold text-gray-800 text-center truncate w-full">
+              {product.name}
+            </h3>
+            <p className="text-sm md:text-base font-bold text-gray-900 mt-2">{product.price}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

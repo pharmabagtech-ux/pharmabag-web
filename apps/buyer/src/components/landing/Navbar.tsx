@@ -1,8 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 
-export default function Navbar() {
+interface NavbarProps {
+  onLoginClick?: () => void;
+}
+
+export default function Navbar({ onLoginClick }: NavbarProps) {
   const navItems = ['Brands', 'Ethical', 'Generic', 'Surgical', 'Ayurvedic', 'OTC'];
 
   return (
@@ -11,9 +16,13 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-cyan-400 flex items-center justify-center font-bold text-white text-lg">
-              P
-            </div>
+            <Image
+              src="/pharmabag_logo.png"
+              alt="PharmaBag Logo"
+              width={120}
+              height={40}
+              className="h-8 w-auto"
+            />
           </div>
 
           {/* Center Navigation */}
@@ -30,12 +39,12 @@ export default function Navbar() {
           </div>
 
           {/* Login Button */}
-          <Link
-            href="/login"
+          <button
+            onClick={onLoginClick}
             className="px-6 py-2 rounded-full bg-lime-300 hover:bg-lime-400 font-semibold text-gray-900 transition-colors"
           >
             Login
-          </Link>
+          </button>
         </div>
       </div>
     </nav>

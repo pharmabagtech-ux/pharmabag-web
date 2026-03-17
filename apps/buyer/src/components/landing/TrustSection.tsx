@@ -11,7 +11,7 @@ const TRUST_ITEMS: TrustItem[] = [
     subtitle: '',
   },
   {
-    title: 'Controlled Qality',
+    title: 'Controlled Quality',
     subtitle: '',
   },
   {
@@ -19,25 +19,25 @@ const TRUST_ITEMS: TrustItem[] = [
     subtitle: '',
   },
   {
-    title: '0 Torelence 2 Duplicacy',
+    title: '0 Tolerance to Duplicacy',
     subtitle: '',
   },
 ];
 
 export default function TrustSection() {
   return (
-    <div className="py-24 px-4">
+    <div className="py-40 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-12 md:gap-16 text-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-y-32 md:gap-x-24 text-center">
           {TRUST_ITEMS.map((item, index) => (
             <div
               key={index}
               className="space-y-4 transform hover:scale-105 transition-transform duration-300"
             >
-              <h3 className="text-4xl md:text-5xl font-semibold text-gray-900">
+              <h3 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight tracking-tight">
                 {item.title}
               </h3>
-              {item.subtitle && <p className="text-lg text-gray-700">{item.subtitle}</p>}
+              {item.subtitle && <p className="text-xl md:text-2xl text-gray-700">{item.subtitle}</p>}
             </div>
           ))}
         </div>
