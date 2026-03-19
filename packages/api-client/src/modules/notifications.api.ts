@@ -30,7 +30,7 @@ export async function getNotifications(params?: {
   limit?: number;
 }): Promise<NotificationListResponse> {
   const { data } = await api.get('/notifications', { params });
-  return NotificationListResponseSchema.parse(data);
+  return data;
 }
 
 export async function markAsRead(notificationId: string): Promise<void> {

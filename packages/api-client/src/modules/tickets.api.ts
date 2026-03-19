@@ -51,26 +51,25 @@ export async function getTickets(params?: {
   status?: string;
 }): Promise<TicketListResponse> {
   const { data } = await api.get('/tickets', { params });
-  return TicketListResponseSchema.parse(data);
+  return data;
 }
 
 export async function getTicketById(id: string): Promise<Ticket> {
   const { data } = await api.get(`/tickets/${id}`);
-  return TicketSchema.parse(data);
+  return data;
 }
 
 export async function createTicket(input: CreateTicketInput): Promise<Ticket> {
-  const body = CreateTicketSchema.parse(input);
-  const { data } = await api.post('/tickets', body);
-  return TicketSchema.parse(data);
+  const { data } = await api.post('/tickets', input);
+  return data;
 }
 
 export async function addTicketMessage(ticketId: string, message: string): Promise<TicketMessage> {
   const { data } = await api.post(`/tickets/${ticketId}/messages`, { message });
-  return TicketMessageSchema.parse(data);
+  return data;
 }
 
 export async function closeTicket(ticketId: string): Promise<Ticket> {
   const { data } = await api.patch(`/tickets/${ticketId}/close`);
-  return TicketSchema.parse(data);
+  return data;
 }

@@ -22,12 +22,14 @@ export { AuthProvider, useAuth } from './auth/auth-provider';
 export {
   getProducts,
   getProductById,
+  getCategories,
   createProduct,
   updateProduct,
   deleteProduct,
   type Product,
   type ProductListResponse,
   type CreateProductInput,
+  type Category,
 } from './modules/products.api';
 
 // Cart
@@ -56,13 +58,12 @@ export {
 
 // Payments
 export {
-  initiatePayment,
-  verifyPayment,
+  createPayment,
+  uploadPaymentProof,
   getPaymentByOrderId,
   getPaymentHistory,
   type Payment,
-  type InitiatePaymentInput,
-  type PaymentResponse,
+  type CreatePaymentInput,
 } from './modules/payments.api';
 
 // Notifications
@@ -98,3 +99,19 @@ export {
   type TicketListResponse,
   type CreateTicketInput,
 } from './modules/tickets.api';
+
+// Buyer Profile
+export {
+  getBuyerProfile,
+  createBuyerProfile,
+  updateBuyerProfile,
+  type BuyerProfile,
+  type CreateBuyerProfileInput,
+  type UpdateBuyerProfileInput,
+} from './modules/buyers.api';
+
+// Storage
+export {
+  uploadPaymentProofFile,
+  uploadKycDocument,
+} from './modules/storage.api';

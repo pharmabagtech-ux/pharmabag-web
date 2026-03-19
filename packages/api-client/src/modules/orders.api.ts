@@ -6,37 +6,54 @@ import { api } from '../api';
 export const OrderItemSchema = z.object({
   id: z.string(),
   productId: z.string(),
-  productName: z.string(),
+  productName: z.string().optional(),
+  name: z.string().optional(),
   price: z.number(),
   quantity: z.number(),
-  total: z.number(),
+  total: z.number().optional(),
+  image: z.string().optional(),
+  product: z.object({
+    id: z.string(),
+    name: z.string(),
+    price: z.number(),
+    images: z.array(z.string()).optional(),
+  }).optional(),
 });
 
 export const OrderSchema = z.object({
   id: z.string(),
-  orderNumber: z.string(),
-  status: z.enum(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']),
-  items: z.array(OrderItemSchema),
-  subtotal: z.number(),
+  orderNumber: z.string().optional(),
+  status: z.string(),
+  items: z.array(OrderItemSchema).optional(),
+  subtotal: z.number().optional(),
   tax: z.number().optional(),
   deliveryCharge: z.number().optional(),
-  total: z.number(),
-  shippingAddress: z.string().optional(),
-  paymentMethod: z.string().optional(),
+  total: z.number().optional(),
+  amount: z.number().optional(),
+  name: z.string().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  pincode: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string().optional(),
 });
 
 export const OrderListResponseSchema = z.object({
   data: z.array(OrderSchema),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
+  total: z.number().optional(),
+  page: z.number().optional(),
+  limit: z.number().optional(),
 });
 
 export const CreateOrderSchema = z.object({
-  shippingAddress: z.string().min(1),
-  paymentMethod: z.string().optional(),
+  name: z.string().min(1),
+  phone: z.string().min(1),
+  address: z.string().min(1),
+  city: z.string().min(1),
+  state: z.string().min(1),
+  pincode: z.string().min(1),
 });
 
 // ─── Types ──────────────────────────────────────────
@@ -54,26 +71,25 @@ export async function getOrders(params?: {
   status?: string;
 }): Promise<OrderListResponse> {
   const { data } = await api.get('/orders', { params });
-  return OrderListResponseSchema.parse(data);
+  return data;
 }
 
 export async function getOrderById(id: string): Promise<Order> {
   const { data } = await api.get(`/orders/${id}`);
-  return OrderSchema.parse(data);
+  return data;
 }
 
 export async function createOrder(input: CreateOrderInput): Promise<Order> {
-  const body = CreateOrderSchema.parse(input);
-  const { data } = await api.post('/orders', body);
-  return OrderSchema.parse(data);
+  const { data } = await api.post('/orders', input);
+  return data;
 }
 
 export async function cancelOrder(id: string): Promise<Order> {
   const { data } = await api.patch(`/orders/${id}/cancel`);
-  return OrderSchema.parse(data);
+  return data;
 }
 
 export async function updateOrderStatus(id: string, status: string): Promise<Order> {
   const { data } = await api.patch(`/orders/${id}/status`, { status });
-  return OrderSchema.parse(data);
+  return data;
 }

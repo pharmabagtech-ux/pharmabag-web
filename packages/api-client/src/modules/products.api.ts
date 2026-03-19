@@ -41,6 +41,18 @@ export type Product = z.infer<typeof ProductSchema>;
 export type ProductListResponse = z.infer<typeof ProductListResponseSchema>;
 export type CreateProductInput = z.infer<typeof CreateProductSchema>;
 
+// ─── Category Schema ────────────────────────────────
+
+export const CategorySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string().optional(),
+  description: z.string().optional(),
+  productCount: z.number().optional(),
+});
+
+export type Category = z.infer<typeof CategorySchema>;
+
 // ─── API Functions ──────────────────────────────────
 
 export async function getProducts(params?: {
@@ -48,25 +60,35 @@ export async function getProducts(params?: {
   limit?: number;
   search?: string;
   category?: string;
+  manufacturer?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  minPrice?: number;
+  maxPrice?: number;
 }): Promise<ProductListResponse> {
   const { data } = await api.get('/products', { params });
-  return ProductListResponseSchema.parse(data);
+  return data;
 }
 
 export async function getProductById(id: string): Promise<Product> {
   const { data } = await api.get(`/products/${id}`);
-  return ProductSchema.parse(data);
+  return data;
+}
+
+export async function getCategories(): Promise<Category[]> {
+  const { data } = await api.get('/products/categories');
+  return data;
 }
 
 export async function createProduct(input: CreateProductInput): Promise<Product> {
   const body = CreateProductSchema.parse(input);
   const { data } = await api.post('/products', body);
-  return ProductSchema.parse(data);
+  return data;
 }
 
 export async function updateProduct(id: string, input: Partial<CreateProductInput>): Promise<Product> {
   const { data } = await api.patch(`/products/${id}`, input);
-  return ProductSchema.parse(data);
+  return data;
 }
 
 export async function deleteProduct(id: string): Promise<void> {

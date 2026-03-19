@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Navbar from '@/components/landing/Navbar';
 import HeroSection from '@/components/landing/HeroSection';
-import BrandStrip from '@/components/landing/BrandStrip';
 import ProductCarousel from '@/components/landing/ProductCarousel';
 import TrustSection from '@/components/landing/TrustSection';
 import Testimonials from '@/components/landing/Testimonials';
@@ -20,9 +19,6 @@ export default function Home() {
 
       {/* Hero Section */}
       <HeroSection />
-
-      {/* Brand Strip */}
-      <BrandStrip />
 
       {/* Featured Products */}
       <ProductCarousel />
