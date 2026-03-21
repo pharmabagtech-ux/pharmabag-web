@@ -2,8 +2,8 @@ import { apiClient } from "@/lib/apiClient";
 import type { User } from "@pharmabag/utils";
 
 export interface SendOtpPayload { phone: string; }
-export interface VerifyOtpPayload { phone: string; otp: string; }
-export interface AuthResponse { accessToken: string; refreshToken?: string; user: User; }
+export interface VerifyOtpPayload { phone: string; otp: string; role?: string; }
+export interface AuthResponse { data: { accessToken: string; refreshToken?: string; user: User; isNewUser?: boolean }; message?: string; }
 
 export async function sendOtp(payload: SendOtpPayload) {
   const { data } = await apiClient.post<{ message: string }>("/auth/send-otp", payload);
@@ -16,6 +16,6 @@ export async function verifyOtp(payload: VerifyOtpPayload) {
 }
 
 export async function getCurrentUser() {
-  const { data } = await apiClient.get<{ user: User }>("/auth/me");
-  return data.user;
+  const { data } = await apiClient.get<{ data: User }>("/auth/me");
+  return data.data;
 }

@@ -2,14 +2,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, ArrowRight, Mail } from "lucide-react";
+import { Shield, ArrowRight, Phone } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { useAdminAuth } from "@/store";
 import { useSendAdminOtp, useVerifyAdminOtp } from "@/hooks/useAdmin";
 import toast from "react-hot-toast";
 
 export default function AdminAuthPage() {
-  const [phone, setPhone] = useState("9999999999");
+  const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"phone"|"otp">("phone");
   const { setUser } = useAdminAuth();
@@ -20,37 +20,36 @@ export default function AdminAuthPage() {
 
   const sendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.length !== 10) { toast.error("Enter valid phone number"); return; }
+    if (phone.length !== 10 || !/^[6-9]/.test(phone)) {
+      toast.error("Enter a valid 10-digit Indian mobile number");
+      return;
+    }
     try {
       await sendOtpMutation.mutateAsync({ phone });
       setStep("otp");
-      toast.success("OTP sent to phone.");
-    } catch {
-      if (phone === "9999999999") {
-        setStep("otp");
-        toast.success("Dev fallback OTP ready.");
-        return;
-      }
-      toast.error("Could not send OTP. Retry.");
+      toast.success("OTP sent successfully");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Could not send OTP. Retry.");
     }
   };
 
   const verify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length < 4) { toast.error("Enter OTP"); return; }
+    if (otp.length < 6) { toast.error("Enter the 6-digit OTP"); return; }
     try {
-      const data = await verifyOtpMutation.mutateAsync({ phone, otp });
-      setUser(data.user);
-      toast.success("Admin signed in");
-      router.push("/dashboard");
-    } catch {
-      if (phone === "9999999999" && otp === "123456") {
-        setUser({ id: "dev-admin", name: "Admin Dev", email: "admin@pharmabag.in", role: "admin" } as any);
-        toast.success("Admin dev sign-in successful.");
-        router.push("/dashboard");
+      const res = await verifyOtpMutation.mutateAsync({ phone, otp, role: "ADMIN" });
+      const user = res.data?.user ?? res.user;
+      const role = user?.role?.toUpperCase?.() ?? "";
+      if (role !== "ADMIN") {
+        toast.error("Access denied. This portal is for admins only.");
+        localStorage.removeItem("pb_token");
         return;
       }
-      toast.error("Invalid OTP. Retry.");
+      setUser(user);
+      toast.success("Admin signed in");
+      router.push("/dashboard");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Invalid OTP. Retry.");
     }
   };
 
@@ -75,9 +74,9 @@ export default function AdminAuthPage() {
             {[
               "Verify sellers and manage approvals",
               "Monitor all platform orders",
-              "Detect fraudulent listings",
+              "Manage products & inventory",
               "View platform analytics & revenue",
-              "Manage 10,000+ buyer accounts",
+              "Manage buyer & seller accounts",
             ].map(f => (
               <div key={f} className="flex items-center gap-3 bg-white/30 backdrop-blur-sm rounded-xl px-4 py-3">
                 <span className="text-amber-600 font-bold">✓</span>
@@ -104,7 +103,7 @@ export default function AdminAuthPage() {
           {step === "phone" ? (
             <form onSubmit={sendOTP} className="space-y-4">
               <Input label="Phone Number" type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                placeholder="9999999999" leftIcon={<Mail className="h-4 w-4" />} required maxLength={10} />
+                placeholder="Enter your phone number" leftIcon={<Phone className="h-4 w-4" />} required maxLength={10} />
               <Button type="submit" className="w-full" size="lg" loading={loading} rightIcon={<ArrowRight className="h-4 w-4" />}>
                 Send OTP
               </Button>
@@ -112,7 +111,7 @@ export default function AdminAuthPage() {
           ) : (
             <form onSubmit={verify} className="space-y-4">
               <Input label="OTP" type="text" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                placeholder="Enter OTP" leftIcon={<Mail className="h-4 w-4" />} required maxLength={6} />
+                placeholder="Enter 6-digit OTP" leftIcon={<Shield className="h-4 w-4" />} required maxLength={6} />
               <Button type="submit" className="w-full" size="lg" loading={loading} rightIcon={<ArrowRight className="h-4 w-4" />}>
                 Verify & Sign In
               </Button>
