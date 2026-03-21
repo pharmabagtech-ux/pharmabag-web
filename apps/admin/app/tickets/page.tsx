@@ -15,7 +15,7 @@ export default function AdminTicketsPage() {
   
   const { data: ticketsData, isLoading } = useTickets();
 
-  const tickets = Array.isArray(ticketsData) ? ticketsData : (ticketsData?.tickets ?? []);
+  const tickets = Array.isArray(ticketsData) ? ticketsData : (ticketsData?.data ?? []);
 
   const filtered = tickets.filter((t: any) =>
     (filter === "ALL" || t.status === filter) &&
@@ -104,7 +104,7 @@ export default function AdminTicketsPage() {
                       <div className="text-xs text-muted-foreground mt-0.5">{t._count?.messages || 0} messages</div>
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {formatDate(t.createdAt, "MMM d, yyyy")}
+                      {formatDate(t.createdAt)}
                     </td>
                     <td className="px-5 py-4">
                       <Badge variant={t.status === "CLOSED" || t.status === "RESOLVED" ? "default" : t.status === "OPEN" ? "warning" : "info"}>

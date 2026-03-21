@@ -38,7 +38,8 @@ export default function AdminAuthPage() {
     if (otp.length < 6) { toast.error("Enter the 6-digit OTP"); return; }
     try {
       const res = await verifyOtpMutation.mutateAsync({ phone, otp, role: "ADMIN" });
-      const user = res.data?.user ?? res.user;
+      const inner = (res as any).data ?? res;
+      const user = inner.user;
       const role = user?.role?.toUpperCase?.() ?? "";
       if (role !== "ADMIN") {
         toast.error("Access denied. This portal is for admins only.");

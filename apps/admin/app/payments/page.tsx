@@ -17,7 +17,7 @@ export default function AdminPaymentsPage() {
   const confirmPayment = useConfirmPayment();
   const rejectPayment = useRejectPayment();
 
-  const payments = Array.isArray(paymentsData) ? paymentsData : (paymentsData?.payments ?? []);
+  const payments = Array.isArray(paymentsData) ? paymentsData : (paymentsData?.data ?? []);
 
   const filtered = payments.filter((p: any) =>
     (filter === "ALL" || p.verificationStatus === filter) &&
@@ -113,8 +113,8 @@ export default function AdminPaymentsPage() {
                 ) : filtered.map((p: any, i: number) => (
                   <motion.tr key={p.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="hover:bg-accent/30 transition-colors">
                     <td className="px-5 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-foreground">{formatDate(p.createdAt, "MMM d, yyyy")}</div>
-                      <div className="text-xs text-muted-foreground">{formatDate(p.createdAt, "h:mm a")}</div>
+                      <div className="text-sm font-medium text-foreground">{formatDate(p.createdAt, { year: "numeric", month: "short", day: "numeric" })}</div>
+                      <div className="text-xs text-muted-foreground">{formatDate(p.createdAt, { hour: "numeric", minute: "2-digit", hour12: true })}</div>
                     </td>
                     <td className="px-5 py-4">
                       <div className="text-sm font-medium text-foreground capitalize">{p.method?.replace(/_/g, " ")}</div>

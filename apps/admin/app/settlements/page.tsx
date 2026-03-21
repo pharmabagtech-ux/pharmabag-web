@@ -21,7 +21,7 @@ export default function AdminSettlementsPage() {
   const [selectedId, setSelectedId] = useState("");
   const [reference, setReference] = useState("");
 
-  const settlements = Array.isArray(settlementsData) ? settlementsData : (settlementsData?.settlements ?? []);
+  const settlements = Array.isArray(settlementsData) ? settlementsData : (settlementsData?.data ?? []);
 
   const filtered = settlements.filter((s: any) =>
     (filter === "ALL" || s.payoutStatus === filter) &&
@@ -120,8 +120,8 @@ export default function AdminSettlementsPage() {
                 ) : filtered.map((s: any, i: number) => (
                   <motion.tr key={s.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="hover:bg-accent/30 transition-colors">
                     <td className="px-5 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-foreground">{formatDate(s.createdAt, "MMM d, yyyy")}</div>
-                      <div className="text-xs text-muted-foreground">{formatDate(s.createdAt, "h:mm a")}</div>
+                      <div className="text-sm font-medium text-foreground">{formatDate(s.createdAt)}</div>
+                      <div className="text-xs text-muted-foreground">{formatDate(s.createdAt, { hour: "numeric", minute: "2-digit", hour12: true })}</div>
                     </td>
                     <td className="px-5 py-4">
                       <div className="text-sm font-medium text-foreground truncate w-40" title={s.seller?.companyName}>{s.seller?.companyName ?? "Unknown Seller"}</div>

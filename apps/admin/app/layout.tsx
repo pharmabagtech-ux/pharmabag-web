@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import "../styles/globals.css";
 import { Providers } from "@/components/providers";
+import { AdminGuard } from "@/components/layout/admin-guard";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
@@ -20,7 +21,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <Providers>
-            {children}
+            <AdminGuard>
+              {children}
+            </AdminGuard>
             <Toaster position="top-right" toastOptions={{ style: { background: "hsl(var(--card))", color: "hsl(var(--foreground))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "14px" } }} />
           </Providers>
         </ThemeProvider>

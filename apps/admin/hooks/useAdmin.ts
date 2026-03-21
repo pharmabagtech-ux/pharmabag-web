@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sendOtp, verifyOtp, getCurrentUser } from "@/api/auth.api";
 import {
-  getAdminDashboard, getAdminUsers, approveUser, rejectUser, blockUser, unblockUser,
+  getAdminDashboard, getAdminUsers, getUserById, approveUser, rejectUser, blockUser, unblockUser,
   getAdminProducts, disableProduct, enableProduct, deleteProduct,
   getAdminOrders, updateAdminOrderStatus,
   getPayments, confirmPayment, rejectPayment,
@@ -40,6 +40,8 @@ export function useAdminMe() { return useQuery({ queryKey: ["admin", "me"], quer
 export function useAdminDashboard() { return useQuery({ queryKey: ["admin", "dashboard"], queryFn: getAdminDashboard, staleTime: 60_000, retry: 1 }); }
 
 export function useAdminUsers() { return useQuery({ queryKey: ["admin", "users"], queryFn: () => getAdminUsers(1, 50), staleTime: 60_000, retry: 1 }); }
+
+export function useUserById(userId: string) { return useQuery({ queryKey: ["admin", "user", userId], queryFn: () => getUserById(userId), enabled: !!userId, staleTime: 60_000, retry: 1 }); }
 
 export function useAffirmUserStatus() {
   const qc = useQueryClient();

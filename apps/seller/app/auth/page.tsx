@@ -40,7 +40,9 @@ export default function SellerAuthPage() {
     if (otp.length < 4) { toast.error("Enter OTP"); return; }
     try {
       const data = await verifyOtpMutation.mutateAsync({ phone, otp, role: "SELLER" });
-      setUser(data.user);
+      // Backend wraps response in { data: { accessToken, user } } — handle both shapes
+      const inner = (data as any).data ?? data;
+      setUser(inner.user);
       toast.success("Logged in successfully");
       router.push("/dashboard");
     } catch (error: any) {

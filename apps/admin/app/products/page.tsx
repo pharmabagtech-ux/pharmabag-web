@@ -16,8 +16,8 @@ export default function AdminProductsPage() {
   const productToggle = useUpdateProductStatus();
   const productDelete = useDeleteProduct();
 
-  // Backend returns { products: [...], meta: {...} }
-  const products: any[] = Array.isArray(productsData) ? productsData : (productsData?.products ?? []);
+  // Backend returns { data: [...], total: ... }
+  const products: any[] = Array.isArray(productsData) ? productsData : (productsData?.data ?? []);
 
   const filtered = products.filter((p: any) =>
     (filter === "all" || (filter === "active" ? p.isActive : !p.isActive)) &&

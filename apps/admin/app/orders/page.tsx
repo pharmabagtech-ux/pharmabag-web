@@ -24,8 +24,8 @@ export default function AdminOrdersPage() {
   const { data: ordersData, isLoading } = useAdminOrders();
   const updateStatus = useUpdateAdminOrderStatus();
 
-  // Backend returns { orders: [...], meta: {...} }
-  const allOrders: any[] = Array.isArray(ordersData) ? ordersData : (ordersData?.orders ?? []);
+  // Backend returns { data: [...], total: ... }
+  const allOrders: any[] = Array.isArray(ordersData) ? ordersData : (ordersData?.data ?? []);
 
   const filtered = allOrders.filter((o: any) =>
     (filter === "all" || o.orderStatus === filter) &&

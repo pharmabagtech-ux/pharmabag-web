@@ -13,10 +13,12 @@ export function useVerifyOtp() {
   return useMutation({
     mutationFn: verifyOtp,
     onSuccess: (data) => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("pb_token", data.accessToken);
+      // Backend wraps response in { data: { accessToken, user } } — handle both nested and flat shapes
+      const inner = (data as any).data ?? data;
+      if (typeof window !== "undefined" && inner.accessToken) {
+        localStorage.setItem("pb_token", inner.accessToken);
       }
-      setUser(data.user);
+      if (inner.user) setUser(inner.user);
       void queryClient.invalidateQueries({ queryKey: ["seller", "dashboard"] });
     },
   });
