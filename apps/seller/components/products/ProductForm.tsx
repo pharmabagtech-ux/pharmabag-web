@@ -28,7 +28,7 @@ const formSchema = z.object({
     message: "Expiry date must be in the future",
   }),
   bulk: z.boolean(),
-  image_list: z.array(z.string()).min(1, "At least one image is required"),
+  image_list: z.array(z.string()).optional().default([]),
   custom_extra_fields: z.array(z.object({ key: z.string().min(1), value: z.string().min(1) })),
   discount_details: z.object({
     type: z.enum([
@@ -41,11 +41,7 @@ const formSchema = z.object({
     discountPercent: z.number().optional(),
     buy: z.number().optional(),
     get: z.number().optional(),
-  }).refine((data) => {
-    if (data.type.includes("ptr_discount") && (!data.discountPercent || data.discountPercent <= 0)) return false;
-    if (data.type.includes("bonus") && (!data.buy || !data.get)) return false;
-    return true;
-  }, { message: "Please fill in the required discount/bonus fields depending on the selected type" }),
+  }).optional(),
 }).refine((data) => data.min_order_qty <= data.max_order_qty, {
   message: "Max order qty must be >= min order qty",
   path: ["max_order_qty"],
@@ -97,21 +93,55 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
     try {
       const extra_fields = data.custom_extra_fields.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
       
-      const payload: ProductPayload = {
-        ...data,
-        extra_fields,
+      // Map discount type from legacy naming to backend enum
+      const discountTypeMap: Record<string, string> = {
+        ptr_discount: "PTR_DISCOUNT",
+        same_product_bonus: "SAME_PRODUCT_BONUS",
+        ptr_discount_and_same_product_bonus: "PTR_PLUS_SAME_PRODUCT_BONUS",
+        different_product_bonus: "DIFFERENT_PRODUCT_BONUS",
+        different_ptr_discount_and_same_product_bonus: "PTR_PLUS_DIFFERENT_PRODUCT_BONUS",
+      };
+
+      // Build the backend-compatible payload
+      // Filter out data URLs (base64) — only send real URLs. If no real URLs, omit images.
+      const realImages = (data.image_list || []).filter((url) => url.startsWith("http"));
+
+      const backendPayload: Record<string, any> = {
+        name: data.product_name,
+        mrp: data.product_price,
+        manufacturer: data.company_name,
+        chemicalComposition: data.chemical_combination || "N/A",
+        categoryId: data.categories[0],         // Backend expects a single category ID
+        subCategoryId: data.sub_categories?.[0] || data.categories[0], // Fallback
+        gstPercent: 12,  // Default GST for pharma
+        stock: data.stock,
+        expiryDate: new Date(data.expire_date).toISOString(),
+        minimumOrderQuantity: data.min_order_qty,
+        maximumOrderQuantity: data.max_order_qty,
+        ...(realImages.length > 0 && { images: realImages }),
+        ...(data.discount_details?.type && {
+          discountType: discountTypeMap[data.discount_details.type] || undefined,
+        }),
+        ...(data.discount_details && (data.discount_details.discountPercent || data.discount_details.buy) && {
+          discountMeta: {
+            discountPercent: data.discount_details.discountPercent,
+            buy: data.discount_details.buy,
+            get: data.discount_details.get,
+          },
+        }),
       };
 
       if (isEditing) {
-        await updateProduct.mutateAsync({ productId: productId!, input: payload });
+        await updateProduct.mutateAsync({ productId: productId!, input: backendPayload as any });
         toast.success("Product updated successfully");
       } else {
-        await createProduct.mutateAsync(payload);
+        await createProduct.mutateAsync(backendPayload as any);
         toast.success("Product added successfully");
       }
       router.push("/products");
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong saving the product");
+      const errorMsg = err?.response?.data?.message || err.message || "Something went wrong saving the product";
+      toast.error(Array.isArray(errorMsg) ? errorMsg.join(", ") : errorMsg);
     }
   };
 
@@ -130,7 +160,12 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit, (validationErrors) => {
+        console.error("Form validation errors:", validationErrors);
+        const firstError = Object.values(validationErrors)[0];
+        const msg = (firstError as any)?.message || "Please fix the form errors";
+        toast.error(String(msg));
+      })} className="space-y-6">
         {/* Basic Info */}
         <div className="glass-card rounded-2xl p-6 space-y-4">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Basic Information</h2>

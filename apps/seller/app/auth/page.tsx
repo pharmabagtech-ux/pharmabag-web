@@ -39,7 +39,7 @@ export default function SellerAuthPage() {
     e.preventDefault();
     if (otp.length < 4) { toast.error("Enter OTP"); return; }
     try {
-      const data = await verifyOtpMutation.mutateAsync({ phone, otp });
+      const data = await verifyOtpMutation.mutateAsync({ phone, otp, role: "SELLER" });
       setUser(data.user);
       toast.success("Logged in successfully");
       router.push("/dashboard");

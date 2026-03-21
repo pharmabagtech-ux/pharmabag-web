@@ -2,8 +2,8 @@ import { apiClient } from "@/lib/apiClient";
 import type { Product, Order, Payout } from "@pharmabag/utils";
 
 export async function getSellerDashboard() {
-  const { data } = await apiClient.get<{ stats: { totalProducts: number; activeListings: number; totalOrders: number; pendingOrders: number; totalRevenue: number; pendingPayouts: number; avgRating: number; lowStockItems: number }; overview: { orders: Order[] }; payouts: { balance: number; paid: number; pending: number; history: Payout[] } }>("/seller/dashboard");
-  return data;
+  const { data } = await apiClient.get<{ data: { stats: any; overview: any } }>("/sellers/dashboard");
+  return data.data;
 }
 
 export async function getSellerProfile() {
@@ -19,29 +19,31 @@ export async function updateSellerProfile(payload: Partial<any>) {
 import { ProductPayload } from "@pharmabag/utils";
 
 export async function getSellerProducts() {
-  const { data } = await apiClient.get<{ products: Product[] }>("/products/seller/own");
-  return data.products;
+  const { data } = await apiClient.get<{ data: { products: Product[] } }>("/products/seller/own");
+  return data.data?.products ?? [];
 }
 
 export async function createSellerProduct(input: ProductPayload) {
-  const { data } = await apiClient.post<{ product: Product }>("/seller/products/add", input);
-  return data.product;
+  // Backend is POST /products (ProductsController)
+  const { data } = await apiClient.post<{ data: Product }>("/products", input);
+  return data.data;
 }
 
 export async function updateSellerProduct(productId: string, input: Partial<ProductPayload>) {
-  const { data } = await apiClient.put<{ product: Product }>(`/seller/products/add/${productId}`, input);
-  return data.product;
+  // Backend is PATCH /products/:id (ProductsController)
+  const { data } = await apiClient.patch<{ data: Product }>(`/products/${productId}`, input);
+  return data.data;
 }
 
 export async function getSellerProductById(productId: string) {
-  const { data } = await apiClient.get<{ product: Product }>(`/seller/products/${productId}`);
-  return data.product;
+  // Backend is GET /products/:id (ProductsController)
+  const { data } = await apiClient.get<{ data: Product }>(`/products/${productId}`);
+  return data.data;
 }
 
 export async function getCategories() {
-  // Try to use a shared categories endpoint or specific to seller
-  const { data } = await apiClient.get<{ categories: any[] }>("/categories");
-  return data.categories || data;
+  const { data } = await apiClient.get<{ data: any[] }>("/products/categories");
+  return data.data || [];
 }
 
 export async function deleteSellerProduct(productId: string) {
@@ -50,8 +52,8 @@ export async function deleteSellerProduct(productId: string) {
 }
 
 export async function getSellerOrders() {
-  const { data } = await apiClient.get<{ orders: Order[] }>("/orders/seller");
-  return data.orders;
+  const { data } = await apiClient.get<{ data: Order[] }>("/orders/seller");
+  return data.data || [];
 }
 
 export async function updateSellerOrderStatus(orderId: string, status: string) {

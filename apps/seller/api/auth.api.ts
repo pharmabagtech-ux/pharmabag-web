@@ -2,7 +2,7 @@ import { apiClient } from "@/lib/apiClient";
 import type { User } from "@pharmabag/utils";
 
 export interface SendOtpPayload { phone: string; }
-export interface VerifyOtpPayload { phone: string; otp: string; }
+export interface VerifyOtpPayload { phone: string; otp: string; role?: string; }
 
 export interface AuthResponse { accessToken: string; refreshToken?: string; user: User; }
 

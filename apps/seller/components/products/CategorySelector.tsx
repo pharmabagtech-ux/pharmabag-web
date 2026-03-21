@@ -45,7 +45,7 @@ export function CategorySelector({ selectedCategoryIds, onChangeCategories, sele
   // Find subcategories belonging to selected categories
   const availableSubcats = safeCategories
     .filter((c: any) => selectedCategoryIds.includes(c.id))
-    .flatMap((c: any) => c.subcategories || []);
+    .flatMap((c: any) => c.subCategories || c.subcategories || []);
 
   return (
     <div className="space-y-4">

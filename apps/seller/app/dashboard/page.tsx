@@ -3,14 +3,25 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Package, ShoppingBag, TrendingUp, CreditCard, Star, AlertTriangle, Bell, BarChart3 } from "lucide-react";
 import { StatCard, Button, OrderStatusBadge } from "@/components/ui";
-import { SELLER_STATS, ORDERS, CHART_DATA, formatCurrency, formatDate } from "@pharmabag/utils";
+import { formatCurrency, formatDate } from "@pharmabag/utils";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { useSellerDashboard } from "@/hooks/useSeller";
+import { useSellerAuth } from "@/store";
 
 export default function SellerDashboard() {
   const { data: dashboardData, isLoading } = useSellerDashboard();
-  const sellerOrders = dashboardData?.overview?.orders ?? ORDERS.filter(o => o.sellerId === "s1");
-  const stats = dashboardData?.stats ?? SELLER_STATS;
+  const { user } = useSellerAuth();
+  const sellerOrders = dashboardData?.overview?.orders || [];
+  const stats = dashboardData?.stats || {
+    totalProducts: 0,
+    activeListings: 0,
+    totalOrders: 0,
+    pendingOrders: 0,
+    totalRevenue: 0,
+    pendingPayouts: 0,
+    avgRating: 0,
+    lowStockItems: 0,
+  };
 
   if (isLoading) {
     return <div className="min-h-screen p-6">Loading seller dashboard...</div>;
@@ -22,7 +33,7 @@ export default function SellerDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-semibold text-2xl text-foreground">Seller Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">SunPharma Direct · <span className="text-yellow-500">★ {SELLER_STATS.avgRating}</span></p>
+          <p className="text-sm text-muted-foreground mt-0.5">{user?.businessName || user?.name || "Seller"} · <span className="text-yellow-500">★ {stats.avgRating.toFixed(1)}</span></p>
         </div>
         <div className="flex gap-2">
           <button aria-label="Notifications" className="relative h-9 w-9 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:bg-accent/60 transition-colors">
@@ -35,18 +46,18 @@ export default function SellerDashboard() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard title="Total Revenue" value={formatCurrency(SELLER_STATS.totalRevenue)} change="+12.4% this month" up icon={TrendingUp} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0}/>
-        <StatCard title="Active Listings" value={`${SELLER_STATS.activeListings}/${SELLER_STATS.totalProducts}`} change="6 pending approval" icon={Package} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0.07}/>
-        <StatCard title="Orders" value={String(SELLER_STATS.totalOrders)} change={`${SELLER_STATS.pendingOrders} pending`} icon={ShoppingBag} iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20" delay={0.14}/>
-        <StatCard title="Pending Payouts" value={formatCurrency(SELLER_STATS.pendingPayouts)} change="Next: Thu 18 Jul" up={false} icon={CreditCard} iconClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20" delay={0.21}/>
+        <StatCard title="Total Revenue" value={formatCurrency(stats.totalRevenue)} change="+0% this month" up icon={TrendingUp} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0}/>
+        <StatCard title="Active Listings" value={`${stats.activeListings}/${stats.totalProducts}`} change="0 pending approval" icon={Package} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0.07}/>
+        <StatCard title="Orders" value={String(stats.totalOrders)} change={`${stats.pendingOrders} pending`} icon={ShoppingBag} iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20" delay={0.14}/>
+        <StatCard title="Pending Payouts" value={formatCurrency(stats.pendingPayouts)} change="Scheduled" up={false} icon={CreditCard} iconClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20" delay={0.21}/>
       </div>
 
       {/* Low stock alert */}
-      {SELLER_STATS.lowStockItems > 0 && (
+      {stats.lowStockItems > 0 && (
         <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} className="flex items-center gap-3 p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
           <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0" aria-hidden/>
           <p className="text-sm text-yellow-700 dark:text-yellow-400">
-            <span className="font-semibold">{SELLER_STATS.lowStockItems} products</span> are running low on stock.{" "}
+            <span className="font-semibold">{stats.lowStockItems} products</span> are running low on stock.{" "}
             <Link href="/inventory" className="underline font-medium">Update inventory →</Link>
           </p>
         </motion.div>
@@ -62,7 +73,7 @@ export default function SellerDashboard() {
             </div>
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={CHART_DATA} margin={{top:0,right:0,left:-20,bottom:0}}>
+                <BarChart data={dashboardData?.chartData || []} margin={{top:0,right:0,left:-20,bottom:0}}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false}/>
                   <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{fontSize:11,fill:"hsl(var(--muted-foreground))"}}/>
                   <YAxis tickLine={false} axisLine={false} tick={{fontSize:11,fill:"hsl(var(--muted-foreground))"}} tickFormatter={v=>`${(v/100000).toFixed(0)}L`}/>
@@ -120,12 +131,12 @@ export default function SellerDashboard() {
 
           {/* Rating card */}
           <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.3}} className="glass-card rounded-2xl p-5 text-center">
-            <div className="flex justify-center gap-1 mb-2" aria-label={`${SELLER_STATS.avgRating} star rating`}>
-              {Array.from({length:5}).map((_,i)=><Star key={i} className={`h-5 w-5 ${i<Math.floor(SELLER_STATS.avgRating)?"fill-yellow-400 text-yellow-400":"text-muted-foreground/30"}`} aria-hidden/>)}
+            <div className="flex justify-center gap-1 mb-2" aria-label={`${stats.avgRating} star rating`}>
+              {Array.from({length:5}).map((_,i)=><Star key={i} className={`h-5 w-5 ${i<Math.floor(stats.avgRating)?"fill-yellow-400 text-yellow-400":"text-muted-foreground/30"}`} aria-hidden/>)}
             </div>
-            <div className="font-semibold text-3xl text-foreground">{SELLER_STATS.avgRating}</div>
+            <div className="font-semibold text-3xl text-foreground">{stats.avgRating.toFixed(1)}</div>
             <div className="text-sm text-muted-foreground mt-1">Seller Rating</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Based on {SELLER_STATS.totalOrders} orders</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Based on {stats.totalOrders} orders</div>
           </motion.div>
         </div>
       </div>
