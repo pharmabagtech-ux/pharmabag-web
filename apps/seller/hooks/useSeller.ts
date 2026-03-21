@@ -1,7 +1,8 @@
 "use client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sendOtp, verifyOtp, getCurrentUser } from "@/api/auth.api";
-import { getSellerDashboard, getSellerProducts, getSellerOrders, getSellerSettlements, getSellerSettlementSummary, createSellerProduct, updateSellerProduct, deleteSellerProduct, updateSellerOrderStatus, getSellerProfile, updateSellerProfile } from "@/api/seller.api";
+import { getSellerDashboard, getSellerProducts, getSellerOrders, getSellerSettlements, getSellerSettlementSummary, createSellerProduct, updateSellerProduct, deleteSellerProduct, updateSellerOrderStatus, getSellerProfile, updateSellerProfile, getSellerProductById, getCategories } from "@/api/seller.api";
+import type { ProductPayload } from "@pharmabag/utils";
 import { useSellerAuth } from "@/store";
 
 export function useSendOtp() { return useMutation({ mutationFn: sendOtp }); }
@@ -34,9 +35,13 @@ export function useSellerProducts() { return useQuery({ queryKey: ["seller", "pr
 
 export function useCreateSellerProduct() { const qc = useQueryClient(); return useMutation({ mutationFn: createSellerProduct, onSuccess: () => void qc.invalidateQueries({ queryKey: ["seller", "products"] }) }); }
 
-export function useUpdateSellerProduct() { const qc = useQueryClient(); return useMutation({ mutationFn: ({ productId, input }: { productId: string; input: any }) => updateSellerProduct(productId, input), onSuccess: () => void qc.invalidateQueries({ queryKey: ["seller", "products"] }) }); }
+export function useUpdateSellerProduct() { const qc = useQueryClient(); return useMutation({ mutationFn: ({ productId, input }: { productId: string; input: Partial<ProductPayload> }) => updateSellerProduct(productId, input), onSuccess: () => void qc.invalidateQueries({ queryKey: ["seller", "products"] }) }); }
 
 export function useDeleteSellerProduct() { const qc = useQueryClient(); return useMutation({ mutationFn: (productId: string) => deleteSellerProduct(productId), onSuccess: () => void qc.invalidateQueries({ queryKey: ["seller", "products"] }) }); }
+
+export function useSellerProduct(id: string) { return useQuery({ queryKey: ["seller", "product", id], queryFn: () => getSellerProductById(id), enabled: !!id && id !== "new", retry: 1 }); }
+
+export function useCategories() { return useQuery({ queryKey: ["categories"], queryFn: getCategories, staleTime: 300_000, retry: 1 }); }
 
 export function useSellerOrders() { return useQuery({ queryKey: ["seller", "orders"], queryFn: getSellerOrders, staleTime: 60_000, retry: 1 }); }
 

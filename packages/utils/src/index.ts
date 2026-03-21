@@ -7,6 +7,9 @@ export type {
   Payout,
   OrderStatus,
   ApprovalStatus,
+  DiscountType,
+  DiscountDetails,
+  ProductPayload,
 } from './types';
 
 // Mock data

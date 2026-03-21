@@ -118,3 +118,34 @@ export interface Payout {
   createdAt: string;
   paidAt?: string;
 }
+
+export type DiscountType =
+  | "ptr_discount"
+  | "same_product_bonus"
+  | "ptr_discount_and_same_product_bonus"
+  | "different_product_bonus"
+  | "different_ptr_discount_and_same_product_bonus";
+
+export type DiscountDetails = {
+  type: DiscountType;
+  discountPercent?: number;
+  buy?: number;
+  get?: number;
+};
+
+export type ProductPayload = {
+  product_name: string;
+  product_price: number;
+  company_name: string;
+  chemical_combination?: string;
+  categories: string[];
+  sub_categories?: string[];
+  stock: number;
+  min_order_qty: number;
+  max_order_qty: number;
+  expire_date: string;
+  bulk: boolean;
+  image_list: string[];
+  extra_fields: Record<string, string>;
+  discount_details: DiscountDetails;
+};

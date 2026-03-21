@@ -7,6 +7,7 @@ import { PRODUCTS, formatCurrency } from "@pharmabag/utils";
 import { SellerSidebar } from "@/components/layout/sidebar";
 import { cn } from "@/lib/utils";
 import { useSellerProducts, useDeleteSellerProduct } from "@/hooks/useSeller";
+import Link from "next/link";
 
 const EMOJI: Record<string,string> = {"eye-drops":"👁️",capsules:"🔴",tablets:"💊",syrups:"🧪",vitamins:"🌟",default:"💊"};
 
@@ -27,7 +28,9 @@ export default function ProductsPage() {
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <div><h1 className="font-semibold text-2xl text-foreground">Products</h1><p className="text-sm text-muted-foreground mt-0.5">Manage your product listings</p></div>
-            <Button leftIcon={<Plus className="h-4 w-4"/>}>Add Product</Button>
+            <Link href="/products/new">
+              <Button leftIcon={<Plus className="h-4 w-4"/>}>Add Product</Button>
+            </Link>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
@@ -76,8 +79,8 @@ export default function ProductsPage() {
                       <td className="px-5 py-4"><ApprovalBadge status={p.approvalStatus ?? "PENDING"}/></td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-1">
-                          <button aria-label={`View ${p.name}`} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"><Eye className="h-3.5 w-3.5"/></button>
-                          <button aria-label={`Edit ${p.name}`} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"><Edit className="h-3.5 w-3.5"/></button>
+                          <Link href={`/products/${p.id}`} aria-label={`View ${p.name}`} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"><Eye className="h-3.5 w-3.5"/></Link>
+                          <Link href={`/products/${p.id}/edit`} aria-label={`Edit ${p.name}`} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"><Edit className="h-3.5 w-3.5"/></Link>
                           <button onClick={() => deleteProduct.mutate(p.id)} aria-label={`Delete ${p.name}`} className="h-7 w-7 rounded-lg flex items-center justify-center text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><Trash2 className="h-3.5 w-3.5"/></button>
                         </div>
                       </td>

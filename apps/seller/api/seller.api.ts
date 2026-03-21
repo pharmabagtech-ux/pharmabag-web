@@ -16,19 +16,32 @@ export async function updateSellerProfile(payload: Partial<any>) {
   return data.profile;
 }
 
+import { ProductPayload } from "@pharmabag/utils";
+
 export async function getSellerProducts() {
   const { data } = await apiClient.get<{ products: Product[] }>("/products/seller/own");
   return data.products;
 }
 
-export async function createSellerProduct(input: any) {
-  const { data } = await apiClient.post<{ product: Product }>("/products", input);
+export async function createSellerProduct(input: ProductPayload) {
+  const { data } = await apiClient.post<{ product: Product }>("/seller/products/add", input);
   return data.product;
 }
 
-export async function updateSellerProduct(productId: string, input: any) {
-  const { data } = await apiClient.patch<{ product: Product }>(`/products/${productId}`, input);
+export async function updateSellerProduct(productId: string, input: Partial<ProductPayload>) {
+  const { data } = await apiClient.put<{ product: Product }>(`/seller/products/add/${productId}`, input);
   return data.product;
+}
+
+export async function getSellerProductById(productId: string) {
+  const { data } = await apiClient.get<{ product: Product }>(`/seller/products/${productId}`);
+  return data.product;
+}
+
+export async function getCategories() {
+  // Try to use a shared categories endpoint or specific to seller
+  const { data } = await apiClient.get<{ categories: any[] }>("/categories");
+  return data.categories || data;
 }
 
 export async function deleteSellerProduct(productId: string) {
