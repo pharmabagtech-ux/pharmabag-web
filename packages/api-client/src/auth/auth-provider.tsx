@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Ignore logout API errors
     } finally {
-      setAccessToken(null);
+      setAccessToken(null, null);
       setUser(null);
     }
   }, []);
