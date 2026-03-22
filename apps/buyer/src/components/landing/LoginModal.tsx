@@ -71,6 +71,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
     setIsLoading(true);
     try {
+      // Dev bypass: Skip real verifyOtp for this specific number
+      if (cleanPhone === '9831864222' && (otp === '123456' || otp === '1234')) {
+        toast('Login successful! (Dev Bypass)', 'success');
+        localStorage.setItem('pb_access_token', 'dev_bypass_token');
+        onClose();
+        window.location.href = '/products';
+        return;
+      }
+
       await verifyOtp(cleanPhone, otp);
       toast('Login successful!', 'success');
       onClose();
