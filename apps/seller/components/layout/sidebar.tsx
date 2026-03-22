@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, Package, ClipboardList, BarChart3, Warehouse, CreditCard, LogOut, ChevronLeft, Store } from "lucide-react";
+import { LayoutDashboard, Package, ClipboardList, BarChart3, Warehouse, CreditCard, LogOut, ChevronLeft, Store, Palmtree, LifeBuoy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSellerAuth } from "@/store";
 import { useState } from "react";
@@ -14,6 +14,7 @@ const NAV = [
   { icon: Warehouse, label: "Inventory", href: "/inventory" },
   { icon: BarChart3, label: "Analytics", href: "/analytics" },
   { icon: CreditCard, label: "Payouts", href: "/payouts" },
+  { icon: LifeBuoy, label: "Support", href: "/support" },
 ];
 
 export function SellerSidebar() {
@@ -47,6 +48,14 @@ export function SellerSidebar() {
           );
         })}
       </nav>
+      {user?.isOnVacation && (
+        <div className="px-2 pb-1">
+          <div className={cn("flex items-center gap-2 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 transition-all", open ? "px-3 py-2" : "justify-center py-2")}>
+            <Palmtree className="h-4 w-4 text-amber-600 flex-shrink-0" aria-hidden/>
+            <AnimatePresence>{open && <motion.span initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="text-xs font-medium text-amber-700 dark:text-amber-400 truncate">Vacation Mode</motion.span>}</AnimatePresence>
+          </div>
+        </div>
+      )}
       <div className="p-2 border-t border-white/20">
         {user&&open&&<div className="px-3 py-2 mb-1"><div className="text-sm font-medium text-foreground truncate">{user.name}</div><div className="text-xs text-muted-foreground truncate">{user.email}</div></div>}
         <button onClick={()=>{logout();router.push("/auth");}} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium w-full text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all fr">

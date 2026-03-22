@@ -237,7 +237,7 @@ export default function CheckoutPage() {
               <div className="space-y-6 mb-10 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 {items.map((item: any) => (
                   <div key={item.id} className="flex gap-4">
-                    <div className="w-16 h-16 bg-[#f1f6ea] rounded-xl flex-shrink-0 relative overflow-hidden">
+                    <div className="w-16 h-16 bg-[#f1f6ea] rounded-2xl flex-shrink-0 relative overflow-hidden">
                       <img src={item.productImage || '/product_placeholder.png'} alt={item.productName} className="object-contain p-2" />
                     </div>
                     <div className="flex-1">

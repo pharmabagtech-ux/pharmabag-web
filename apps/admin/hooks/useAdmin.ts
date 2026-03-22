@@ -9,7 +9,8 @@ import {
   getSettlements, markSettlementPaid,
   getTickets, getTicketById, replyToTicket, updateTicketStatus,
   getCategories, createCategory, updateCategory, deleteCategory,
-  getSubCategories, createSubCategory, updateSubCategory, deleteSubCategory
+  getSubCategories, createSubCategory, updateSubCategory, deleteSubCategory as deleteSubCategoryApi,
+  broadcastNotification
 } from "@/api/admin.api";
 import { useAdminAuth } from "@/store";
 
@@ -169,5 +170,10 @@ export function useUpdateSubCategory() {
 
 export function useDeleteSubCategory() {
   const qc = useQueryClient();
-  return useMutation({ mutationFn: deleteSubCategory, onSuccess: () => { void qc.invalidateQueries({ queryKey: ["admin", "subcategories"] }); void qc.invalidateQueries({ queryKey: ["admin", "categories"] }); } });
+  return useMutation({ mutationFn: deleteSubCategoryApi, onSuccess: () => { void qc.invalidateQueries({ queryKey: ["admin", "subcategories"] }); void qc.invalidateQueries({ queryKey: ["admin", "categories"] }); } });
+}
+
+// ─── Notifications ───────────────────────────────────
+export function useBroadcastNotification() {
+  return useMutation({ mutationFn: (payload: { target: string; message: string }) => broadcastNotification(payload) });
 }

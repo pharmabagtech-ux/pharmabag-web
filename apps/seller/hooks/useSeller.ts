@@ -1,7 +1,7 @@
 "use client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sendOtp, verifyOtp, getCurrentUser } from "@/api/auth.api";
-import { getSellerDashboard, getSellerProducts, getSellerOrders, getSellerSettlements, getSellerSettlementSummary, createSellerProduct, updateSellerProduct, deleteSellerProduct, updateSellerOrderStatus, getSellerProfile, updateSellerProfile, getSellerProductById, getCategories } from "@/api/seller.api";
+import { getSellerDashboard, getSellerProducts, getSellerOrders, getSellerSettlements, getSellerSettlementSummary, createSellerProduct, updateSellerProduct, deleteSellerProduct, updateSellerOrderStatus, getSellerProfile, updateSellerProfile, getSellerProductById, getCategories, toggleVacationMode, getSellerTickets, createSellerTicket, addTicketMessage } from "@/api/seller.api";
 import type { ProductPayload } from "@pharmabag/utils";
 import { useSellerAuth } from "@/store";
 
@@ -52,3 +52,37 @@ export function useUpdateSellerOrderStatus() { const qc = useQueryClient(); retu
 export function useSellerSettlements() { return useQuery({ queryKey: ["seller", "settlements"], queryFn: getSellerSettlements, staleTime: 60_000, retry: 1 }); }
 
 export function useSellerSettlementSummary() { return useQuery({ queryKey: ["seller", "settlement-summary"], queryFn: getSellerSettlementSummary, staleTime: 60_000, retry: 1 }); }
+
+export function useToggleVacationMode() {
+  const qc = useQueryClient();
+  const { user, setUser } = useSellerAuth();
+  return useMutation({
+    mutationFn: (isOnVacation: boolean) => toggleVacationMode(isOnVacation),
+    onSuccess: (_, isOnVacation) => {
+      if (user) setUser({ ...user, isOnVacation } as any);
+      void qc.invalidateQueries({ queryKey: ["seller", "profile"] });
+    },
+  });
+}
+
+// ─── Support Tickets ─────────────────────────────────
+
+export function useSellerTickets() {
+  return useQuery({ queryKey: ["seller", "tickets"], queryFn: getSellerTickets, staleTime: 30_000, retry: 1 });
+}
+
+export function useCreateSellerTicket() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createSellerTicket,
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["seller", "tickets"] }),
+  });
+}
+
+export function useAddTicketMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, message }: { ticketId: string; message: string }) => addTicketMessage(ticketId, message),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["seller", "tickets"] }),
+  });
+}

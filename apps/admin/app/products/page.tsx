@@ -81,14 +81,14 @@ export default function AdminProductsPage() {
             <table className="w-full" aria-label="Products">
               <thead>
                 <tr className="border-b border-border/50 bg-muted/20">
-                  {["Product", "Manufacturer", "Category", "MRP", "Stock", "Status", "Actions"].map(h => (
+                  {["Product", "Manufacturer", "Category", "MRP", "Stock", "Expiry", "Min Qty", "Max Qty", "Status", "Actions"].map(h => (
                     <th key={h} scope="col" className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={7} className="py-12 text-center text-sm text-muted-foreground">No products found</td></tr>
+                  <tr><td colSpan={10} className="py-12 text-center text-sm text-muted-foreground">No products found</td></tr>
                 ) : filtered.map((p: any, i: number) => (
                   <motion.tr key={p.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="hover:bg-accent/30 transition-colors">
                     <td className="px-5 py-4">
@@ -103,7 +103,18 @@ export default function AdminProductsPage() {
                     <td className="px-5 py-4 text-sm text-muted-foreground">{p.manufacturer ?? "—"}</td>
                     <td className="px-5 py-4"><Badge className="capitalize">{p.category?.name ?? "—"}</Badge></td>
                     <td className="px-5 py-4 text-sm font-semibold text-foreground">{formatCurrency(p.mrp ?? 0)}</td>
-                    <td className="px-5 py-4 text-sm text-muted-foreground">{p.stock ?? 0}</td>
+                    <td className="px-5 py-4 text-sm text-muted-foreground">{p.batches?.reduce((s: number, b: any) => s + (b.stock ?? 0), 0) ?? p.stock ?? 0}</td>
+                    <td className="px-5 py-4 text-sm text-muted-foreground whitespace-nowrap">
+                      {(() => {
+                        const nearest = p.batches?.filter((b: any) => b.expiryDate)?.sort((a: any, b: any) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime())?.[0];
+                        if (!nearest) return "—";
+                        const d = new Date(nearest.expiryDate);
+                        const isExpired = d < new Date();
+                        return <span className={isExpired ? "text-red-500 font-medium" : ""}>{d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}{isExpired ? " ⚠" : ""}</span>;
+                      })()}
+                    </td>
+                    <td className="px-5 py-4 text-sm text-muted-foreground">{p.minimumOrderQuantity ?? 1}</td>
+                    <td className="px-5 py-4 text-sm text-muted-foreground">{p.maximumOrderQuantity ?? "—"}</td>
                     <td className="px-5 py-4">
                       <Badge variant={p.isActive ? "success" : "error"}>{p.isActive ? "Active" : "Disabled"}</Badge>
                     </td>

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useSellerAuth } from "@/store";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 
@@ -12,7 +13,8 @@ apiClient.interceptors.request.use((config: any) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("pb_token");
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      const cleanToken = token.replace(/^(Bearer\s+)+/i, "");
+      config.headers.Authorization = `Bearer ${cleanToken}`;
     }
   }
   return config;
@@ -24,6 +26,8 @@ apiClient.interceptors.response.use(
     if (error?.response?.status === 401) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("pb_token");
+        useSellerAuth.getState().logout();
+        window.location.href = "/auth";
       }
     }
     return Promise.reject(error);

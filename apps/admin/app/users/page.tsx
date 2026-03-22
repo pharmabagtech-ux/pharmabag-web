@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, UserCheck, UserX, Eye, Ban, Unlock, ChevronDown, ChevronUp, Building2, FileText, MapPin } from "lucide-react";
+import { Search, UserCheck, UserX, Eye, Ban, Unlock, ChevronDown, ChevronUp, Building2, FileText, MapPin, Palmtree } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button, Input, Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { useAdminUsers, useAffirmUserStatus, useUserById } from "@/hooks/useAdmin";
 
 type RoleFilter = "all" | "BUYER" | "SELLER" | "ADMIN";
-type StatusFilter = "all" | "APPROVED" | "PENDING" | "BLOCKED";
+type StatusFilter = "all" | "APPROVED" | "PENDING" | "BLOCKED" | "VACATION";
 
 function SellerDetails({ userId }: { userId: string }) {
   const { data: user, isLoading } = useUserById(userId);
@@ -59,9 +59,11 @@ export default function UsersPage() {
   // Backend returns { data: [...], total: ... } inside data field
   const users: any[] = Array.isArray(usersData) ? usersData : (usersData?.data ?? []);
 
+  const vacationCount = users.filter((u: any) => u.role === "SELLER" && u.isOnVacation).length;
+
   const filtered = users.filter((u: any) =>
     (role === "all" || u.role === role) &&
-    (status === "all" || u.status === status) &&
+    (status === "all" || (status === "VACATION" ? (u.role === "SELLER" && u.isOnVacation) : u.status === status)) &&
     (!search || (u.phone ?? "").includes(search) || (u.email ?? "").toLowerCase().includes(search.toLowerCase()))
   );
 
@@ -93,7 +95,7 @@ export default function UsersPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-semibold text-2xl text-foreground">User Management</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">{users.length} total users · {users.filter((u: any) => u.status === "PENDING").length} pending</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{users.length} total users · {users.filter((u: any) => u.status === "PENDING").length} pending{vacationCount > 0 && <> · <span className="text-amber-600">{vacationCount} on vacation</span></>}</p>
           </div>
         </div>
 
@@ -107,10 +109,14 @@ export default function UsersPage() {
                 className={cn("px-3 py-2 rounded-xl text-xs font-medium border transition-all", role === r ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:bg-accent/60")}>{r === "all" ? "All" : r}</button>
             ))}
           </div>
-          <div className="flex gap-1.5" role="group" aria-label="Filter by status">
-            {(["all", "APPROVED", "PENDING", "BLOCKED"] as StatusFilter[]).map(s => (
+          <div className="flex gap-1.5 flex-wrap" role="group" aria-label="Filter by status">
+            {(["all", "APPROVED", "PENDING", "BLOCKED", "VACATION"] as StatusFilter[]).map(s => (
               <button key={s} onClick={() => setStatus(s)}
-                className={cn("px-3 py-2 rounded-xl text-xs font-medium border transition-all", status === s ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:bg-accent/60")}>{s === "all" ? "All" : s}</button>
+                className={cn("px-3 py-2 rounded-xl text-xs font-medium border transition-all",
+                  status === s
+                    ? (s === "VACATION" ? "bg-amber-500 text-white border-amber-500" : "bg-primary text-white border-primary")
+                    : (s === "VACATION" ? "border-amber-200 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20" : "border-border text-muted-foreground hover:bg-accent/60")
+                )}>{s === "all" ? "All" : s === "VACATION" ? `🏖 Vacation (${vacationCount})` : s}</button>
             ))}
           </div>
         </div>
@@ -154,7 +160,14 @@ export default function UsersPage() {
                         </td>
                         <td className="px-5 py-4 text-sm text-muted-foreground">{u.email ?? "—"}</td>
                         <td className="px-5 py-4">
-                          <Badge variant={u.status === "APPROVED" ? "success" : u.status === "PENDING" ? "warning" : "error"}>{u.status}</Badge>
+                          <div className="flex items-center gap-1.5">
+                            <Badge variant={u.status === "APPROVED" ? "success" : u.status === "PENDING" ? "warning" : "error"}>{u.status}</Badge>
+                            {u.role === "SELLER" && u.isOnVacation && (
+                              <Badge variant="warning" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
+                                <Palmtree className="h-3 w-3" /> Vacation
+                              </Badge>
+                            )}
+                          </div>
                         </td>
                         <td className="px-5 py-4 text-xs text-muted-foreground">{u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-IN") : "—"}</td>
                         <td className="px-5 py-4">

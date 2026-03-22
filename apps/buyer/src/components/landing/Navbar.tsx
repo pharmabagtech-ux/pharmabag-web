@@ -12,9 +12,10 @@ import { useAuth } from '@pharmabag/api-client';
 
 interface NavbarProps {
   onLoginClick?: () => void;
+  showUserActions?: boolean;
 }
 
-export default function Navbar({ onLoginClick }: NavbarProps) {
+export default function Navbar({ onLoginClick, showUserActions = false }: NavbarProps) {
   const { isAuthenticated, user } = useAuth();
   const [isBrandsMenuOpen, setIsBrandsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -79,6 +80,8 @@ export default function Navbar({ onLoginClick }: NavbarProps) {
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-4 md:gap-6">
+              {/* User Action Icons - Only show when logged in and showUserActions is true */}
+              {isAuthenticated && showUserActions && (
               <div className="hidden md:flex items-center gap-4 pr-6 border-r border-gray-200">
                 <Link href="/support" className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group">
                   <HelpCircle className="w-5 h-5" />
@@ -106,6 +109,7 @@ export default function Navbar({ onLoginClick }: NavbarProps) {
                   <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Profile</span>
                 </Link>
               </div>
+              )}
 
               {/* Login Button / User State */}
               {!isAuthenticated ? (

@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { Send, ArrowLeft, Loader2, User, Shield, Clock } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button, Input, Badge } from "@/components/ui";
-import { formatDate } from "@pharmabag/utils";
+import { formatDate, formatDateTime } from "@pharmabag/utils";
+import { cn } from "@/lib/utils";
 import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useTicketById, useReplyToTicket, useUpdateTicketStatus, useAdminMe } from "@/hooks/useAdmin";
@@ -89,7 +90,7 @@ export default function AdminTicketDetailPage() {
               <h1 className="text-2xl font-bold text-foreground">{ticket.subject}</h1>
               <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5"><User className="h-4 w-4" /> {ticket.user?.phone} ({ticket.user?.role?.toLowerCase()})</span>
-                <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> {formatDate(ticket.createdAt, "MMM d, yyyy h:mm a")}</span>
+                <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> {formatDateTime(ticket.createdAt)}</span>
               </div>
             </div>
             
@@ -116,7 +117,7 @@ export default function AdminTicketDetailPage() {
                       <div className="flex items-center gap-2 mb-1.5">
                         {isAdmin ? <Shield className="h-3 w-3 opacity-70" /> : <User className="h-3 w-3 opacity-70" />}
                         <span className={cn("text-xs font-medium", isAdmin ? "text-primary-foreground/90" : "text-muted-foreground")}>{isAdmin ? "Support Agent" : "User"}</span>
-                        <span className={cn("text-xs", isAdmin ? "text-primary-foreground/70" : "text-muted-foreground/70")}>· {formatDate(msg.createdAt, "h:mm a")}</span>
+                        <span className={cn("text-xs", isAdmin ? "text-primary-foreground/70" : "text-muted-foreground/70")}>· {formatDate(msg.createdAt, { hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
                     </div>

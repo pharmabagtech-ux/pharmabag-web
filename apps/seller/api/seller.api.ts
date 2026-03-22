@@ -70,3 +70,24 @@ export async function getSellerSettlementSummary() {
   const { data } = await apiClient.get<{ summary: any }>("/settlements/summary");
   return data.summary;
 }
+
+export async function toggleVacationMode(isOnVacation: boolean) {
+  const { data } = await apiClient.patch<any>("/sellers/profile", { isOnVacation });
+  return data.data ?? data.profile ?? data;
+}
+
+// ─── Support Tickets ─────────────────────────────────
+export async function getSellerTickets() {
+  const { data } = await apiClient.get<any>("/tickets");
+  return data.data ?? data;
+}
+
+export async function createSellerTicket(payload: { subject: string; message: string }) {
+  const { data } = await apiClient.post<any>("/tickets", payload);
+  return data.data ?? data;
+}
+
+export async function addTicketMessage(ticketId: string, message: string) {
+  const { data } = await apiClient.post<any>(`/tickets/${ticketId}/messages`, { message });
+  return data.data ?? data;
+}

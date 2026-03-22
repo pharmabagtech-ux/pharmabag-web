@@ -1,16 +1,20 @@
 "use client";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Package, ShoppingBag, TrendingUp, CreditCard, Star, AlertTriangle, Bell, BarChart3 } from "lucide-react";
+import { Package, ShoppingBag, TrendingUp, CreditCard, Star, AlertTriangle, Bell, BarChart3, Palmtree } from "lucide-react";
 import { StatCard, Button, OrderStatusBadge } from "@/components/ui";
 import { formatCurrency, formatDate } from "@pharmabag/utils";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { useSellerDashboard } from "@/hooks/useSeller";
+import { useSellerDashboard, useToggleVacationMode, useSellerProfile } from "@/hooks/useSeller";
 import { useSellerAuth } from "@/store";
+import toast from "react-hot-toast";
 
 export default function SellerDashboard() {
   const { data: dashboardData, isLoading } = useSellerDashboard();
   const { user } = useSellerAuth();
+  const { data: profile } = useSellerProfile();
+  const toggleVacation = useToggleVacationMode();
+  const isOnVacation = user?.isOnVacation || (profile as any)?.isOnVacation || false;
   const sellerOrders = dashboardData?.overview?.orders || [];
   const stats = dashboardData?.stats || {
     totalProducts: 0,
@@ -29,6 +33,22 @@ export default function SellerDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
+      {/* Vacation Mode Banner */}
+      {isOnVacation && (
+        <motion.div initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}} className="flex items-center justify-between gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+          <div className="flex items-center gap-3">
+            <Palmtree className="h-5 w-5 text-amber-600 flex-shrink-0" aria-hidden/>
+            <div>
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">Vacation Mode is ON</p>
+              <p className="text-xs text-amber-600 dark:text-amber-500 mt-0.5">Your store is currently hidden from buyers. Turn off vacation mode to resume selling.</p>
+            </div>
+          </div>
+          <Button size="sm" variant="outline" loading={toggleVacation.isPending} onClick={() => { toggleVacation.mutate(false, { onSuccess: () => toast.success("Vacation mode turned off. Your store is now visible!"), onError: () => toast.error("Failed to update vacation mode") }); }}>
+            Deactivate
+          </Button>
+        </motion.div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -36,6 +56,13 @@ export default function SellerDashboard() {
           <p className="text-sm text-muted-foreground mt-0.5">{user?.businessName || user?.name || "Seller"} · <span className="text-yellow-500">★ {stats.avgRating.toFixed(1)}</span></p>
         </div>
         <div className="flex gap-2">
+          {!isOnVacation && (
+            <Button size="sm" variant="outline" loading={toggleVacation.isPending}
+              onClick={() => { toggleVacation.mutate(true, { onSuccess: () => toast.success("Vacation mode activated! Your store is now hidden from buyers."), onError: () => toast.error("Failed to update vacation mode") }); }}
+              leftIcon={<Palmtree className="h-3.5 w-3.5"/>}>
+              Vacation Mode
+            </Button>
+          )}
           <button aria-label="Notifications" className="relative h-9 w-9 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:bg-accent/60 transition-colors">
             <Bell className="h-4 w-4"/>
             <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center" aria-hidden>2</span>

@@ -18,9 +18,12 @@ export function SellerGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isSuccess && currentProfile) {
       const state = useSellerAuth.getState();
-      if (state.user && (state.user as any).sellerProfile?.verificationStatus !== currentProfile.verificationStatus) {
+      const profileChanged = state.user && (state.user as any).sellerProfile?.verificationStatus !== currentProfile.verificationStatus;
+      const vacationChanged = state.user && state.user.isOnVacation !== currentProfile.isOnVacation;
+      if (profileChanged || vacationChanged) {
         state.setUser({
           ...state.user,
+          isOnVacation: currentProfile.isOnVacation ?? false,
           sellerProfile: currentProfile
         } as any);
       }

@@ -59,7 +59,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
     );
   }
 
-  const discount = product.mrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
+  const discount = product.mrp ? Math.round(((product.mrp - (product.price ?? 0)) / product.mrp) * 100) : 0;
   const inStock = (product.stock ?? 0) > 0;
 
   return (
@@ -102,7 +102,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
               <div>
                 {product.category && (
                   <span className="text-[10px] font-bold text-lime-700 bg-lime-100 px-3 py-1 rounded-full uppercase tracking-widest">
-                    {product.category}
+                    {typeof product.category === 'object' ? (product.category as any).name : product.category}
                   </span>
                 )}
                 <h1 className="text-4xl font-bold text-gray-900 tracking-tight mt-4">{product.name}</h1>
@@ -114,8 +114,8 @@ export default function ProductDetailPage({ params }: { params: { productId: str
               {/* Price */}
               <div className="bg-white/40 backdrop-blur-xl p-6 rounded-3xl border border-white/40 shadow-lg">
                 <div className="flex items-baseline gap-4">
-                  <span className="text-4xl font-bold text-gray-900">₹{product.price.toLocaleString('en-IN')}</span>
-                  {product.mrp && product.mrp > product.price && (
+                  <span className="text-4xl font-bold text-gray-900">₹{(product.price ?? 0).toLocaleString('en-IN')}</span>
+                  {product.mrp && product.mrp > (product.price ?? 0) && (
                     <>
                       <span className="text-xl text-gray-400 line-through">₹{product.mrp.toLocaleString('en-IN')}</span>
                       <span className="text-sm font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">

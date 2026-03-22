@@ -138,12 +138,12 @@ export async function getCategories() {
   return data.data;
 }
 
-export async function createCategory(payload: { name: string; slug: string }) {
+export async function createCategory(payload: { name: string }) {
   const { data } = await apiClient.post<{ data: any }>("/admin/categories", payload);
   return data.data;
 }
 
-export async function updateCategory(id: string, payload: { name?: string; slug?: string }) {
+export async function updateCategory(id: string, payload: { name?: string }) {
   const { data } = await apiClient.patch<{ data: any }>(`/admin/categories/${id}`, payload);
   return data.data;
 }
@@ -159,17 +159,23 @@ export async function getSubCategories(categoryId?: string) {
   return data.data;
 }
 
-export async function createSubCategory(payload: { name: string; slug: string; categoryId: string }) {
+export async function createSubCategory(payload: { name: string; categoryId: string }) {
   const { data } = await apiClient.post<{ data: any }>("/admin/subcategories", payload);
   return data.data;
 }
 
-export async function updateSubCategory(id: string, payload: { name?: string; slug?: string; categoryId?: string }) {
+export async function updateSubCategory(id: string, payload: { name?: string; categoryId?: string }) {
   const { data } = await apiClient.patch<{ data: any }>(`/admin/subcategories/${id}`, payload);
   return data.data;
 }
 
 export async function deleteSubCategory(id: string) {
   const { data } = await apiClient.delete<{ data: any }>(`/admin/subcategories/${id}`);
+  return data.data;
+}
+
+// ─── Notifications ───────────────────────────────────
+export async function broadcastNotification(payload: { target: string; message: string }) {
+  const { data } = await apiClient.post<{ data: any }>("/admin/notifications/broadcast", payload);
   return data.data;
 }

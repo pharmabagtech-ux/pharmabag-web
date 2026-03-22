@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, Edit2, Trash2, FolderTree, ArrowRight, Loader2 } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, FolderTree, ArrowRight, Loader2, ChevronDown, Layers } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button, Input, Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -10,10 +10,6 @@ import {
   useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory,
   useSubCategories, useCreateSubCategory, useUpdateSubCategory, useDeleteSubCategory
 } from "@/hooks/useAdmin";
-
-function slugify(text: string) {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-}
 
 export default function AdminCategoriesPage() {
   const [view, setView] = useState<"categories" | "subcategories">("categories");
@@ -29,54 +25,78 @@ export default function AdminCategoriesPage() {
   const updateSubCat = useUpdateSubCategory();
   const deleteSubCat = useDeleteSubCategory();
 
-  // Modal State
+  // Add-type picker dropdown
+  const [addPickerOpen, setAddPickerOpen] = useState(false);
+  const addPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (addPickerRef.current && !addPickerRef.current.contains(e.target as Node)) {
+        setAddPickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Modal State — addType tracks what is being created/edited independently of view tab
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [addType, setAddType] = useState<"categories" | "subcategories">("categories");
   const [editId, setEditId] = useState("");
-  const [formData, setFormData] = useState({ name: "", slug: "", categoryId: "" });
+  const [formData, setFormData] = useState({ name: "", categoryId: "" });
 
   const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData?.categories ?? []);
   const subCategories = Array.isArray(subCatsData) ? subCatsData : (subCatsData?.subCategories ?? []);
 
-  const openModal = (mode: "create" | "edit", item?: any) => {
-    setModalMode(mode);
-    setEditId(item?.id || "");
+  const openCreateModal = (type: "categories" | "subcategories") => {
+    setAddType(type);
+    setModalMode("create");
+    setEditId("");
     setFormData({
-      name: item?.name || "",
-      slug: item?.slug || "",
-      categoryId: item?.categoryId || (categories.length > 0 ? categories[0].id : ""),
+      name: "",
+      categoryId: categories.length > 0 ? categories[0].id : "",
+    });
+    setAddPickerOpen(false);
+    setModalOpen(true);
+  };
+
+  const openEditModal = (item: any) => {
+    // Determine type from context: if item has categoryId, it's a subcategory
+    const type = item.categoryId ? "subcategories" : "categories";
+    setAddType(type);
+    setModalMode("edit");
+    setEditId(item.id);
+    setFormData({
+      name: item.name || "",
+      categoryId: item.categoryId || (categories.length > 0 ? categories[0].id : ""),
     });
     setModalOpen(true);
   };
 
   const closeModal = () => {
     setModalOpen(false);
-    setFormData({ name: "", slug: "", categoryId: "" });
-  };
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.value;
-    setFormData(prev => ({ ...prev, name, slug: slugify(name) }));
+    setFormData({ name: "", categoryId: "" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (view === "categories") {
+      if (addType === "categories") {
         if (modalMode === "create") {
-          await createCat.mutateAsync({ name: formData.name, slug: formData.slug });
+          await createCat.mutateAsync({ name: formData.name });
           toast.success("Category created");
         } else {
-          await updateCat.mutateAsync({ id: editId, payload: { name: formData.name, slug: formData.slug } });
+          await updateCat.mutateAsync({ id: editId, payload: { name: formData.name } });
           toast.success("Category updated");
         }
       } else {
         if (!formData.categoryId) return toast.error("Select a parent category");
         if (modalMode === "create") {
-          await createSubCat.mutateAsync({ name: formData.name, slug: formData.slug, categoryId: formData.categoryId });
+          await createSubCat.mutateAsync({ name: formData.name, categoryId: formData.categoryId });
           toast.success("Subcategory created");
         } else {
-          await updateSubCat.mutateAsync({ id: editId, payload: { name: formData.name, slug: formData.slug, categoryId: formData.categoryId } });
+          await updateSubCat.mutateAsync({ id: editId, payload: { name: formData.name, categoryId: formData.categoryId } });
           toast.success("Subcategory updated");
         }
       }
@@ -119,9 +139,46 @@ export default function AdminCategoriesPage() {
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">Manage your product categorization hierarchy</p>
           </div>
-          <Button onClick={() => openModal("create")} leftIcon={<Plus className="h-4 w-4" />}>
-            Add {view === "categories" ? "Category" : "Subcategory"}
-          </Button>
+
+          {/* Add button with type picker */}
+          <div className="relative" ref={addPickerRef}>
+            <Button onClick={() => setAddPickerOpen(!addPickerOpen)} leftIcon={<Plus className="h-4 w-4" />} rightIcon={<ChevronDown className={cn("h-3.5 w-3.5 transition-transform", addPickerOpen && "rotate-180")} />}>
+              Add New
+            </Button>
+            <AnimatePresence>
+              {addPickerOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-2 w-56 rounded-xl glass border border-white/20 shadow-xl overflow-hidden z-50"
+                >
+                  <button
+                    onClick={() => openCreateModal("categories")}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-primary/10 transition-colors"
+                  >
+                    <FolderTree className="h-4 w-4 text-primary" />
+                    <div className="text-left">
+                      <div className="font-medium">Category</div>
+                      <div className="text-xs text-muted-foreground">Top-level grouping</div>
+                    </div>
+                  </button>
+                  <div className="border-t border-white/10" />
+                  <button
+                    onClick={() => openCreateModal("subcategories")}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-primary/10 transition-colors"
+                  >
+                    <Layers className="h-4 w-4 text-primary" />
+                    <div className="text-left">
+                      <div className="font-medium">Subcategory</div>
+                      <div className="text-xs text-muted-foreground">Under a parent category</div>
+                    </div>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
@@ -163,7 +220,7 @@ export default function AdminCategoriesPage() {
                     )}
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => openModal("edit", item)} aria-label="Edit" title="Edit"
+                        <button onClick={() => openEditModal(item)} aria-label="Edit" title="Edit"
                           className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
                           <Edit2 className="h-4 w-4" />
                         </button>
@@ -181,6 +238,7 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
 
+      {/* ═══ Create / Edit Modal ═══ */}
       <AnimatePresence>
         {modalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -188,10 +246,14 @@ export default function AdminCategoriesPage() {
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
               className="relative w-full max-w-md bg-card/60 glass-card rounded-2xl shadow-xl overflow-hidden border border-border">
               <div className="p-6">
-                <h2 className="text-xl font-semibold mb-1">{modalMode === "create" ? "Add" : "Edit"} {view === "categories" ? "Category" : "Subcategory"}</h2>
-                <p className="text-sm text-muted-foreground mb-6">Enter the details for this {view === "categories" ? "category" : "subcategory"}.</p>
+                <h2 className="text-xl font-semibold mb-1">
+                  {modalMode === "create" ? "Add" : "Edit"} {addType === "categories" ? "Category" : "Subcategory"}
+                </h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Enter the details for this {addType === "categories" ? "category" : "subcategory"}.
+                </p>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {view === "subcategories" && (
+                  {addType === "subcategories" && (
                     <div className="space-y-1.5">
                       <label className="block text-sm font-medium text-foreground">Parent Category</label>
                       <select value={formData.categoryId} onChange={e => setFormData(prev => ({ ...prev, categoryId: e.target.value }))}
@@ -201,8 +263,7 @@ export default function AdminCategoriesPage() {
                       </select>
                     </div>
                   )}
-                  <Input label="Name" value={formData.name} onChange={handleNameChange} placeholder="e.g. Antibiotics" required autoFocus />
-                  <Input label="Slug (URL Friendly)" value={formData.slug} onChange={e => setFormData(prev => ({ ...prev, slug: e.target.value }))} placeholder="e.g. antibiotics" required />
+                  <Input label="Name" value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Antibiotics" required autoFocus />
                   <div className="pt-4 flex justify-end gap-3">
                     <Button type="button" variant="ghost" onClick={closeModal}>Cancel</Button>
                     <Button type="submit" loading={createCat.isPending || updateCat.isPending || createSubCat.isPending || updateSubCat.isPending}>

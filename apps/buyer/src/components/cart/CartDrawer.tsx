@@ -87,7 +87,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                       exit={{ opacity: 0, x: -50 }}
                       className="flex gap-4"
                     >
-                      <div className="w-20 h-20 bg-gray-100 rounded-2xl flex-shrink-0" />
+                      <div className="w-20 h-20 bg-[#f1f6ea] rounded-2xl flex-shrink-0" />
                       <div className="flex-1 flex flex-col justify-between">
                         <div className="flex justify-between">
                           <h3 className="font-bold text-gray-900 leading-tight">{itemName}</h3>

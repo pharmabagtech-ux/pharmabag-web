@@ -136,7 +136,7 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
                       return (
                         <div key={item.id} className="flex items-center justify-between py-4 border-b border-gray-50 last:border-0">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-gray-100 rounded-xl" />
+                            <div className="w-12 h-12 bg-[#f1f6ea] rounded-2xl" />
                             <div>
                               <p className="font-bold text-gray-900">{itemName}</p>
                               <p className="text-xs text-gray-400 font-bold">Qty: {item.quantity}</p>

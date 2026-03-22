@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, ChevronRight, LayoutGrid, List } from 'lucide-react';
-import PremiumNavbar from '@/components/shared/PremiumNavbar';
+import Navbar from '@/components/landing/Navbar';
 import PremiumFooter from '@/components/shared/PremiumFooter';
 import PremiumProductCard from '@/components/shared/PremiumProductCard';
 import { SkeletonCard } from '@/components/shared/LoaderSkeleton';
@@ -22,8 +22,6 @@ export default function ProductsPage() {
   const { data: productsData, isLoading, isError } = useProducts({
     search: debouncedSearch,
     categoryId: selectedCategory || undefined,
-    minPrice: priceRange[0],
-    maxPrice: priceRange[1],
   });
 
   const { data: categoriesData } = useCategories();
@@ -31,48 +29,18 @@ export default function ProductsPage() {
   const products = productsData?.data ?? [];
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#cffaf6] via-[#f0fdf4] to-[#e0e7ff] relative overflow-hidden">
-      <PremiumNavbar />
+    <main className="min-h-screen bg-[#f2fcf6] relative overflow-hidden">
+      {/* Vibrant Glass Mesh Background Elements */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-cyan-300 rounded-full mix-blend-multiply filter blur-[120px] opacity-60 animate-pulse pointer-events-none" style={{ animationDuration: '8s' }}></div>
+      <div className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-[#e6fa64] rounded-full mix-blend-multiply filter blur-[150px] opacity-50 animate-pulse pointer-events-none" style={{ animationDuration: '10s', animationDelay: '2s' }}></div>
+      <div className="absolute top-[30%] right-[-10%] w-[40vw] h-[40vw] bg-[#9cf1d4] rounded-full mix-blend-multiply filter blur-[130px] opacity-40 scroll-smooth pointer-events-none"></div>
 
-      <div className="pt-32 pb-20 px-4 md:px-8 max-w-[1600px] mx-auto relative z-10 w-full">
-        {/* Top Bar with Breadcrumbs and Search */}
-        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 mb-10">
-          <div className="flex items-center gap-2 text-sm font-medium text-gray-600 flex-wrap">
-            <span className="cursor-pointer hover:text-black transition-colors">Home</span>
-            <ChevronRight className="w-4 h-4 opacity-50" />
-            <span className="cursor-pointer hover:text-black transition-colors">Products</span>
-            <ChevronRight className="w-4 h-4 opacity-50" />
-            <div className="flex items-center gap-1 font-bold text-black bg-white/50 px-2 py-1 rounded-md cursor-pointer ml-1">
-              <span>{selectedCategory ? categories.find((c: any) => c.slug === selectedCategory)?.name || 'ALL PRODUCTS' : 'ALL PRODUCTS'}</span>
-              <ChevronRight className="w-4 h-4 rotate-90" />
-            </div>
-            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest ml-4">
-              {products.length} Products
-            </span>
-          </div>
+<Navbar showUserActions={true} />
 
-          <div className="flex items-center gap-4 w-full xl:w-[480px]">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search for Brands, Products or manufacturers"
-                className="w-full h-12 bg-[#f4f7f2]/80 backdrop-blur-md border border-white/60 rounded-full pl-6 pr-12 text-sm text-gray-900 font-medium focus:ring-2 focus:ring-lime-300 outline-none transition-all"
-              />
-              <button className="absolute inset-y-0 right-4 flex items-center text-gray-400 hover:text-gray-900 transition-colors">
-                <Search className="w-5 h-5" />
-              </button>
-            </div>
-            <button className="p-3 bg-white/40 rounded-xl hover:bg-white/80 transition-colors border border-white/60">
-              <Filter className="w-5 h-5 text-gray-700" />
-            </button>
-          </div>
-        </div>
-
+      <div className="pt-24 pb-20 px-4 md:px-8 max-w-[1600px] mx-auto relative z-10 w-full">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Filters */}
-          <aside className="w-full lg:w-[260px] flex-shrink-0 space-y-6">
+          <aside className="w-full lg:w-[260px] flex-shrink-0 space-y-6 lg:mt-[100px]">
             {/* Filter by Price */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Filter By Price</h3>
@@ -82,21 +50,20 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            {/* Filter By Attributes */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
-              <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Filter By</h3>
-              <div className="space-y-4">
+              <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.15em] mb-6">Filter By</h3>
+              <div className="space-y-5">
                 <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="w-4 h-4 rounded border border-gray-300 group-hover:border-lime-500 transition-colors flex items-center justify-center"></div>
-                  <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">New Items</span>
+                  <div className="w-4 h-4 rounded-md border-2 border-gray-200 group-hover:border-lime-400 transition-colors flex items-center justify-center bg-white"></div>
+                  <span className="text-[13px] font-bold text-gray-500 group-hover:text-gray-900 transition-colors tracking-tight">New Items</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="w-4 h-4 rounded border border-gray-300 group-hover:border-lime-500 transition-colors flex items-center justify-center"></div>
-                  <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Best Selling</span>
+                  <div className="w-4 h-4 rounded-md border-2 border-gray-200 group-hover:border-lime-400 transition-colors flex items-center justify-center bg-white"></div>
+                  <span className="text-[13px] font-bold text-gray-500 group-hover:text-gray-900 transition-colors tracking-tight">Best Selling</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="w-4 h-4 rounded border border-gray-300 group-hover:border-lime-500 transition-colors flex items-center justify-center"></div>
-                  <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Discount Items</span>
+                  <div className="w-4 h-4 rounded-md border-2 border-gray-200 group-hover:border-lime-400 transition-colors flex items-center justify-center bg-white"></div>
+                  <span className="text-[13px] font-bold text-gray-500 group-hover:text-gray-900 transition-colors tracking-tight">Discount Items</span>
                 </label>
               </div>
             </div>
@@ -145,8 +112,43 @@ export default function ProductsPage() {
             </div>
           </aside>
 
-          {/* Product Grid */}
+          {/* Product Grid Container */}
           <div className="flex-1 w-full relative">
+            {/* Top Bar with Breadcrumbs and Search - SHIFTED RIGHT */}
+            <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 mb-10 mt-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-500 flex-wrap">
+                <span className="cursor-pointer hover:text-black transition-colors">Home</span>
+                <ChevronRight className="w-4 h-4 opacity-30" />
+                <span className="cursor-pointer hover:text-black transition-colors">Products</span>
+                <ChevronRight className="w-4 h-4 opacity-30" />
+                <div className="flex items-center gap-1 font-black text-gray-900 bg-white/60 px-4 py-2 rounded-full cursor-pointer ml-1 shadow-sm border border-white/40 group hover:bg-white transition-all">
+                  <span className="uppercase tracking-tight">{selectedCategory ? categories.find((c: any) => c.slug === selectedCategory)?.name || 'ALL PRODUCTS' : 'ALL PRODUCTS'}</span>
+                  <ChevronRight className="w-4 h-4 rotate-90 opacity-40 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-4">
+                  {products.length} Products
+                </span>
+              </div>
+
+              <div className="flex items-center gap-4 w-full xl:w-[520px]">
+                <div className="flex-1 relative group">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search for Brands, Products or manufacturers"
+                    className="w-full h-12 bg-white/60 backdrop-blur-md border border-white/60 rounded-full pl-6 pr-14 text-sm text-gray-900 font-bold placeholder:text-gray-400 focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all shadow-sm"
+                  />
+                  <button className="absolute inset-y-0 right-5 flex items-center text-gray-400 hover:text-gray-900 transition-colors">
+                    <Search className="w-5 h-5" strokeWidth={3} />
+                  </button>
+                </div>
+                <button className="p-3 bg-white/60 rounded-2xl hover:bg-white transition-all border border-white/60 shadow-sm group">
+                  <Filter className="w-5 h-5 text-gray-800 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
+                </button>
+              </div>
+            </div>
+
             <AnimatePresence mode="wait">
               {isLoading ? (
                 <motion.div

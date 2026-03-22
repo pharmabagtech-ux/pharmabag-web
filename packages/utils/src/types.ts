@@ -40,6 +40,7 @@ export interface User {
   storeName?: string;
   isActive?: boolean;
   isVerified?: boolean;
+  isOnVacation?: boolean;
   createdAt: string;
   updatedAt?: string;
 }
