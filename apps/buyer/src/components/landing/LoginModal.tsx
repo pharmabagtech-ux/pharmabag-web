@@ -63,6 +63,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   const handleVerifyOtp = async () => {
     const cleanPhone = sanitizePhone(phone);
+    console.log('Verifying OTP:', { phone: cleanPhone, otp });
     if (otp.length < 4) {
       toast('Please enter the OTP', 'error');
       return;
@@ -75,6 +76,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       onClose();
       window.location.href = '/products'; // Redirect to products after login
     } catch (error: any) {
+      console.error('Verify OTP failed:', error?.response?.data || error);
       toast(error?.response?.data?.message || 'Invalid OTP', 'error');
     } finally {
       setIsLoading(false);
