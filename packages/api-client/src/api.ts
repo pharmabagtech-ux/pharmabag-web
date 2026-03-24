@@ -56,12 +56,13 @@ export function getRefreshToken(): string | null {
 
 // Determine base URL dynamically
 function getBaseURL(): string {
+  const url = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
   if (typeof window !== 'undefined') {
     // Client-side: use the Next.js public env variable
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+    return url || 'http://localhost:3000/api';
   }
   // Server-side: fallback
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+  return url || 'http://localhost:3000/api';
 }
 
 // Create the Axios instance
