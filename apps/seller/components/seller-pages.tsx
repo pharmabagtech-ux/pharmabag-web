@@ -145,8 +145,8 @@ export function InventoryContent() {
                   </td>
                   <td className="px-5 py-4 text-sm text-muted-foreground">{item.minimumOrderQuantity ?? 1}</td>
                   <td className="px-5 py-4">
-                    <Badge variant={item.isEnabled ? "success" : "error"}>
-                      {item.isEnabled ? "Active" : "Disabled"}
+                    <Badge variant={item.isActive ? "success" : "error"}>
+                      {item.isActive ? "Active" : "Disabled"}
                     </Badge>
                   </td>
                 </motion.tr>

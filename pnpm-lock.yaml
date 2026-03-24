@@ -242,6 +242,9 @@ importers:
 
   packages/api-client:
     dependencies:
+      '@pharmabag/utils':
+        specifier: workspace:*
+        version: link:../utils
       axios:
         specifier: ^1.6.0
         version: 1.13.6

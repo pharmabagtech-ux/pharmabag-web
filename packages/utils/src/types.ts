@@ -30,6 +30,8 @@ export type ApprovalStatus =
   | 'rejected'
   | 'blocked';
 
+export type ProductStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export interface SellerProfile {
   verificationStatus?: string;
   businessName?: string;
@@ -80,8 +82,10 @@ export interface Product {
   sellerId?: string;
   sellerName?: string;
   discount?: number;
-  isEnabled?: boolean;
-  approvalStatus?: ApprovalStatus;
+  isActive?: boolean;
+  status?: ProductStatus;
+  approvalStatus?: ProductStatus;
+  rejectionReason?: string;
   category?: string;
   genericName?: string;
   gst?: number;

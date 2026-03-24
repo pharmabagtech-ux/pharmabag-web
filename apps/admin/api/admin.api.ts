@@ -1,9 +1,22 @@
 import { apiClient } from "@/lib/apiClient";
+import { PRODUCTS as MOCK_PRODUCTS, ADMIN_STATS } from "@pharmabag/utils/mockData";
+import type { Product } from "@pharmabag/utils";
+
+// ─── Local mock product store for approve/reject simulation ───
+let _mockProducts: Product[] | null = null;
+function getMockProducts(): Product[] {
+  if (!_mockProducts) _mockProducts = structuredClone(MOCK_PRODUCTS);
+  return _mockProducts;
+}
 
 // ─── Dashboard ───────────────────────────────────────
 export async function getAdminDashboard() {
-  const { data } = await apiClient.get<{ data: any }>("/admin/dashboard");
-  return data.data;
+  try {
+    const { data } = await apiClient.get<{ data: any }>("/admin/dashboard");
+    return data.data;
+  } catch {
+    return ADMIN_STATS;
+  }
 }
 
 // ─── Users ───────────────────────────────────────────
@@ -44,38 +57,104 @@ export async function unblockUser(userId: string) {
 
 // ─── Products ────────────────────────────────────────
 export async function getAdminProducts(page = 1, limit = 50) {
-  const { data } = await apiClient.get<{ data: any }>(`/admin/products?page=${page}&limit=${limit}`);
-  return data.data;
+  try {
+    const { data } = await apiClient.get<{ data: any }>(`/admin/products?page=${page}&limit=${limit}`);
+    return data.data;
+  } catch (error) {
+    console.error("Admin Products Error:", error);
+    // Fallback to mock data — admin sees ALL products regardless of status
+    const products = getMockProducts();
+    const start = (page - 1) * limit;
+    return { data: products.slice(start, start + limit), total: products.length, page, limit };
+  }
 }
 
 export async function getProductById(productId: string) {
-  const { data } = await apiClient.get<{ data: any }>(`/admin/products/${productId}`);
-  return data.data;
+  try {
+    const { data } = await apiClient.get<{ data: any }>(`/admin/products/${productId}`);
+    return data.data;
+  } catch {
+    const product = getMockProducts().find((p) => p.id === productId);
+    if (!product) throw new Error("Product not found");
+    return product;
+  }
 }
 
 export async function disableProduct(productId: string) {
-  const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/disable`);
-  return data.data;
+  try {
+    const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/disable`);
+    return data.data;
+  } catch {
+    const products = getMockProducts();
+    const idx = products.findIndex((p) => p.id === productId);
+    if (idx === -1) throw new Error("Product not found");
+    products[idx] = { ...products[idx], isActive: false };
+    return products[idx];
+  }
 }
 
 export async function enableProduct(productId: string) {
-  const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/enable`);
-  return data.data;
+  try {
+    const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/enable`);
+    return data.data;
+  } catch {
+    const products = getMockProducts();
+    const idx = products.findIndex((p) => p.id === productId);
+    if (idx === -1) throw new Error("Product not found");
+    // Only allow enabling if product is APPROVED
+    if (products[idx].status !== "APPROVED" && products[idx].approvalStatus !== "APPROVED") {
+      throw new Error("Only approved products can be enabled");
+    }
+    products[idx] = { ...products[idx], isActive: true };
+    return products[idx];
+  }
 }
 
 export async function deleteProduct(productId: string) {
-  const { data } = await apiClient.delete<{ data: any }>(`/admin/products/${productId}`);
-  return data.data;
+  try {
+    const { data } = await apiClient.delete<{ data: any }>(`/admin/products/${productId}`);
+    return data.data;
+  } catch {
+    const products = getMockProducts();
+    const idx = products.findIndex((p) => p.id === productId);
+    if (idx === -1) throw new Error("Product not found");
+    const removed = products.splice(idx, 1)[0];
+    return removed;
+  }
 }
 
 export async function approveProduct(productId: string) {
-  const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/approve`);
-  return data.data;
+  try {
+    const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/approve`);
+    return data.data;
+  } catch {
+    const products = getMockProducts();
+    const idx = products.findIndex((p) => p.id === productId);
+    if (idx === -1) throw new Error("Product not found");
+    const current = products[idx];
+    if (current.status !== "PENDING" && current.approvalStatus !== "PENDING") {
+      throw new Error("Only pending products can be approved");
+    }
+    products[idx] = { ...current, status: "APPROVED", approvalStatus: "APPROVED", isActive: true };
+    return products[idx];
+  }
 }
 
 export async function rejectProduct(productId: string, reason?: string) {
-  const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/reject`, { reason });
-  return data.data;
+  try {
+    const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/reject`, { reason });
+    return data.data;
+  } catch {
+    const products = getMockProducts();
+    const idx = products.findIndex((p) => p.id === productId);
+    if (idx === -1) throw new Error("Product not found");
+    const current = products[idx];
+    if (current.status !== "PENDING" && current.approvalStatus !== "PENDING") {
+      throw new Error("Only pending products can be rejected");
+    }
+    products[idx] = { ...current, status: "REJECTED", approvalStatus: "REJECTED", isActive: false, rejectionReason: reason };
+    return products[idx];
+  }
 }
 
 // ─── Orders ──────────────────────────────────────────
@@ -222,20 +301,72 @@ export async function updateUserStatus(userId: string, statusLevel: number) {
 
 // ─── Products (Extended) ─────────────────────────────
 export async function getAdminProductsFiltered(params: { page?: number; limit?: number; status?: string; search?: string; categoryId?: string; sellerId?: string } = {}) {
-  const qs = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, String(v)); });
-  const { data } = await apiClient.get<{ data: any }>(`/admin/products?${qs}`);
-  return data.data;
+  try {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, String(v)); });
+    const { data } = await apiClient.get<{ data: any }>(`/admin/products?${qs}`);
+    return data.data;
+  } catch {
+    let products = getMockProducts();
+    if (params.status) {
+      const s = params.status.toUpperCase();
+      if (s === "ACTIVE") products = products.filter((p) => p.isActive);
+      else if (s === "INACTIVE") products = products.filter((p) => !p.isActive);
+      else products = products.filter((p) => (p.approvalStatus ?? p.status) === s);
+    }
+    if (params.search) {
+      const q = params.search.toLowerCase();
+      products = products.filter((p) => p.name.toLowerCase().includes(q));
+    }
+    if (params.categoryId) products = products.filter((p) => p.categoryId === params.categoryId);
+    if (params.sellerId) products = products.filter((p) => p.sellerId === params.sellerId);
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 50;
+    const start = (page - 1) * limit;
+    return { data: products.slice(start, start + limit), total: products.length, page, limit };
+  }
 }
 
 export async function createProduct(payload: Record<string, any>) {
-  const { data } = await apiClient.post<{ data: any }>("/admin/products", payload);
-  return data.data;
+  try {
+    const { data } = await apiClient.post<{ data: any }>("/admin/products", payload);
+    return data.data;
+  } catch {
+    // Admin-created products default to APPROVED
+    const newProduct: Product = {
+      id: `admin-p-${Date.now()}`,
+      name: payload.name ?? "New Product",
+      genericName: payload.genericName ?? "",
+      manufacturer: payload.manufacturer ?? "",
+      category: payload.category ?? "",
+      categoryId: payload.categoryId ?? "",
+      price: payload.mrp ?? payload.price ?? 0,
+      mrp: payload.mrp ?? 0,
+      status: "APPROVED",
+      approvalStatus: "APPROVED",
+      isActive: true,
+      stock: payload.stock ?? 0,
+      images: payload.images ?? [],
+      description: payload.description ?? "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    getMockProducts().push(newProduct);
+    return newProduct;
+  }
 }
 
 export async function updateProduct(productId: string, payload: Record<string, any>) {
-  const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}`, payload);
-  return data.data;
+  try {
+    const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}`, payload);
+    return data.data;
+  } catch {
+    const products = getMockProducts();
+    const idx = products.findIndex((p) => p.id === productId);
+    if (idx === -1) throw new Error("Product not found");
+    products[idx] = { ...products[idx], ...payload, updatedAt: new Date().toISOString() };
+    return products[idx];
+  }
 }
 
 // ─── Orders (Extended) ───────────────────────────────

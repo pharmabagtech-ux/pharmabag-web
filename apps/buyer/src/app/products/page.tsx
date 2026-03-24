@@ -24,35 +24,27 @@ export default function ProductsPage() {
   
   const debouncedSearch = useDebounce(searchTerm, 500);
   
-  // MOCKED API CALLS for preview
-  const productsData = { data: [], total: 0 };
-  const categoriesData: any[] = [];
-  const manufacturersData: any[] = [];
-  const citiesData: any[] = [];
-  
+  // Real API calls with mock fallbacks (only APPROVED products are returned)
+  const { data: productsData, isLoading, isError } = useProducts({
+    page,
+    limit: 24,
+    search: debouncedSearch || undefined,
+    categoryId: selectedCategory ?? undefined,
+    manufacturer: selectedManufacturer ?? undefined,
+    minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
+    maxPrice: priceRange[1] < 10000 ? priceRange[1] : undefined,
+  });
+  const { data: categoriesData } = useCategories();
+  const { data: manufacturersData } = useManufacturers();
+  const { data: citiesData } = useCities();
+
   const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.data ?? [];
-  const manufacturers = manufacturersData ?? [];
-  const cities = citiesData ?? [];
-  
-  // Dummy data — all start with 0 items in cart
-  const DUMMY_PRODUCTS = [
-    { id: '1', name: 'Ozempic Glycosesd..', price: 3345.53, mrp: 3345.53, image: '/products/pharma_bottle.png', moq: 162, ptr: 3345.53, discountTag: '15% Off (9+0)', rateLabel: 'N. RATE' },
-    { id: '2', name: 'Ozempic Glycosesd..', price: 3345.53, mrp: 3345.53, image: '/products/pharma_bottle.png', moq: 171, ptr: 3345.53, discountTag: '15% Off (9+0)', rateLabel: 'N. RATE' },
-    { id: '3', name: 'Ozempic Glycosesd..', price: 3345.53, mrp: 3345.53, image: '/products/pharma_bottle.png', moq: 3, ptr: 3345.53, discountTag: '15% Off (9+0)', rateLabel: 'N. RATE' },
-    { id: '4', name: 'Ozempic Glycosesd..', price: 3345.53, mrp: 3345.53, image: '/products/pharma_bottle.png', moq: 66, ptr: 3345.53, discountTag: '15% Off (9+0)', rateLabel: 'PTR' },
-    { id: '5', name: 'Ozempic Glycosesd..', price: 3345.53, mrp: 3345.53, image: '/products/pharma_bottle.png', moq: 71, ptr: 3345.53, discountTag: '15% Off (9+0)', rateLabel: 'PTR', infoIcon: true },
-    { id: '6', name: 'Ozempic Glycosesd..', price: 3345.53, mrp: 3345.53, image: '/products/pharma_bottle.png', moq: 87, ptr: 3345.53, discountTag: '15% Off (9+0)', rateLabel: 'PTR', infoIcon: true },
-    { id: '7', name: 'Ozempic Glycosesd..', price: 3345.53, mrp: 3345.53, image: '/products/pharma_bottle.png', moq: 162, ptr: 3345.53, discountTag: '15% Off (9+0)', rateLabel: 'N. RATE' },
-    { id: '8', name: 'Ozempic Glycosesd..', price: 3345.53, mrp: 3345.53, image: '/products/pharma_bottle.png', moq: 171, ptr: 3345.53, discountTag: '15% Off (9+0)', rateLabel: 'N. RATE' },
-  ];
+  const manufacturers = Array.isArray(manufacturersData) ? manufacturersData : [];
+  const cities = Array.isArray(citiesData) ? citiesData : [];
 
-  const products = DUMMY_PRODUCTS;
-  const totalProducts = DUMMY_PRODUCTS.length;
-  const totalPages = 1;
-
-  // Override loading to false for dummy data preview
-  const isLoading = false;
-  const isError = false;
+  const products = productsData?.data ?? [];
+  const totalProducts = productsData?.total ?? 0;
+  const totalPages = Math.ceil(totalProducts / 24) || 1;
 
   return (
     <main className="min-h-screen bg-[#f2fcf6] relative overflow-hidden">
@@ -195,7 +187,7 @@ export default function ProductsPage() {
                   <ChevronRight className="w-4 h-4 rotate-90 opacity-40 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-4">
-                  123 Products
+                  {totalProducts} Products
                 </span>
               </div>
 
@@ -271,26 +263,30 @@ export default function ProductsPage() {
                   key="grid"
                   className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5 gap-y-8"
                 >
-                  {products.map((product: any, idx: number) => (
-                    <div
-                      key={product.id}
-                    >
-                      <PremiumProductCard
-                        name={product.name}
-                        price={product.price || product.mrp || 0}
-                        mrp={product.mrp}
-                        image={product.image || (product.images && product.images.length > 0 ? product.images[0].url : '/product_placeholder.png')}
-                        moq={product.moq || product.minimumOrderQuantity || 1}
-                        ptr={product.ptr}
-                        discountTag={product.discountTag || product.discountMeta?.tag}
-                        cartQuantity={product.cartQuantity}
-                        plusColor={product.plusColor}
-                        rateLabel={product.rateLabel}
-                        infoIcon={product.infoIcon}
-                        onClick={() => window.location.href = `/products/${product.id}`}
-                      />
-                    </div>
-                  ))}
+                  {products.map((product: any) => {
+                    const image = product.image
+                      || (product.images && product.images.length > 0
+                        ? (typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url)
+                        : '/product_placeholder.png');
+                    return (
+                      <div key={product.id}>
+                        <PremiumProductCard
+                          name={product.name}
+                          price={product.sellingPrice || product.price || product.mrp || 0}
+                          mrp={product.mrp}
+                          image={image}
+                          moq={product.moq || product.minimumOrderQuantity || 1}
+                          ptr={product.ptr}
+                          discountTag={product.discountTag || product.discountMeta?.tag}
+                          cartQuantity={product.cartQuantity}
+                          plusColor={product.plusColor}
+                          rateLabel={product.rateLabel || (product.ptr ? 'PTR' : 'N. RATE')}
+                          infoIcon={product.infoIcon}
+                          onClick={() => window.location.href = `/products/${product.id}`}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </AnimatePresence>

@@ -3,7 +3,7 @@ import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { OrderStatus, ApprovalStatus } from "@pharmabag/utils";
+import type { OrderStatus, ApprovalStatus, ProductStatus } from "@pharmabag/utils";
 
 /* Button */
 interface BtnProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -48,10 +48,11 @@ export function OrderStatusBadge({ status }: { status: OrderStatus }) {
   return <Badge variant={variant}><span className="h-1.5 w-1.5 rounded-full bg-current"/>{label}</Badge>;
 }
 
-export function ApprovalBadge({ status }: { status: ApprovalStatus }) {
-  const m: Partial<Record<ApprovalStatus,{label:string;variant:BadgeProps["variant"]}>> = {
+export function ApprovalBadge({ status }: { status: ApprovalStatus | ProductStatus }) {
+  const m: Partial<Record<string,{label:string;variant:BadgeProps["variant"]}>> = {
     pending:{label:"Pending Review",variant:"warning"}, approved:{label:"Approved",variant:"success"}, rejected:{label:"Rejected",variant:"error"},
     PENDING:{label:"Pending Review",variant:"warning"}, APPROVED:{label:"Approved",variant:"success"}, REJECTED:{label:"Rejected",variant:"error"},
+    DRAFT:{label:"Draft",variant:"default"},
   };
   const { label, variant } = m[status] ?? { label: status, variant: "default" as const };
   return <Badge variant={variant}><span className="h-1.5 w-1.5 rounded-full bg-current"/>{label}</Badge>;

@@ -7,6 +7,7 @@ export type {
   Payout,
   OrderStatus,
   ApprovalStatus,
+  ProductStatus,
   DiscountType,
   DiscountDetails,
   ProductPayload,

@@ -3,7 +3,7 @@ import { forwardRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { OrderStatus, ApprovalStatus } from "@pharmabag/utils";
+import type { OrderStatus, ApprovalStatus, ProductStatus } from "@pharmabag/utils";
 
 export const Button = forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary"|"secondary"|"ghost"|"outline"|"danger"|"warning";
@@ -51,10 +51,11 @@ export function StatusBadge({ status }: { status: OrderStatus }) {
   return <Badge variant={entry.v}><span className="h-1.5 w-1.5 rounded-full bg-current"/>{entry.l}</Badge>;
 }
 
-export function ApprovalBadge({ status }: { status: ApprovalStatus }) {
-  const m: Partial<Record<ApprovalStatus,{l:string;v:BadgeProps["variant"]}>> = {
+export function ApprovalBadge({ status }: { status: ApprovalStatus | ProductStatus }) {
+  const m: Partial<Record<string,{l:string;v:BadgeProps["variant"]}>> = {
     pending:{l:"Pending Review",v:"warning"}, approved:{l:"Approved",v:"success"}, rejected:{l:"Rejected",v:"error"},
     PENDING:{l:"Pending Review",v:"warning"}, APPROVED:{l:"Approved",v:"success"}, REJECTED:{l:"Rejected",v:"error"},
+    DRAFT:{l:"Draft",v:"default"},
   };
   const entry = m[status] ?? { l: status, v: "default" as const };
   return <Badge variant={entry.v}><span className="h-1.5 w-1.5 rounded-full bg-current"/>{entry.l}</Badge>;
