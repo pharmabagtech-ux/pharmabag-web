@@ -1,7 +1,8 @@
 "use client";
 import React, { useRef, useState } from "react";
-import { UploadCloud, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { UploadCloud, X, Loader2, Image as ImageIcon, Link as LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Input } from "../ui";
 
 interface Props {
   value: string[];
@@ -12,6 +13,8 @@ interface Props {
 
 export function ImageUploader({ value = [], onChange, error, maxFiles = 5 }: Props) {
   const [isUploading, setIsUploading] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const simulateUpload = (file: File): Promise<string> => {
@@ -60,8 +63,61 @@ export function ImageUploader({ value = [], onChange, error, maxFiles = 5 }: Pro
     onChange(newArr);
   };
 
+  const handleAddUrl = () => {
+    if (!imageUrl.trim()) {
+      alert("Please enter a valid image URL");
+      return;
+    }
+    if (value.length >= maxFiles) {
+      alert(`You can only upload up to ${maxFiles} images.`);
+      return;
+    }
+    onChange([...value, imageUrl.trim()]);
+    setImageUrl("");
+    setShowUrlInput(false);
+  };
+
   return (
     <div className="space-y-3">
+      {/* Toggle buttons */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => !isUploading && fileInputRef.current?.click()}
+          className="flex-1 px-3 py-2 rounded-lg text-sm font-medium border border-border hover:bg-accent/60 transition-colors"
+        >
+          📁 Upload Files
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowUrlInput(!showUrlInput)}
+          className="flex-1 px-3 py-2 rounded-lg text-sm font-medium border border-border hover:bg-accent/60 transition-colors flex items-center justify-center gap-2"
+        >
+          <LinkIcon className="h-4 w-4" /> Paste URL
+        </button>
+      </div>
+
+      {/* URL Input */}
+      {showUrlInput && (
+        <div className="flex gap-2">
+          <Input
+            type="url"
+            placeholder="https://example.com/image.jpg"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleAddUrl()}
+          />
+          <button
+            type="button"
+            onClick={handleAddUrl}
+            className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap"
+          >
+            Add
+          </button>
+        </div>
+      )}
+
+      {/* Upload Dropzone */}
       <div 
         onClick={() => !isUploading && fileInputRef.current?.click()}
         className={cn(

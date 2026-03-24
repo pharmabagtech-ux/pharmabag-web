@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSellerAuth } from "@/store";
+import { useSellerMe } from "@/hooks/useSeller";
 import { Loader2, ShieldAlert, Store } from "lucide-react";
 import { SellerSidebar } from "./sidebar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,12 +14,22 @@ function getVerificationStatus(user: any): string {
 }
 
 export function SellerGuard({ children }: { children: React.ReactNode }) {
-  const { user, isAuth } = useSellerAuth();
+  const { user, isAuth, setUser } = useSellerAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  const { data: serverUser } = useSellerMe(mounted && isAuth);
+
+  useEffect(() => {
+    const sUser = serverUser as any;
+    const lUser = user as any;
+    if (sUser && sUser.sellerProfile?.verificationStatus !== lUser?.sellerProfile?.verificationStatus) {
+      setUser(serverUser || null);
+    }
+  }, [serverUser, user, setUser]);
 
   useEffect(() => {
     if (!mounted) return;
