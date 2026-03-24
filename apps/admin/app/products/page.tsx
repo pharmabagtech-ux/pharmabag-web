@@ -1,32 +1,58 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
+import { Search, CheckCircle, XCircle, Trash2, Eye, ShieldCheck, ShieldX } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button, Input, Badge, Pagination } from "@/components/ui";
 import { formatCurrency } from "@pharmabag/utils";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { useAdminProducts, useUpdateProductStatus, useDeleteProduct } from "@/hooks/useAdmin";
+import { useAdminProducts, useUpdateProductStatus, useDeleteProduct, useApproveProduct, useRejectProduct } from "@/hooks/useAdmin";
 
 export default function AdminProductsPage() {
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
+  const [filter, setFilter] = useState<"all" | "active" | "inactive" | "pending">("all");
   const [page, setPage] = useState(1);
   const limit = 20;
   const { data: productsData, isLoading } = useAdminProducts(page, limit);
   const productToggle = useUpdateProductStatus();
   const productDelete = useDeleteProduct();
+  const productApprove = useApproveProduct();
+  const productReject = useRejectProduct();
 
   // Backend returns { data: [...], total: ... }
   const products: any[] = Array.isArray(productsData) ? productsData : (productsData?.data ?? []);
   const totalProducts = productsData?.total ?? products.length;
   const totalPages = Math.max(1, Math.ceil(totalProducts / limit));
 
-  const filtered = products.filter((p: any) =>
-    (filter === "all" || (filter === "active" ? p.isActive : !p.isActive)) &&
-    (!search || (p.name ?? "").toLowerCase().includes(search.toLowerCase()) || (p.manufacturer ?? "").toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = products.filter((p: any) => {
+    const matchesSearch = !search || (p.name ?? "").toLowerCase().includes(search.toLowerCase()) || (p.manufacturer ?? "").toLowerCase().includes(search.toLowerCase());
+    if (!matchesSearch) return false;
+    if (filter === "all") return true;
+    if (filter === "pending") return p.approvalStatus === "PENDING" || p.approvalStatus === "pending";
+    if (filter === "active") return p.isActive;
+    return !p.isActive;
+  });
+
+  const handleApprove = async (id: string, name: string) => {
+    try {
+      await productApprove.mutateAsync(id);
+      toast.success(`"${name}" approved`);
+    } catch {
+      toast.error(`Failed to approve "${name}"`);
+    }
+  };
+
+  const handleReject = async (id: string, name: string) => {
+    const reason = window.prompt(`Reason for rejecting "${name}":`);
+    if (reason === null) return;
+    try {
+      await productReject.mutateAsync({ productId: id, reason: reason || undefined });
+      toast.success(`"${name}" rejected`);
+    } catch {
+      toast.error(`Failed to reject "${name}"`);
+    }
+  };
 
   const toggleStatus = async (id: string, name: string, isActive: boolean) => {
     try {
@@ -73,9 +99,9 @@ export default function AdminProductsPage() {
             <Input placeholder="Search products…" value={search} onChange={e => setSearch(e.target.value)} leftIcon={<Search className="h-4 w-4" />} />
           </div>
           <div className="flex gap-1.5" role="group" aria-label="Filter by status">
-            {(["all", "active", "inactive"] as const).map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                className={cn("px-3 py-2 rounded-xl text-xs font-medium border transition-all capitalize", filter === f ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:bg-accent/60")}>{f}</button>
+            {(["all", "pending", "active", "inactive"] as const).map(f => (
+              <button key={f} onClick={() => { setFilter(f); setPage(1); }}
+                className={cn("px-3 py-2 rounded-xl text-xs font-medium border transition-all capitalize", filter === f ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:bg-accent/60")}>{f === "pending" ? "Pending Approval" : f}</button>
             ))}
           </div>
         </div>
@@ -85,14 +111,14 @@ export default function AdminProductsPage() {
             <table className="w-full" aria-label="Products">
               <thead>
                 <tr className="border-b border-border/50 bg-muted/20">
-                  {["Product", "Manufacturer", "Category", "MRP", "Stock", "Expiry", "Min Qty", "Max Qty", "Status", "Actions"].map(h => (
+                  {["Product", "Manufacturer", "Category", "MRP", "Stock", "Expiry", "Min Qty", "Max Qty", "Approval", "Status", "Actions"].map(h => (
                     <th key={h} scope="col" className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={10} className="py-12 text-center text-sm text-muted-foreground">No products found</td></tr>
+                  <tr><td colSpan={11} className="py-12 text-center text-sm text-muted-foreground">No products found</td></tr>
                 ) : filtered.map((p: any, i: number) => (
                   <motion.tr key={p.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="hover:bg-accent/30 transition-colors">
                     <td className="px-5 py-4">
@@ -119,6 +145,24 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="px-5 py-4 text-sm text-muted-foreground">{p.minimumOrderQuantity ?? 1}</td>
                     <td className="px-5 py-4 text-sm text-muted-foreground">{p.maximumOrderQuantity ?? "—"}</td>
+                    <td className="px-5 py-4">
+                      {(p.approvalStatus === "PENDING" || p.approvalStatus === "pending") ? (
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => void handleApprove(p.id, p.name)} aria-label="Approve" title="Approve"
+                            className="h-7 w-7 rounded-lg flex items-center justify-center text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                          </button>
+                          <button onClick={() => void handleReject(p.id, p.name)} aria-label="Reject" title="Reject"
+                            className="h-7 w-7 rounded-lg flex items-center justify-center text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                            <ShieldX className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <Badge variant={p.approvalStatus === "APPROVED" || p.approvalStatus === "approved" ? "success" : p.approvalStatus === "REJECTED" || p.approvalStatus === "rejected" ? "error" : "default"}>
+                          {p.approvalStatus ?? "APPROVED"}
+                        </Badge>
+                      )}
+                    </td>
                     <td className="px-5 py-4">
                       <Badge variant={p.isActive ? "success" : "error"}>{p.isActive ? "Active" : "Disabled"}</Badge>
                     </td>

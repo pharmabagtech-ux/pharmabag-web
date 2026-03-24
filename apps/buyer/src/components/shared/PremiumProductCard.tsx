@@ -23,9 +23,9 @@ export default function PremiumProductCard({
   price, 
   mrp,
   image, 
-  moq = 162,
+  moq = 1,
   ptr,
-  discountTag = "15% Off (9+0)",
+  discountTag,
   isBookmarked = false,
   onBookmark,
   onClick 
@@ -62,9 +62,11 @@ export default function PremiumProductCard({
       {/* Top Section */}
       <div className="relative w-full h-[180px] flex items-center justify-center p-4 pt-10">
         {/* Top Left Discount Tag - Pill shape attached to top-left */}
-        <div className="absolute top-0 left-0 bg-white px-3 py-1.5 text-[10px] font-black text-gray-800 rounded-br-2xl border-b border-r border-gray-100 z-10 shadow-sm">
-          {discountTag}
-        </div>
+        {discountTag && (
+          <div className="absolute top-0 left-0 bg-white px-3 py-1.5 text-[10px] font-black text-gray-800 rounded-br-2xl border-b border-r border-gray-100 z-10 shadow-sm">
+            {discountTag}
+          </div>
+        )}
         
         {/* Share Icon */}
         <button 

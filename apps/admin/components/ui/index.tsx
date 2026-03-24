@@ -43,7 +43,8 @@ export function StatusBadge({ status }: { status: OrderStatus }) {
     pending:{l:"Pending",v:"warning"}, confirmed:{l:"Confirmed",v:"info"}, processing:{l:"Processing",v:"purple"},
     shipped:{l:"Shipped",v:"info"}, delivered:{l:"Delivered",v:"success"}, cancelled:{l:"Cancelled",v:"error"},
     PLACED:{l:"Placed",v:"warning"}, ACCEPTED:{l:"Accepted",v:"info"},
-    SHIPPED:{l:"Shipped",v:"info"}, DELIVERED:{l:"Delivered",v:"success"},
+    SHIPPED:{l:"Shipped",v:"info"}, OUT_FOR_DELIVERY:{l:"Out for Delivery",v:"purple"},
+    DELIVERED:{l:"Delivered",v:"success"},
     CANCELLED:{l:"Cancelled",v:"error"}, RETURNED:{l:"Returned",v:"error"},
   };
   const entry = m[status] ?? { l: status, v: "default" as const };

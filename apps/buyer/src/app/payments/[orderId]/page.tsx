@@ -9,6 +9,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePaymentByOrderId, useUploadPaymentProof } from '@/hooks/usePayments';
 import { useUploadPaymentProofFile } from '@/hooks/useStorage';
+import AuthGuard from '@/components/shared/AuthGuard';
 
 export default function PaymentIdPage({ params }: { params: { orderId: string } }) {
   const [file, setFile] = useState<File | null>(null);
@@ -53,6 +54,7 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
   const hasProof = !!payment?.proofUrl;
 
   return (
+    <AuthGuard>
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
@@ -241,5 +243,6 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
 
       <Footer />
     </main>
+    </AuthGuard>
   );
 }

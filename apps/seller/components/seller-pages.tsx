@@ -12,6 +12,7 @@ import {
   useSellerProducts, 
   useSellerSettlements, 
   useSellerSettlementSummary,
+  useRequestPayout,
   useSellerCustomOrders,
   useSellerCancelledOrders,
   useSellerDashboard,
@@ -227,6 +228,7 @@ export function AnalyticsContent() {
 export function PayoutsContent() {
   const { data: payouts, isLoading: loadingPayouts } = useSellerSettlements();
   const { data: summary, isLoading: loadingSummary } = useSellerSettlementSummary();
+  const requestPayout = useRequestPayout();
   
   const payoutHistory: any[] = payouts || [];
   const stats = summary || { balance: 0, paid: 0, pending: 0 };
@@ -237,7 +239,7 @@ export function PayoutsContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="font-semibold text-2xl text-foreground">Payouts</h1><p className="text-sm text-muted-foreground mt-0.5">Track your earnings and payouts</p></div>
-        <Button leftIcon={<CreditCard className="h-4 w-4"/>} onClick={() => { import("react-hot-toast").then(({default: toast}) => toast.success("Payout request submitted! You will receive it within 3-5 business days.")); }}>Request Payout</Button>
+        <Button leftIcon={<CreditCard className="h-4 w-4"/>} disabled={requestPayout.isPending || (stats.balance || 0) <= 0} onClick={() => { requestPayout.mutate(undefined, { onSuccess: () => { import("react-hot-toast").then(({default: toast}) => toast.success("Payout request submitted! You will receive it within 3-5 business days.")); }, onError: (err: any) => { import("react-hot-toast").then(({default: toast}) => toast.error(err?.response?.data?.message || "Failed to request payout")); } }); }}>{requestPayout.isPending ? "Requesting..." : "Request Payout"}</Button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard title="Available Balance" value={formatCurrency(stats.balance || 0)} change="Ready to withdraw" up icon={CreditCard} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0}/>

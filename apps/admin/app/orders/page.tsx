@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 const STATUS_FILTERS = [
   { label: "All", v: "all" },
   { label: "Placed", v: "PLACED" },
-  { label: "Confirmed", v: "CONFIRMED" },
+  { label: "Accepted", v: "ACCEPTED" },
   { label: "Shipped", v: "SHIPPED" },
   { label: "Delivered", v: "DELIVERED" },
   { label: "Cancelled", v: "CANCELLED" },
@@ -38,9 +38,10 @@ export default function AdminOrdersPage() {
 
   const handleOverride = async (orderId: string, currentStatus: string) => {
     const nextMap: Record<string, string> = {
-      PLACED: "CONFIRMED",
-      CONFIRMED: "SHIPPED",
-      SHIPPED: "DELIVERED",
+      PLACED: "ACCEPTED",
+      ACCEPTED: "SHIPPED",
+      SHIPPED: "OUT_FOR_DELIVERY",
+      OUT_FOR_DELIVERY: "DELIVERED",
     };
     const next = nextMap[currentStatus];
     if (!next) { toast.error("No next status available"); return; }
@@ -107,9 +108,9 @@ export default function AdminOrdersPage() {
                     <td className="px-5 py-4"><Badge variant={o.paymentStatus === "PAID" ? "success" : o.paymentStatus === "PENDING" ? "warning" : "error"}>{o.paymentStatus ?? "—"}</Badge></td>
                     <td className="px-5 py-4"><Badge variant={o.orderStatus === "DELIVERED" ? "success" : o.orderStatus === "PLACED" ? "warning" : o.orderStatus === "CANCELLED" ? "error" : "info"}>{o.orderStatus ?? "—"}</Badge></td>
                     <td className="px-5 py-4">
-                      {["PLACED", "CONFIRMED", "SHIPPED"].includes(o.orderStatus) && (
+                      {["PLACED", "ACCEPTED", "SHIPPED", "OUT_FOR_DELIVERY"].includes(o.orderStatus) && (
                         <button onClick={() => void handleOverride(o.id, o.orderStatus)} className="text-xs text-primary underline hover:text-primary/80">
-                          → {o.orderStatus === "PLACED" ? "Confirm" : o.orderStatus === "CONFIRMED" ? "Ship" : "Deliver"}
+                          → {o.orderStatus === "PLACED" ? "Accept" : o.orderStatus === "ACCEPTED" ? "Ship" : o.orderStatus === "SHIPPED" ? "Out for Delivery" : "Deliver"}
                         </button>
                       )}
                     </td>

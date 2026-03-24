@@ -9,6 +9,7 @@ import { useToast } from '@/components/shared/Toast';
 import { useBuyerProfile, useUpdateBuyerProfile, useCreateBuyerProfile } from '@/hooks/useBuyerProfile';
 import { useAuth } from '@pharmabag/api-client';
 import { useState } from 'react';
+import AuthGuard from '@/components/shared/AuthGuard';
 
 export default function ProfilePage() {
   const { data: profile, isLoading, isError } = useBuyerProfile();
@@ -147,6 +148,7 @@ export default function ProfilePage() {
   const fullAddress = [profile.address, profile.city, profile.state, profile.pincode].filter(Boolean).join(', ');
 
   return (
+    <AuthGuard>
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
@@ -315,5 +317,6 @@ export default function ProfilePage() {
 
       <Footer />
     </main>
+    </AuthGuard>
   );
 }

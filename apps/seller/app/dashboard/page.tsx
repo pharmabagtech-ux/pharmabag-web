@@ -12,8 +12,7 @@ import toast from "react-hot-toast";
 export default function SellerDashboard() {
   const { data: dashboardData, isLoading } = useSellerDashboard();
   const { user } = useSellerAuth();
-  const isDevUser = user?.id === "dev-seller";
-  const { data: profile } = useSellerProfile(!isDevUser);
+  const { data: profile } = useSellerProfile();
   const toggleVacation = useToggleVacationMode();
   const isOnVacation = user?.isOnVacation || (profile as any)?.isOnVacation || false;
   const sellerOrders: any[] = dashboardData?.overview?.orders || [];

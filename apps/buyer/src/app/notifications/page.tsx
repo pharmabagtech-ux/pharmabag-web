@@ -7,6 +7,8 @@ import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { SkeletonList } from '@/components/shared/LoaderSkeleton';
 import { useNotifications, useMarkAsRead, useMarkAllAsRead } from '@/hooks/useNotifications';
+import AuthGuard from '@/components/shared/AuthGuard';
+import { useRouter } from 'next/navigation';
 
 function formatTimeAgo(dateStr: string): string {
   try {
@@ -35,6 +37,13 @@ export default function NotificationsPage() {
   const { data, isLoading, isError } = useNotifications();
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
+  const router = useRouter();
+
+  const typeRoutes: Record<string, string> = {
+    order: '/orders',
+    payment: '/payments',
+    promotion: '/products',
+  };
 
   const notifications = data?.data ?? [];
   const unreadCount = data?.unreadCount ?? 0;
@@ -42,6 +51,7 @@ export default function NotificationsPage() {
 
 
   return (
+    <AuthGuard>
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
@@ -99,7 +109,11 @@ export default function NotificationsPage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
                     whileHover={{ x: 5 }}
-                    onClick={() => { if (!notif.isRead) markAsRead.mutate(notif.id); }}
+                    onClick={() => {
+                      if (!notif.isRead) markAsRead.mutate(notif.id);
+                      const route = typeRoutes[notif.type ?? ''];
+                      if (route) router.push(route);
+                    }}
                     className={`group flex items-center gap-6 p-6 rounded-[32px] border transition-all duration-300 cursor-pointer ${
                       notif.isRead 
                         ? 'bg-white/40 border-gray-100 hover:bg-white/60 shadow-sm' 
@@ -137,5 +151,6 @@ export default function NotificationsPage() {
 
       <Footer />
     </main>
+    </AuthGuard>
   );
 }

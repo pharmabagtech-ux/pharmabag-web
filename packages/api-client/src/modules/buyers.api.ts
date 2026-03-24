@@ -63,3 +63,38 @@ export async function updateBuyerProfile(input: UpdateBuyerProfileInput): Promis
   const { data } = await api.patch('/buyers/profile', input);
   return data;
 }
+
+// ─── Extended Buyer APIs ────────────────────────────
+
+export async function verifyPanGst(params: {
+  panNumber?: string;
+  gstNumber?: string;
+}): Promise<{ valid: boolean; name?: string; status?: string; message?: string }> {
+  const { data } = await api.post('/buyers/verify-documents', params);
+  return data;
+}
+
+export async function getBuyerCreditDetails(): Promise<{
+  creditLimit: number;
+  usedCredit: number;
+  availableCredit: number;
+  status: string; // normal | emi | credit
+  milestones: Array<{
+    id: string;
+    orderId: string;
+    amount: number;
+    dueDate: string;
+    status: string;
+  }>;
+}> {
+  const { data } = await api.get('/buyers/credit');
+  return data;
+}
+
+export async function getBuyerInvoices(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<{ data: Array<{ id: string; orderId: string; amount: number; url: string; createdAt: string }>; total: number }> {
+  const { data } = await api.get('/buyers/invoices', { params });
+  return data;
+}

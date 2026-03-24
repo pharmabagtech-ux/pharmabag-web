@@ -12,18 +12,6 @@ export type {
   ProductPayload,
 } from './types';
 
-// Mock data
-export {
-  SELLER_STATS,
-  ADMIN_STATS,
-  USERS,
-  PRODUCTS,
-  ORDERS,
-  INVENTORY,
-  PAYOUTS,
-  CHART_DATA,
-} from './mockData';
-
 // Currency formatting
 export { formatCurrency, parseCurrency, formatNumber, formatCompact } from './formatCurrency';
 

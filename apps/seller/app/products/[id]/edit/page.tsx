@@ -30,7 +30,7 @@ export default function EditProductPage() {
               productId={product.id} 
               defaultValues={{
                 product_name: product.name,
-                product_price: product.price,
+                product_price: product.mrp ?? product.price,
                 company_name: product.manufacturer || "",
                 chemical_combination: product.chemicalComposition || "",
                 categories: product.categoryId ? [product.categoryId] : [],

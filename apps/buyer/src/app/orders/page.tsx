@@ -10,6 +10,7 @@ import OrderCard from '@/components/shared/OrderCard';
 import { SkeletonList } from '@/components/shared/LoaderSkeleton';
 import Link from 'next/link';
 import { useOrders } from '@/hooks/useOrders';
+import AuthGuard from '@/components/shared/AuthGuard';
 
 const STATUS_FILTERS = ['ALL', 'PLACED', 'ACCEPTED', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 
@@ -26,6 +27,7 @@ export default function OrdersPage() {
   const orders = data?.data ?? [];
 
   return (
+    <AuthGuard>
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
 
@@ -138,5 +140,6 @@ export default function OrdersPage() {
 
       <Footer />
     </main>
+    </AuthGuard>
   );
 }

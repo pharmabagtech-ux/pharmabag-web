@@ -4,7 +4,7 @@ import { sendOtp, verifyOtp, getCurrentUser } from "@/api/auth.api";
 import {
   getAdminDashboard, getAdminUsers, getUserById, approveUser, rejectUser, blockUser, unblockUser,
   getBuyers, getSellers, updateUser, deleteUser, updateUserStatus,
-  getAdminProducts, getAdminProductsFiltered, getProductById, disableProduct, enableProduct, deleteProduct, createProduct, updateProduct,
+  getAdminProducts, getAdminProductsFiltered, getProductById, disableProduct, enableProduct, deleteProduct, createProduct, updateProduct, approveProduct, rejectProduct,
   getAdminOrders, getAdminOrdersFiltered, getOrderById, updateAdminOrderStatus, cancelOrder, getOrderInvoice,
   getPayments, confirmPayment, rejectPayment,
   getSettlements, markSettlementPaid, getSellerSettlements, createSettlement,
@@ -33,7 +33,7 @@ export function useVerifyAdminOtp() {
     onSuccess: (data) => {
       const inner = data.data ?? data;
       if (typeof window !== "undefined" && inner.accessToken) {
-        localStorage.setItem("pb_token", inner.accessToken);
+        localStorage.setItem("pb_access_token", inner.accessToken);
       }
       if (inner.user) setUser(inner.user);
       void queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
@@ -233,6 +233,22 @@ export function useUpdateProduct() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ productId, payload }: { productId: string; payload: Record<string, any> }) => updateProduct(productId, payload),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "products"] }),
+  });
+}
+
+export function useApproveProduct() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (productId: string) => approveProduct(productId),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "products"] }),
+  });
+}
+
+export function useRejectProduct() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productId, reason }: { productId: string; reason?: string }) => rejectProduct(productId, reason),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "products"] }),
   });
 }

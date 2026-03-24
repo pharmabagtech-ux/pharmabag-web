@@ -12,9 +12,9 @@ import toast from "react-hot-toast";
 
 const ORDER_STATUSES = [
   { key: "PLACED", label: "Placed", icon: Clock, color: "bg-yellow-500" },
-  { key: "CONFIRMED", label: "Confirmed", icon: CheckCircle, color: "bg-blue-500" },
-  { key: "PROCESSING", label: "Processing", icon: Package, color: "bg-purple-500" },
+  { key: "ACCEPTED", label: "Accepted", icon: CheckCircle, color: "bg-blue-500" },
   { key: "SHIPPED", label: "Shipped", icon: Truck, color: "bg-indigo-500" },
+  { key: "OUT_FOR_DELIVERY", label: "Out for Delivery", icon: Package, color: "bg-purple-500" },
   { key: "DELIVERED", label: "Delivered", icon: CheckCircle, color: "bg-green-500" },
 ];
 
@@ -73,7 +73,13 @@ export default function OrderDetailPage() {
     );
   }
 
-  const currentStatusIdx = ORDER_STATUSES.findIndex(s => s.key === order.orderStatus);
+  // Normalize legacy status values from backend
+  const normalizeStatus = (s: string) => {
+    const map: Record<string, string> = { CONFIRMED: "ACCEPTED", PROCESSING: "ACCEPTED", TRANSIT: "SHIPPED" };
+    return map[s] ?? s;
+  };
+  const normalizedStatus = normalizeStatus(order.orderStatus);
+  const currentStatusIdx = ORDER_STATUSES.findIndex(s => s.key === normalizedStatus);
   const items: any[] = order.items ?? order.orderItems ?? [];
   const isCancelled = order.orderStatus === "CANCELLED";
 

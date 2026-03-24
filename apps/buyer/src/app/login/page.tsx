@@ -11,9 +11,9 @@ import { useToast } from '@/components/shared/Toast';
 
 const TRUST_HIGHLIGHTS = [
   { label: 'Fastest Delivery' },
-  { label: 'Controlled Qality' },
+  { label: 'Controlled Quality' },
   { label: 'Only B2B rates' },
-  { label: '0 Torelence 2 Diplicay' },
+  { label: 'Zero Tolerance to Duplicacy' },
 ];
 
 export default function LoginPage() {
@@ -38,13 +38,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Dev bypass: Skip real OTP for this specific number
-    if (cleanPhone === '9831864222') {
-      setStep('otp');
-      toast('Dev Bypass: Use 123456', 'success');
-      return;
-    }
-
     setIsLoading(true);
     try {
       await sendOtp(cleanPhone);
@@ -66,14 +59,6 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // Dev bypass: skip real verifyOtp for the dev phone number
-      if (cleanPhone === '9831864222' && (otp === '123456' || otp === '1234')) {
-        toast('Login successful! (Dev Bypass)', 'success');
-        localStorage.setItem('pb_access_token', 'dev_bypass_token');
-        window.location.href = '/products';
-        return;
-      }
-
       await verifyOtp(cleanPhone, otp);
       toast('Login successful!', 'success');
       window.location.href = '/products';
@@ -120,9 +105,9 @@ export default function LoginPage() {
                   Pharma Bag
                 </h1>
                 <p className="text-3xl md:text-5xl font-normal text-black tracking-tight">
-                  Inida&apos;s Only <span className="font-bold text-black border-b-4 border-lime-300">Trusted</span>
+                  India&apos;s Only <span className="font-bold text-black border-b-4 border-lime-300">Trusted</span>
                 </p>
-                <p className="text-xl md:text-2xl font-medium text-black/40">B2B Pharma Pklatform</p>
+                <p className="text-xl md:text-2xl font-medium text-black/40">B2B Pharma Platform</p>
               </div>
             </div>
 

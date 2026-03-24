@@ -41,6 +41,7 @@ export function useUploadPaymentProof() {
       uploadPaymentProof(paymentId, proofUrl),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['payment'] });
     },
   });
 }

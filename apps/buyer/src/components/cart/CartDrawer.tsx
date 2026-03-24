@@ -4,21 +4,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Plus, Minus, Trash2, Loader2, ShoppingBag } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
 import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/hooks/useCart';
+import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { useToast } from '@/components/shared/Toast';
 import Link from 'next/link';
 
 export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { data: cart, isLoading, isError } = useCart();
+  const { data: config } = usePlatformConfig();
   const updateItem = useUpdateCartItem();
   const removeItem = useRemoveCartItem();
   const { toast } = useToast();
 
+  const gstRate = (config?.gst_rate ?? 12) / 100;
   const items = cart?.items ?? [];
   const subtotal = items.reduce((acc, item) => {
     const price = item.product?.price ?? item.price;
     return acc + price * item.quantity;
   }, 0);
-  const gst = Math.round(subtotal * 0.12);
+  const gst = Math.round(subtotal * gstRate);
   const total = subtotal + gst;
 
   return (
@@ -137,7 +140,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                     <span>₹{subtotal.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-sm font-medium text-gray-500">
-                    <span>GST (12%)</span>
+                    <span>GST ({config?.gst_rate ?? 12}%)</span>
                     <span>₹{gst.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-gray-100">
@@ -146,7 +149,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                   </div>
                 </div>
                 <Link
-                  href="/orders"
+                  href="/checkout"
                   onClick={onClose}
                   className="w-full py-4 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-2xl font-bold shadow-lg shadow-lime-200 transition-all block text-center"
                 >

@@ -15,8 +15,6 @@ export default function HeroSection() {
 
     setIsSearching(true);
     const debounceTimer = setTimeout(() => {
-      // Simulate search logic
-      console.log('Searching for:', searchTerm);
       setIsSearching(false);
     }, 500);
 

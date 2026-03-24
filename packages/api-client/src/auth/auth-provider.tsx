@@ -33,18 +33,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const rt = typeof window !== 'undefined' ? localStorage.getItem('pb_refresh_token') : null;
       
       if (token || rt) {
-        // Dev bypass: if token is dev_bypass_token, set a mock user without calling API
-        if (token === 'dev_bypass_token') {
-          setUser({
-            id: 'dev-user',
-            phone: '9831864222',
-            role: 'buyer',
-            email: 'dev@pharmabag.in',
-          });
-          setIsLoading(false);
-          return;
-        }
-
         try {
           const profile = await getProfile();
           setUser(profile);

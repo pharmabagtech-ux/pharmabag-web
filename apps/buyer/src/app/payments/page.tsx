@@ -8,6 +8,7 @@ import Footer from '@/components/landing/Footer';
 import { SkeletonList } from '@/components/shared/LoaderSkeleton';
 import Link from 'next/link';
 import { usePaymentHistory } from '@/hooks/usePayments';
+import AuthGuard from '@/components/shared/AuthGuard';
 
 function getPaymentStatusBadge(status: string) {
   const s = status.toUpperCase();
@@ -26,6 +27,7 @@ export default function PaymentsPage() {
   const pendingCount = payments.filter((p) => ['PENDING', 'PROCESSING'].includes(p.status.toUpperCase())).length;
 
   return (
+    <AuthGuard>
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
@@ -160,5 +162,6 @@ export default function PaymentsPage() {
 
       <Footer />
     </main>
+    </AuthGuard>
   );
 }

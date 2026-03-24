@@ -17,15 +17,28 @@ import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useCart } from '@/hooks/useCart';
 import { useCreateOrder } from '@/hooks/useOrders';
-import { useBuyerProfile } from '@/hooks/useBuyerProfile';
+import { useCreatePayment } from '@/hooks/usePayments';
+import { useBuyerProfile, useBuyerCreditDetails } from '@/hooks/useBuyerProfile';
 import { useToast } from '@/components/shared/Toast';
+import { usePlatformConfig } from '@/hooks/usePlatformConfig';
+import Image from 'next/image';
 import Link from 'next/link';
+import AuthGuard from '@/components/shared/AuthGuard';
+
+type PaymentMethod = 'cod' | 'online' | 'credit';
 
 export default function CheckoutPage() {
   const { data: cartData, isLoading: isCartLoading } = useCart();
   const { data: profileData } = useBuyerProfile();
+  const { data: creditData } = useBuyerCreditDetails();
   const { toast } = useToast();
   const createOrder = useCreateOrder();
+  const createPaymentMut = useCreatePayment();
+  const { data: platformConfig } = usePlatformConfig();
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
+
+  const credit = (creditData as any)?.data || creditData;
+  const isCreditEligible = credit?.status === 'active' && (credit?.availableCredit ?? 0) > 0;
   
   const [address, setAddress] = useState({
     name: '',
@@ -53,8 +66,11 @@ export default function CheckoutPage() {
   const cart = (cartData as any)?.data || cartData || { items: [], total: 0 };
   const items = cart.items ?? [];
   const subtotal = cart.total ?? 0;
-  const shipping = subtotal > 5000 ? 0 : 250;
-  const gst = subtotal * 0.12; // 12% GST example
+  const shippingThreshold = platformConfig?.shipping_threshold ?? 5000;
+  const shippingFee = platformConfig?.shipping_fee ?? 250;
+  const gstRate = (platformConfig?.gst_rate ?? 12) / 100;
+  const shipping = subtotal > shippingThreshold ? 0 : shippingFee;
+  const gst = subtotal * gstRate;
   const total = subtotal + shipping + gst;
 
   const handlePlaceOrder = () => {
@@ -63,10 +79,31 @@ export default function CheckoutPage() {
       return;
     }
 
-    createOrder.mutate(address, {
+    if (paymentMethod === 'credit') {
+      const availableCredit = credit?.availableCredit ?? 0;
+      if (total > availableCredit) {
+        toast(`Insufficient credit. Available: ₹${availableCredit.toLocaleString()}, Required: ₹${total.toLocaleString()}`, 'error');
+        return;
+      }
+    }
+
+    createOrder.mutate({ ...address, paymentMethod }, {
       onSuccess: (data: any) => {
         const orderId = data?.data?.id || data?.id;
-        window.location.href = `/orders/${orderId}?success=true`;
+        // Create payment record for the order
+        createPaymentMut.mutate(
+          { orderId, amount: total, method: paymentMethod },
+          {
+            onSuccess: () => {
+              window.location.href = `/orders/${orderId}?success=true`;
+            },
+            onError: () => {
+              // Payment record failed but order was created — redirect without success flag
+              toast('Order placed but payment recording failed. Please contact support.', 'error');
+              window.location.href = `/orders/${orderId}`;
+            },
+          }
+        );
       },
       onError: (error: any) => {
         toast(error?.message || 'Failed to place order', 'error');
@@ -87,6 +124,7 @@ export default function CheckoutPage() {
   }
 
   return (
+    <AuthGuard>
     <main className="min-h-screen bg-[#f8fbfa]">
       <Navbar showUserActions={true} />
 
@@ -191,31 +229,72 @@ export default function CheckoutPage() {
                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">Payment Method</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button className="flex items-center justify-between p-6 bg-white rounded-3xl border-2 border-lime-300 shadow-xl shadow-lime-900/5 group text-left">
+              <div className="grid grid-cols-1 gap-4">
+                {/* Cash on Delivery */}
+                <button
+                  onClick={() => setPaymentMethod('cod')}
+                  className={`flex items-center justify-between p-6 rounded-3xl border-2 text-left transition-all ${
+                    paymentMethod === 'cod'
+                      ? 'bg-white border-lime-300 shadow-xl shadow-lime-900/5'
+                      : 'bg-white/50 border-gray-100 hover:border-gray-200'
+                  }`}
+                >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-lime-50 rounded-xl flex items-center justify-center">
-                      <ShieldCheck className="w-5 h-5 text-lime-600" />
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${paymentMethod === 'cod' ? 'bg-lime-50' : 'bg-gray-50'}`}>
+                      <ShieldCheck className={`w-5 h-5 ${paymentMethod === 'cod' ? 'text-lime-600' : 'text-gray-400'}`} />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 leading-tight">Cash on Delivery</p>
+                      <p className={`font-bold leading-tight ${paymentMethod === 'cod' ? 'text-gray-900' : 'text-gray-600'}`}>Cash on Delivery</p>
                       <p className="text-xs font-medium text-gray-400 mt-0.5">Pay when you receive</p>
                     </div>
                   </div>
-                  <CheckCircle2 className="w-6 h-6 text-lime-500" />
+                  {paymentMethod === 'cod' && <CheckCircle2 className="w-6 h-6 text-lime-500" />}
                 </button>
 
-                <button disabled className="flex items-center justify-between p-6 bg-gray-50/50 rounded-3xl border border-gray-100 opacity-60 cursor-not-allowed text-left">
+                {/* Online Payment — disabled until payment gateway integration */}
+                <button
+                  disabled
+                  className="flex items-center justify-between p-6 rounded-3xl border-2 text-left transition-all bg-gray-50/50 border-gray-100 opacity-50 cursor-not-allowed"
+                >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50">
                       <CreditCard className="w-5 h-5 text-gray-400" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-400 leading-tight">Online Payment</p>
-                      <p className="text-xs font-medium text-gray-400 mt-0.5">Credit/Debit/UPI</p>
+                      <p className="font-bold leading-tight text-gray-400">Online Payment</p>
+                      <p className="text-xs font-medium text-gray-400 mt-0.5">Coming Soon — Credit/Debit Card, UPI, Net Banking</p>
                     </div>
                   </div>
-                  <AlertCircle className="w-5 h-5 text-gray-300" />
+                </button>
+
+                {/* Credit / EMI */}
+                <button
+                  onClick={() => isCreditEligible && setPaymentMethod('credit')}
+                  disabled={!isCreditEligible}
+                  className={`flex items-center justify-between p-6 rounded-3xl border-2 text-left transition-all ${
+                    paymentMethod === 'credit'
+                      ? 'bg-white border-lime-300 shadow-xl shadow-lime-900/5'
+                      : isCreditEligible
+                      ? 'bg-white/50 border-gray-100 hover:border-gray-200'
+                      : 'bg-gray-50/50 border-gray-100 opacity-50 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${paymentMethod === 'credit' ? 'bg-emerald-50' : 'bg-gray-50'}`}>
+                      <CreditCard className={`w-5 h-5 ${paymentMethod === 'credit' ? 'text-emerald-600' : 'text-gray-400'}`} />
+                    </div>
+                    <div>
+                      <p className={`font-bold leading-tight ${paymentMethod === 'credit' ? 'text-gray-900' : isCreditEligible ? 'text-gray-600' : 'text-gray-400'}`}>
+                        Credit / EMI
+                      </p>
+                      <p className="text-xs font-medium text-gray-400 mt-0.5">
+                        {isCreditEligible
+                          ? `Available credit: ₹${(credit.availableCredit ?? 0).toLocaleString('en-IN')}`
+                          : 'Not eligible — apply for credit in your profile'}
+                      </p>
+                    </div>
+                  </div>
+                  {paymentMethod === 'credit' && <CheckCircle2 className="w-6 h-6 text-lime-500" />}
                 </button>
               </div>
             </motion.div>
@@ -238,7 +317,7 @@ export default function CheckoutPage() {
                 {items.map((item: any) => (
                   <div key={item.id} className="flex gap-4">
                     <div className="w-16 h-16 bg-[#f1f6ea] rounded-2xl flex-shrink-0 relative overflow-hidden">
-                      <img src={item.productImage || '/product_placeholder.png'} alt={item.productName} className="object-contain p-2" />
+                      <Image src={item.productImage || '/product_placeholder.png'} alt={item.productName} fill className="object-contain p-2" sizes="64px" />
                     </div>
                     <div className="flex-1">
                       <p className="font-bold text-gray-900 leading-tight line-clamp-1">{item.productName}</p>
@@ -261,7 +340,7 @@ export default function CheckoutPage() {
                   <span>{shipping === 0 ? 'FREE' : `₹${shipping}`}</span>
                 </div>
                 <div className="flex justify-between text-gray-600 font-medium">
-                  <span>GST (12%)</span>
+                  <span>GST ({platformConfig?.gst_rate ?? 12}%)</span>
                   <span>₹{gst.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-[28px] font-black text-gray-900 pt-4 border-t border-gray-100">
@@ -300,5 +379,6 @@ export default function CheckoutPage() {
 
       <Footer />
     </main>
+    </AuthGuard>
   );
 }

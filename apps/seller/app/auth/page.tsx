@@ -22,13 +22,6 @@ export default function SellerAuthPage() {
     e.preventDefault();
     if (phone.length !== 10) { toast.error("Enter valid phone number"); return; }
 
-    // Dev bypass: Skip real OTP for this specific number
-    if (phone === "9831864222") {
-      setStep("otp");
-      toast.success("Dev Bypass: Use 123456");
-      return;
-    }
-
     try {
       await sendOtpMutation.mutateAsync({ phone });
       setStep("otp");
@@ -49,29 +42,6 @@ export default function SellerAuthPage() {
       toast.success("Logged in successfully");
       router.push("/dashboard");
     } catch (error: any) {
-      // Dev bypass: Allow login with 9831864222 / 123456 even if backend is not deployed
-      if (phone === "9831864222" && otp === "123456") {
-        localStorage.setItem("pb_token", "dev_bypass_token");
-        setUser({
-          id: "dev-seller",
-          name: "Seller Dev",
-          email: "seller@pharmabag.in",
-          role: "seller",
-          phone: "9831864222",
-          storeName: "Dev Seller Store",
-          isOnVacation: false,
-          sellerProfile: {
-            verificationStatus: "APPROVED",
-            businessName: "Dev Pharma Business",
-            businessType: "pharmacy",
-            city: "Mumbai",
-            state: "Maharashtra"
-          }
-        } as any);
-        toast.success("Dev bypass login success.");
-        router.push("/dashboard");
-        return;
-      }
       toast.error("Invalid OTP. Please retry.");
     }
   };
@@ -115,7 +85,7 @@ export default function SellerAuthPage() {
             </form>
           ) : (
             <form onSubmit={verify} className="space-y-4">
-              <Input label="OTP (use 123456)" type="text" inputMode="numeric" maxLength={6}
+              <Input label="Enter OTP" type="text" inputMode="numeric" maxLength={6}
                 value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,""))} placeholder="••••••"/>
               <Button type="submit" className="w-full" size="lg" loading={loading} rightIcon={<ArrowRight className="h-4 w-4"/>}>Verify & Sign In</Button>
               <button type="button" onClick={()=>setStep("phone")} className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-center">← Change number</button>

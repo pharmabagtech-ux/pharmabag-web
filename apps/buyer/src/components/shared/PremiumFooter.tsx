@@ -88,7 +88,7 @@ export default function PremiumFooter() {
 
         <div className="mt-24 pt-12 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8">
            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">
-             &copy; 2024 PHARMABAG INTELLIGENCE SYSTEMS. ALL PROTOCOLS RESERVED.
+             &copy; {new Date().getFullYear()} PHARMABAG INTELLIGENCE SYSTEMS. ALL PROTOCOLS RESERVED.
            </p>
            <div className="flex items-center gap-10">
               <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-none">ISO 27001:2022</p>

@@ -1,5 +1,5 @@
 // Core API client
-export { api, setAccessToken, getAccessToken } from './api';
+export { api, setAccessToken, getAccessToken, onApiEvent } from './api';
 
 // Auth
 export {
@@ -26,6 +26,11 @@ export {
   createProduct,
   updateProduct,
   deleteProduct,
+  getManufacturers,
+  getProductsByManufacturer,
+  getNearbyProducts,
+  getCities,
+  getDiscountDetails,
   type Product,
   type ProductListResponse,
   type CreateProductInput,
@@ -50,10 +55,14 @@ export {
   createOrder,
   cancelOrder,
   updateOrderStatus,
+  getOrderMilestones,
+  confirmMilestonePayment,
+  getOrderInvoice,
   type Order,
   type OrderItem,
   type OrderListResponse,
   type CreateOrderInput,
+  type Milestone,
 } from './modules/orders.api';
 
 // Payments
@@ -105,13 +114,32 @@ export {
   getBuyerProfile,
   createBuyerProfile,
   updateBuyerProfile,
+  verifyPanGst,
+  getBuyerCreditDetails,
+  getBuyerInvoices,
   type BuyerProfile,
   type CreateBuyerProfileInput,
   type UpdateBuyerProfileInput,
 } from './modules/buyers.api';
+
+// Wishlist
+export {
+  getWishlist,
+  addToWishlist,
+  removeFromWishlist,
+  type Wishlist,
+  type WishlistItem,
+} from './modules/wishlist.api';
 
 // Storage
 export {
   uploadPaymentProofFile,
   uploadKycDocument,
 } from './modules/storage.api';
+
+// Platform Config
+export {
+  getPlatformConfig,
+  invalidateConfigCache,
+  type PlatformConfig,
+} from './modules/config.api';

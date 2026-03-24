@@ -16,6 +16,7 @@ import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useTicketById, useAddTicketMessage } from '@/hooks/useTickets';
 import Link from 'next/link';
+import AuthGuard from '@/components/shared/AuthGuard';
 
 export default function TicketDetailPage() {
   const { ticketId } = useParams() as { ticketId: string };
@@ -54,6 +55,7 @@ export default function TicketDetailPage() {
   }
 
   return (
+    <AuthGuard>
     <main className="min-h-screen bg-[#f8fbfa] flex flex-col">
       <Navbar showUserActions={true} />
 
@@ -179,5 +181,6 @@ export default function TicketDetailPage() {
 
       <Footer />
     </main>
+    </AuthGuard>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getOrders, getOrderById, createOrder, cancelOrder, type CreateOrderInput } from '@pharmabag/api-client';
+import { getOrders, getOrderById, createOrder, cancelOrder, getOrderMilestones, confirmMilestonePayment, getOrderInvoice, type CreateOrderInput } from '@pharmabag/api-client';
 
 export function useOrders(params?: { page?: number; limit?: number; status?: string }) {
   return useQuery({
@@ -33,8 +33,37 @@ export function useCancelOrder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => cancelOrder(id),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', id] });
+    },
+  });
+}
+
+export function useOrderMilestones(orderId: string) {
+  return useQuery({
+    queryKey: ['order-milestones', orderId],
+    queryFn: () => getOrderMilestones(orderId),
+    enabled: !!orderId,
+  });
+}
+
+export function useConfirmMilestonePayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ milestoneId, method, referenceNumber }: { milestoneId: string; method: string; referenceNumber?: string }) =>
+      confirmMilestonePayment(milestoneId, { method, referenceNumber }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order-milestones'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
+  });
+}
+
+export function useOrderInvoice(orderId: string) {
+  return useQuery({
+    queryKey: ['order-invoice', orderId],
+    queryFn: () => getOrderInvoice(orderId),
+    enabled: !!orderId,
   });
 }

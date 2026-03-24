@@ -8,6 +8,7 @@ import Timeline from '@/components/shared/Timeline';
 import { useToast } from '@/components/shared/Toast';
 import Link from 'next/link';
 import { useOrderById, useCancelOrder } from '@/hooks/useOrders';
+import AuthGuard from '@/components/shared/AuthGuard';
 
 const STATUS_ORDER = ['PLACED', 'ACCEPTED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
@@ -73,6 +74,7 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
   const isCancellable = !['DELIVERED', 'CANCELLED', 'SHIPPED'].includes(order.status.toUpperCase());
 
   return (
+    <AuthGuard>
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
@@ -192,5 +194,6 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
 
       <Footer />
     </main>
+    </AuthGuard>
   );
 }

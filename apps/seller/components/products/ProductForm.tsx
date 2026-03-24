@@ -113,12 +113,13 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         chemicalComposition: data.chemical_combination || "N/A",
         categoryId: data.categories[0],         // Backend expects a single category ID
         subCategoryId: data.sub_categories?.[0] || data.categories[0], // Fallback
-        gstPercent: 12,  // Default GST for pharma
         stock: data.stock,
         expiryDate: new Date(data.expire_date).toISOString(),
         minimumOrderQuantity: data.min_order_qty,
         maximumOrderQuantity: data.max_order_qty,
+        bulk: data.bulk,
         ...(realImages.length > 0 && { images: realImages }),
+        ...(Object.keys(extra_fields).length > 0 && { extraFields: extra_fields }),
         ...(data.discount_details?.type && {
           discountType: discountTypeMap[data.discount_details.type] || undefined,
         }),

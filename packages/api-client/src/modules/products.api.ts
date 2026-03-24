@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { api } from '../api';
-import { PRODUCTS } from '@pharmabag/utils';
 
 // ─── Schemas ────────────────────────────────────────
 
@@ -76,85 +75,23 @@ export async function getProducts(params?: {
   minPrice?: number;
   maxPrice?: number;
 }): Promise<ProductListResponse> {
-  try {
-    const { data } = await api.get('/products', { params });
-    return {
-      data: data.data.products,
-      total: data.data.meta.total,
-      page: data.data.meta.page,
-      limit: data.data.meta.limit,
-    };
-  } catch (error) {
-    // Fallback to mock data when backend is unavailable
-    console.warn('Backend unavailable, using mock products data');
-    const mockProducts = PRODUCTS as any[];
-    
-    // Filter by search term if provided
-    let filtered = mockProducts;
-    if (params?.search) {
-      const searchLower = params.search.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(searchLower) ||
-        p.description?.toLowerCase().includes(searchLower) ||
-        p.manufacturer?.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    // Filter by price range if provided
-    if (params?.minPrice !== undefined || params?.maxPrice !== undefined) {
-      filtered = filtered.filter(p => {
-        const price = p.price;
-        if (params.minPrice !== undefined && price < params.minPrice) return false;
-        if (params.maxPrice !== undefined && price > params.maxPrice) return false;
-        return true;
-      });
-    }
-
-    const page = params?.page || 1;
-    const limit = params?.limit || 10;
-    const start = (page - 1) * limit;
-    const paginatedData = filtered.slice(start, start + limit);
-    
-    return {
-      data: paginatedData,
-      total: filtered.length,
-      page,
-      limit,
-    };
-  }
+  const { data } = await api.get('/products', { params });
+  return {
+    data: data.data.products,
+    total: data.data.meta.total,
+    page: data.data.meta.page,
+    limit: data.data.meta.limit,
+  };
 }
 
 export async function getProductById(id: string): Promise<Product> {
-  try {
-    const { data } = await api.get(`/products/${id}`);
-    return data.data;
-  } catch (error) {
-    // Fallback to mock data when backend is unavailable
-    const mockProducts = PRODUCTS as any[];
-    const product = mockProducts.find(p => p.id === id);
-    if (!product) {
-      throw new Error('Product not found');
-    }
-    return product;
-  }
+  const { data } = await api.get(`/products/${id}`);
+  return data.data;
 }
 
 export async function getCategories(): Promise<Category[]> {
-  try {
-    const { data } = await api.get('/products/categories');
-    return data.data;
-  } catch (error) {
-    // Fallback to mock categories when backend is unavailable
-    console.warn('Backend unavailable, using default categories');
-    return [
-      { id: 'cat1', name: 'Tablets & Capsules', slug: 'tablets-capsules' },
-      { id: 'cat2', name: 'Supplements', slug: 'supplements' },
-      { id: 'cat3', name: 'Pain Relief', slug: 'pain-relief' },
-      { id: 'cat4', name: 'Cold & Cough', slug: 'cold-cough' },
-      { id: 'cat5', name: 'Digestive Health', slug: 'digestive' },
-      { id: 'cat6', name: 'Vitamins', slug: 'vitamins' },
-    ];
-  }
+  const { data } = await api.get('/products/categories');
+  return data.data;
 }
 
 export async function createProduct(input: CreateProductInput): Promise<Product> {
@@ -170,4 +107,51 @@ export async function updateProduct(id: string, input: Partial<CreateProductInpu
 
 export async function deleteProduct(id: string): Promise<void> {
   await api.delete(`/products/${id}`);
+}
+
+// ─── Extended Product APIs ──────────────────────────
+
+export async function getManufacturers(): Promise<{ id: string; name: string; productCount?: number }[]> {
+  const { data } = await api.get('/products/manufacturers');
+  return data.data ?? data;
+}
+
+export async function getProductsByManufacturer(manufacturer: string, params?: {
+  page?: number;
+  limit?: number;
+}): Promise<ProductListResponse> {
+  return getProducts({ ...params, manufacturer });
+}
+
+export async function getNearbyProducts(params: {
+  latitude: number;
+  longitude: number;
+  radiusKm?: number;
+  page?: number;
+  limit?: number;
+}): Promise<ProductListResponse> {
+  const { data } = await api.get('/products/nearby', { params });
+  return {
+    data: data.data?.products ?? data.data ?? [],
+    total: data.data?.meta?.total ?? 0,
+    page: data.data?.meta?.page ?? params.page ?? 1,
+    limit: data.data?.meta?.limit ?? params.limit ?? 10,
+  };
+}
+
+export async function getCities(): Promise<{ id: string; name: string; state: string }[]> {
+  const { data } = await api.get('/locations/cities');
+  return data.data ?? data;
+}
+
+export async function getDiscountDetails(productId: string): Promise<{
+  discountType: string;
+  discountPercent: number;
+  ptr?: number;
+  gstPercent?: number;
+  netRate?: number;
+  savings?: number;
+}> {
+  const { data } = await api.get(`/products/${productId}/discount`);
+  return data.data ?? data;
 }

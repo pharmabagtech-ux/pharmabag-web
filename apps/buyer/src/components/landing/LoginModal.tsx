@@ -11,9 +11,9 @@ interface LoginModalProps {
 
 const TRUST_HIGHLIGHTS = [
   { label: 'Fastest Delivery' },
-  { label: 'Controlled Qality' },
+  { label: 'Controlled Quality' },
   { label: 'Only B2B rates' },
-  { label: '0 Torelence 2 Diplicay' },
+  { label: 'Zero Tolerance to Duplicacy' },
 ];
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
@@ -43,13 +43,6 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       return;
     }
 
-    // Dev bypass: Skip real OTP for this specific number
-    if (cleanPhone === '9831864222') {
-      setStep('otp');
-      toast('Dev Bypass: Use 123456', 'success');
-      return;
-    }
-
     setIsLoading(true);
     try {
       await sendOtp(cleanPhone);
@@ -64,7 +57,6 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   const handleVerifyOtp = async () => {
     const cleanPhone = sanitizePhone(phone);
-    console.log('Verifying OTP:', { phone: cleanPhone, otp });
     if (otp.length !== 6) {
       toast('Please enter the 6-digit OTP', 'error');
       return;
@@ -72,19 +64,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
     setIsLoading(true);
     try {
-      // Dev bypass: skip real verifyOtp for the dev phone number
-      if (cleanPhone === '9831864222' && (otp === '123456' || otp === '1234')) {
-        toast('Login successful! (Dev Bypass)', 'success');
-        localStorage.setItem('pb_access_token', 'dev_bypass_token');
-        window.location.href = '/products';
-        return;
-      }
-
       await verifyOtp(cleanPhone, otp);
       toast('Login successful!', 'success');
       onClose();
     } catch (error: any) {
-      console.error('Verify OTP failed:', error?.response?.data || error);
       toast(error?.response?.data?.message || 'Invalid OTP', 'error');
     } finally {
       setIsLoading(false);
@@ -125,9 +108,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             <div className="space-y-3">
               <h1 className="text-5xl md:text-[80px] font-black text-black tracking-tight leading-none">Pharma Bag</h1>
               <p className="text-3xl md:text-5xl font-normal text-black tracking-tight">
-                Inida&apos;s Only <span className="font-bold text-black">Trusted</span>
+                India&apos;s Only <span className="font-bold text-black">Trusted</span>
               </p>
-              <p className="text-xl md:text-2xl font-medium text-black/60">B2B Pharma Pklatform</p>
+              <p className="text-xl md:text-2xl font-medium text-black/60">B2B Pharma Platform</p>
             </div>
           </div>
 

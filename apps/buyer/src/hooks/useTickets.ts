@@ -51,8 +51,9 @@ export function useCloseTicket() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ticketId: string) => closeTicket(ticketId),
-    onSuccess: () => {
+    onSuccess: (_data, ticketId) => {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] });
     },
   });
 }

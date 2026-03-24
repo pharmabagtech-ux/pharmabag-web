@@ -6,6 +6,7 @@ import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button, Input, Badge, Pagination } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import Link from "next/link";
 import { useAdminUsers, useAffirmUserStatus, useUserById } from "@/hooks/useAdmin";
 
 type RoleFilter = "all" | "BUYER" | "SELLER" | "ADMIN";
@@ -176,6 +177,10 @@ export default function UsersPage() {
                         <td className="px-5 py-4 text-xs text-muted-foreground">{u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-IN") : "—"}</td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-1">
+                            <Link href={`/users/${u.id}`} onClick={(e) => e.stopPropagation()} aria-label="View user" title="View user details"
+                              className="h-7 w-7 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors">
+                              <Eye className="h-3.5 w-3.5" />
+                            </Link>
                             {isSeller && (
                               <button onClick={(e) => { e.stopPropagation(); setExpandedUser(isExpanded ? null : u.id); }} aria-label="View details" title="View seller details"
                                 className="h-7 w-7 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors">

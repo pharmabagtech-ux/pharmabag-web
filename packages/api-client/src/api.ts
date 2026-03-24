@@ -1,5 +1,27 @@
 import axios, { type AxiosInstance, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
+// ─── API Event System ───────────────────────────────
+// Allows UI layers to subscribe to API events (e.g., show toasts, trigger logout)
+
+type ApiEventType = 'auth:expired' | 'error:forbidden' | 'error:server' | 'error:network';
+type ApiEventListener = (detail?: { message?: string; status?: number }) => void;
+
+const eventListeners = new Map<ApiEventType, Set<ApiEventListener>>();
+
+export function onApiEvent(event: ApiEventType, listener: ApiEventListener): () => void {
+  if (!eventListeners.has(event)) {
+    eventListeners.set(event, new Set());
+  }
+  eventListeners.get(event)!.add(listener);
+  return () => { eventListeners.get(event)?.delete(listener); };
+}
+
+function emitApiEvent(event: ApiEventType, detail?: { message?: string; status?: number }) {
+  eventListeners.get(event)?.forEach(fn => fn(detail));
+}
+
+// ─── Token Storage ──────────────────────────────────
+
 // In-memory + LocalStorage token storage
 let accessToken: string | null = typeof window !== 'undefined' ? localStorage.getItem('pb_access_token') : null;
 let refreshTokenStored: string | null = typeof window !== 'undefined' ? localStorage.getItem('pb_refresh_token') : null;
@@ -130,24 +152,26 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         setAccessToken(null, null);
+        // Notify UI to redirect to login
+        emitApiEvent('auth:expired', { message: 'Session expired. Please log in again.' });
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     }
 
-    // Global error handling
+    // Global error handling with event emission
     if (error.response) {
-      const { status } = error.response;
+      const { status, data } = error.response as { status: number; data?: any };
+      const serverMsg = data?.message || data?.error;
+
       if (status === 403) {
-        console.error('Access forbidden');
-      } else if (status === 404) {
-        console.error('Resource not found');
+        emitApiEvent('error:forbidden', { message: serverMsg || 'You do not have permission to perform this action.', status });
       } else if (status >= 500) {
-        console.error('Server error');
+        emitApiEvent('error:server', { message: serverMsg || 'Something went wrong. Please try again later.', status });
       }
     } else if (error.request) {
-      console.error('Network error: no response received');
+      emitApiEvent('error:network', { message: 'Network error. Please check your connection.' });
     }
 
     return Promise.reject(error);

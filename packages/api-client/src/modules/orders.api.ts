@@ -54,6 +54,7 @@ export const CreateOrderSchema = z.object({
   city: z.string().min(1),
   state: z.string().min(1),
   pincode: z.string().min(1),
+  paymentMethod: z.enum(['cod', 'online', 'credit']).optional(),
 });
 
 // ─── Types ──────────────────────────────────────────
@@ -91,5 +92,37 @@ export async function cancelOrder(id: string): Promise<Order> {
 
 export async function updateOrderStatus(id: string, status: string): Promise<Order> {
   const { data } = await api.patch(`/orders/${id}/status`, { status });
+  return data;
+}
+
+// ─── Milestone / EMI APIs ───────────────────────────
+
+export const MilestoneSchema = z.object({
+  id: z.string(),
+  orderId: z.string(),
+  amount: z.number(),
+  dueDate: z.string(),
+  status: z.string(), // pending | paid | overdue
+  paidAt: z.string().optional(),
+  createdAt: z.string().optional(),
+});
+
+export type Milestone = z.infer<typeof MilestoneSchema>;
+
+export async function getOrderMilestones(orderId: string): Promise<Milestone[]> {
+  const { data } = await api.get(`/orders/${orderId}/milestones`);
+  return data.data ?? data;
+}
+
+export async function confirmMilestonePayment(milestoneId: string, paymentDetails: {
+  method: string;
+  referenceNumber?: string;
+}): Promise<Milestone> {
+  const { data } = await api.post(`/milestones/${milestoneId}/pay`, paymentDetails);
+  return data;
+}
+
+export async function getOrderInvoice(orderId: string): Promise<{ url: string }> {
+  const { data } = await api.get(`/orders/${orderId}/invoice`);
   return data;
 }

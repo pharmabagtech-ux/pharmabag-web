@@ -9,7 +9,6 @@ import { SidebarProvider, useSidebar } from "@/context/sidebar-context";
 
 function getVerificationStatus(user: any): string {
   if (!user) return "UNVERIFIED";
-  if (user.id === "dev-seller") return "APPROVED";
   return user.sellerProfile?.verificationStatus || "UNVERIFIED";
 }
 

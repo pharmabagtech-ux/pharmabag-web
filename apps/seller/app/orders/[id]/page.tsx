@@ -10,7 +10,7 @@ import {
 import { Button, Badge, OrderStatusBadge } from "@/components/ui";
 import { formatCurrency, formatDate } from "@pharmabag/utils";
 import {
-  useSellerOrder, useAcceptSellerOrder, useRejectSellerOrder, useUploadOrderInvoice,
+  useSellerOrder, useAcceptSellerOrder, useRejectSellerOrder, useUploadOrderInvoice, useUpdateSellerOrderStatus,
 } from "@/hooks/useSeller";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,7 @@ export default function OrderDetailPage() {
   const acceptOrder = useAcceptSellerOrder();
   const rejectOrder = useRejectSellerOrder();
   const uploadInvoice = useUploadOrderInvoice();
+  const updateStatus = useUpdateSellerOrderStatus();
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
 
@@ -91,6 +92,13 @@ export default function OrderDetailPage() {
     });
   };
 
+  const handleMarkAsShipped = () => {
+    updateStatus.mutate({ orderId: id, status: "SHIPPED" }, {
+      onSuccess: () => toast.success("Order marked as shipped"),
+      onError: () => toast.error("Failed to update order status"),
+    });
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Back */}
@@ -112,12 +120,22 @@ export default function OrderDetailPage() {
             </>
           )}
           {(order.status === "ACCEPTED" || order.status === "confirmed" || order.status === "AWAITING_INVOICE") && (
-            <label>
-              <Button size="sm" variant="outline" leftIcon={<Upload className="h-3.5 w-3.5" />} loading={uploadInvoice.isPending} onClick={() => document.getElementById("invoice-upload")?.click()}>
-                Upload Invoice
+            <>
+              <label>
+                <Button size="sm" variant="outline" leftIcon={<Upload className="h-3.5 w-3.5" />} loading={uploadInvoice.isPending} onClick={() => document.getElementById("invoice-upload")?.click()}>
+                  Upload Invoice
+                </Button>
+                <input id="invoice-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={handleInvoiceUpload} />
+              </label>
+              <Button size="sm" leftIcon={<Truck className="h-3.5 w-3.5" />} loading={updateStatus.isPending} onClick={handleMarkAsShipped}>
+                Mark as Shipped
               </Button>
-              <input id="invoice-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={handleInvoiceUpload} />
-            </label>
+            </>
+          )}
+          {(order.status === "WAREHOUSE") && (
+            <Button size="sm" leftIcon={<Truck className="h-3.5 w-3.5" />} loading={updateStatus.isPending} onClick={handleMarkAsShipped}>
+              Mark as Shipped
+            </Button>
           )}
         </div>
       </motion.div>

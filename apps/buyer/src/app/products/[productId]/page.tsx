@@ -1,22 +1,45 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Package, ShoppingCart, Star, Loader2, AlertCircle, Minus, Plus, Check, Send, User } from 'lucide-react';
+import { ChevronLeft, Package, ShoppingCart, Star, Loader2, AlertCircle, Minus, Plus, Check, Send, User, Heart } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { useProductById } from '@/hooks/useProducts';
 import { useAddToCart } from '@/hooks/useCart';
 import { useProductReviews, useCreateReview } from '@/hooks/useReviews';
+import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useToast } from '@/components/shared/Toast';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
 export default function ProductDetailPage({ params }: { params: { productId: string } }) {
   const { data: product, isLoading, isError } = useProductById(params.productId);
   const addToCart = useAddToCart();
+  const { data: wishlistData } = useWishlist();
+  const addToWishlist = useAddToWishlist();
+  const removeFromWishlist = useRemoveFromWishlist();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+
+  const wishlistItems = wishlistData?.items ?? [];
+  const wishlistEntry = wishlistItems.find((w) => w.productId === params.productId || w.product?.id === params.productId);
+  const isWishlisted = !!wishlistEntry;
+
+  const handleToggleWishlist = () => {
+    if (isWishlisted && wishlistEntry) {
+      removeFromWishlist.mutate(wishlistEntry.id, {
+        onSuccess: () => toast('Removed from wishlist', 'success'),
+        onError: () => toast('Failed to update wishlist', 'error'),
+      });
+    } else {
+      addToWishlist.mutate(params.productId, {
+        onSuccess: () => toast('Added to wishlist!', 'success'),
+        onError: () => toast('Failed to update wishlist', 'error'),
+      });
+    }
+  };
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -81,13 +104,16 @@ export default function ProductDetailPage({ params }: { params: { productId: str
             {/* Product Image */}
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="bg-white/40 backdrop-blur-xl rounded-[40px] border border-white/40 shadow-xl overflow-hidden flex items-center justify-center aspect-square"
+              className="relative bg-white/40 backdrop-blur-xl rounded-[40px] border border-white/40 shadow-xl overflow-hidden flex items-center justify-center aspect-square"
             >
               {product.images && product.images.length > 0 ? (
-                <img
+                <Image
                   src={product.images[0]}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority
                 />
               ) : (
                 <div className="flex flex-col items-center gap-4 text-gray-300">
@@ -127,12 +153,23 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                 <p className="text-xs text-gray-400 mt-2 font-medium">Inclusive of all taxes</p>
               </div>
 
-              {/* Stock Status */}
-              <div className="flex items-center gap-3">
-                <div className={`w-3 h-3 rounded-full ${inStock ? 'bg-green-400' : 'bg-red-400'}`} />
-                <span className={`font-bold ${inStock ? 'text-green-600' : 'text-red-600'}`}>
-                  {inStock ? `In Stock (${product.stock} available)` : 'Out of Stock'}
-                </span>
+              {/* Stock Status + Wishlist */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${inStock ? 'bg-green-400' : 'bg-red-400'}`} />
+                  <span className={`font-bold ${inStock ? 'text-green-600' : 'text-red-600'}`}>
+                    {inStock ? `In Stock (${product.stock} available)` : 'Out of Stock'}
+                  </span>
+                </div>
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={handleToggleWishlist}
+                  disabled={addToWishlist.isPending || removeFromWishlist.isPending}
+                  className="p-3 rounded-2xl border border-white/60 bg-white/60 backdrop-blur-sm hover:bg-white transition-all shadow-sm disabled:opacity-50"
+                  title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                  <Heart className={`w-5 h-5 transition-colors ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-400'}`} />
+                </motion.button>
               </div>
 
               {/* Quantity + Add to Cart */}

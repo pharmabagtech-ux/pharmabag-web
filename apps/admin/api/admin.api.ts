@@ -68,6 +68,16 @@ export async function deleteProduct(productId: string) {
   return data.data;
 }
 
+export async function approveProduct(productId: string) {
+  const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/approve`);
+  return data.data;
+}
+
+export async function rejectProduct(productId: string, reason?: string) {
+  const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/reject`, { reason });
+  return data.data;
+}
+
 // ─── Orders ──────────────────────────────────────────
 export async function getAdminOrders(page = 1, limit = 50) {
   const { data } = await apiClient.get<{ data: any }>(`/admin/orders?page=${page}&limit=${limit}`);

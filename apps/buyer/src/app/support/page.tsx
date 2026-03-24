@@ -9,6 +9,8 @@ import { SkeletonList } from '@/components/shared/LoaderSkeleton';
 import { useToast } from '@/components/shared/Toast';
 import { useTickets, useCreateTicket } from '@/hooks/useTickets';
 import { useState } from 'react';
+import Link from 'next/link';
+import AuthGuard from '@/components/shared/AuthGuard';
 
 export default function SupportPage() {
   const { data, isLoading, isError } = useTickets();
@@ -48,6 +50,7 @@ export default function SupportPage() {
   };
 
   return (
+    <AuthGuard>
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
@@ -166,39 +169,40 @@ export default function SupportPage() {
                />
              ) : (
                tickets.map((tkt: any) => (
-                 <motion.div
-                   key={tkt.id}
-                   whileHover={{ y: -5 }}
-                   className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl flex items-center justify-between"
-                 >
-                   <div className="flex flex-col">
-                     <div className="flex items-center gap-3 mb-2">
-                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{tkt.id.slice(-8)}</span>
-                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${statusColor(tkt.status)}`}>
-                          {tkt.status}
-                       </span>
-                       {tkt.priority && (
-                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${tkt.priority === 'high' ? 'bg-red-100 text-red-600' : tkt.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>
-                           {tkt.priority}
+                 <Link key={tkt.id} href={`/support/${tkt.id}`}>
+                   <motion.div
+                     whileHover={{ y: -5 }}
+                     className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl flex items-center justify-between cursor-pointer"
+                   >
+                     <div className="flex flex-col">
+                       <div className="flex items-center gap-3 mb-2">
+                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{tkt.id.slice(-8)}</span>
+                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${statusColor(tkt.status)}`}>
+                            {tkt.status}
                          </span>
-                       )}
+                         {tkt.priority && (
+                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${tkt.priority === 'high' ? 'bg-red-100 text-red-600' : tkt.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>
+                             {tkt.priority}
+                           </span>
+                         )}
+                       </div>
+                       <h3 className="text-lg font-bold text-gray-900">{tkt.subject}</h3>
+                       <p className="text-sm text-gray-400 font-medium mt-1">
+                         {tkt.category ?? 'General'} • Created {formatDate(tkt.createdAt)}
+                       </p>
                      </div>
-                     <h3 className="text-lg font-bold text-gray-900">{tkt.subject}</h3>
-                     <p className="text-sm text-gray-400 font-medium mt-1">
-                       {tkt.category ?? 'General'} • Created {formatDate(tkt.createdAt)}
-                     </p>
-                   </div>
-                   
-                   <div className="flex items-center gap-6">
-                      <div className="text-right hidden sm:block">
-                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Updated</p>
-                         <p className="text-sm font-bold text-gray-800">{formatDate(tkt.updatedAt)}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300">
-                         <ChevronRight className="w-6 h-6" />
-                      </div>
-                   </div>
-                 </motion.div>
+                     
+                     <div className="flex items-center gap-6">
+                        <div className="text-right hidden sm:block">
+                           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Updated</p>
+                           <p className="text-sm font-bold text-gray-800">{formatDate(tkt.updatedAt)}</p>
+                        </div>
+                        <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300">
+                           <ChevronRight className="w-6 h-6" />
+                        </div>
+                     </div>
+                   </motion.div>
+                 </Link>
                ))
              )}
           </div>
@@ -207,5 +211,6 @@ export default function SupportPage() {
 
       <Footer />
     </main>
+    </AuthGuard>
   );
 }
