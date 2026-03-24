@@ -17,6 +17,10 @@ export async function verifyOtp(payload: VerifyOtpPayload) {
 }
 
 export async function getCurrentUser() {
-  const { data } = await apiClient.get<{ data: User }>("/auth/me");
-  return data.data;
+  const { data } = await apiClient.get("/auth/me");
+  // Backend returns raw user object (not wrapped in { data }).
+  // Handle both shapes defensively in case a response interceptor is added later.
+  const user = data?.data ?? data;
+  console.log("[AUTH] getCurrentUser resolved status:", user?.status);
+  return user;
 }
