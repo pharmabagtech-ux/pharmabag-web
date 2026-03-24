@@ -39,8 +39,8 @@ export function useSellerMe(enabled: boolean = false) {
     queryKey: ["seller", "me"],
     queryFn: getCurrentUser,
     enabled,
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 10_000,
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
     retry: 1,
   });

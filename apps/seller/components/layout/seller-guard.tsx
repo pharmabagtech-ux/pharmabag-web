@@ -3,66 +3,68 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSellerAuth } from "@/store";
 import { useSellerMe } from "@/hooks/useSeller";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, ShieldAlert, Store } from "lucide-react";
 import { SellerSidebar } from "./sidebar";
 import { motion, AnimatePresence } from "framer-motion";
 import { SidebarProvider, useSidebar } from "@/context/sidebar-context";
 
 /**
- * Extracts the seller verification status from the user object.
- * Handles ALL possible backend response shapes:
- *   1. user.sellerProfile.verificationStatus  (nested — Prisma include)
- *   2. user.verificationStatus                (flat — when backend flattens)
- *   3. user.status                            (top-level status field)
- * Normalises to UPPERCASE for consistent comparison.
+ * Single source of truth: User.status
+ * Values: NEW | PENDING | APPROVED | REJECTED | BLOCKED
+ *
+ * The guard NEVER mutates status. It only reads from the server.
  */
-function getVerificationStatus(user: any): string {
-  if (!user) return "UNVERIFIED";
-
-  // Priority 1: nested sellerProfile (most specific)
-  const nested = user.sellerProfile?.verificationStatus;
-  if (nested) return String(nested).toUpperCase();
-
-  // Priority 2: flat verificationStatus on user object
-  const flat = user.verificationStatus;
-  if (flat) return String(flat).toUpperCase();
-
-  // Priority 3: top-level status (admin approval sets this)
-  const topLevel = user.status;
-  if (topLevel) return String(topLevel).toUpperCase();
-
-  return "UNVERIFIED";
+function getUserStatus(user: any): string {
+  if (!user) return "NEW";
+  return String(user.status || "NEW").toUpperCase();
 }
 
 export function SellerGuard({ children }: { children: React.ReactNode }) {
   const { user, isAuth, setUser } = useSellerAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Fetch the LATEST profile from the server on every mount / window focus.
-  // staleTime: 0 + refetchOnMount: "always" ensures we NEVER use cached stale status.
+  // Always fetch the LATEST user from the server on mount.
   const {
     data: serverUser,
     isLoading: isLoadingProfile,
-    isFetching,
   } = useSellerMe(mounted && isAuth);
 
-  // Sync server data into local store when it arrives
+  // Sync server data into the local Zustand store (for offline/cache use only)
   useEffect(() => {
     if (serverUser) {
-      setUser(serverUser);
+      setUser(serverUser as any);
     }
   }, [serverUser, setUser]);
 
+  // Redirect to /auth if not authenticated
   useEffect(() => {
     if (!mounted) return;
     if (!isAuth && pathname !== "/auth") {
       router.replace("/auth");
     }
   }, [isAuth, pathname, mounted, router]);
+
+  // ──── STEP 6: Auto-poll for PENDING sellers ────────
+  // When status is PENDING, poll every 5s so the seller
+  // automatically transitions to dashboard once admin approves.
+  const effectiveUser = serverUser ?? user;
+  const currentStatus = getUserStatus(effectiveUser);
+
+  useEffect(() => {
+    if (currentStatus !== "PENDING") return;
+
+    const interval = setInterval(() => {
+      void queryClient.invalidateQueries({ queryKey: ["seller", "me"] });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [currentStatus, queryClient]);
 
   // SSR / hydration guard
   if (!mounted) return null;
@@ -72,7 +74,7 @@ export function SellerGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Not authenticated — show loading while redirect effect fires
+  // Not authenticated — show spinner while redirect fires
   if (!user || !isAuth) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -81,10 +83,7 @@ export function SellerGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // CRITICAL: Wait for the server profile to load before making any
-  // verification-based routing decisions. Without this, the component
-  // uses the stale cached status and redirects prematurely.
-  // We check both isLoading (first fetch) AND isFetching (refetch).
+  // CRITICAL: Wait for the server profile before making routing decisions.
   if (isLoadingProfile) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -93,82 +92,71 @@ export function SellerGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Use server data if available, fall back to cached Zustand user
-  const effectiveUser = serverUser ?? user;
-  const verificationStatus = getVerificationStatus(effectiveUser);
+  // ──── STATE MACHINE ROUTING (strict switch) ────────
 
-  // Normalised status groups for clear routing decisions
-  const isApproved = ["APPROVED", "ACTIVE", "VERIFIED"].includes(verificationStatus);
-  const isPending  = verificationStatus === "PENDING";
-  const isRejected = verificationStatus === "REJECTED";
-  // Everything else (UNVERIFIED, empty, unknown) → needs onboarding
-
-  // Onboarding page — render directly without dashboard layout
+  // On /onboarding page
   if (pathname === "/onboarding") {
-    // Already approved/pending/rejected — no need to be on onboarding
-    if (isApproved || isPending || isRejected) {
+    if (currentStatus !== "NEW") {
       router.replace("/dashboard");
       return null;
     }
     return <>{children}</>;
   }
 
-  // UNVERIFIED sellers must complete onboarding first
-  if (!isApproved && !isPending && !isRejected) {
-    router.replace("/onboarding");
-    return null;
-  }
+  switch (currentStatus) {
+    case "NEW":
+      router.replace("/onboarding");
+      return null;
 
-  // PENDING — show review message
-  if (isPending) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-6">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full glass-card rounded-2xl p-8 text-center space-y-4">
-          <div className="mx-auto h-16 w-16 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 rounded-full flex items-center justify-center mb-6">
-            <Store className="h-8 w-8" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Application Under Review</h1>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            Your seller profile is currently being reviewed. We will notify you once your account is verified.
-          </p>
-          <div className="pt-4">
-            <button onClick={() => useSellerAuth.getState().logout()} className="text-sm font-medium text-primary hover:underline">
-              Sign Out
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
+    case "PENDING":
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-background p-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full glass-card rounded-2xl p-8 text-center space-y-4">
+            <div className="mx-auto h-16 w-16 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 rounded-full flex items-center justify-center mb-6">
+              <Store className="h-8 w-8" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Application Under Review</h1>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Your seller profile is currently being reviewed. We will notify you once your account is verified.
+            </p>
+            <div className="pt-4">
+              <button onClick={() => useSellerAuth.getState().logout()} className="text-sm font-medium text-primary hover:underline">
+                Sign Out
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      );
 
-  // REJECTED — show rejected message
-  if (isRejected) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-6">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full glass-card rounded-2xl p-8 text-center space-y-4 border-red-200 dark:border-red-900/30">
-          <div className="mx-auto h-16 w-16 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-full flex items-center justify-center mb-6">
-            <ShieldAlert className="h-8 w-8" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Application Rejected</h1>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            We could not verify your business details. Please contact support to resolve this.
-          </p>
-          <div className="pt-4">
-            <button onClick={() => useSellerAuth.getState().logout()} className="text-sm font-medium text-red-600 hover:underline">
-              Sign Out
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
+    case "REJECTED":
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-background p-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full glass-card rounded-2xl p-8 text-center space-y-4 border-red-200 dark:border-red-900/30">
+            <div className="mx-auto h-16 w-16 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-full flex items-center justify-center mb-6">
+              <ShieldAlert className="h-8 w-8" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Application Rejected</h1>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              We could not verify your business details. Please contact support to resolve this.
+            </p>
+            <div className="pt-4">
+              <button onClick={() => useSellerAuth.getState().logout()} className="text-sm font-medium text-red-600 hover:underline">
+                Sign Out
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      );
 
-  // APPROVED — full dashboard layout with sidebar
-  return (
-    <SidebarProvider>
-      <DashboardLayout pathname={pathname}>{children}</DashboardLayout>
-    </SidebarProvider>
-  );
+    case "APPROVED":
+    default:
+      // APPROVED or any other status → full dashboard
+      return (
+        <SidebarProvider>
+          <DashboardLayout pathname={pathname}>{children}</DashboardLayout>
+        </SidebarProvider>
+      );
+  }
 }
 
 function DashboardLayout({ children, pathname }: { children: React.ReactNode; pathname: string }) {

@@ -5,12 +5,12 @@ import { motion } from "framer-motion";
 import { Store, Building2, FileText, CheckCircle2, MapPin, ArrowRight } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { useUpdateSellerProfile } from "@/hooks/useSeller";
-import { useSellerAuth } from "@/store";
+import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 export default function SellerOnboardingPage() {
   const router = useRouter();
-  const { user, setUser } = useSellerAuth();
+  const queryClient = useQueryClient();
   const updateProfile = useUpdateSellerProfile();
   const [loading, setLoading] = useState(false);
 
@@ -47,13 +47,10 @@ export default function SellerOnboardingPage() {
     try {
       await updateProfile.mutateAsync(payload);
       
-      // Update local auth state to reflect new PENDING status
-      if (user) {
-        setUser({
-          ...user,
-          sellerProfile: { ...(user as any).sellerProfile, verificationStatus: "PENDING" }
-        } as any);
-      }
+      // Backend sets User.status = PENDING. Refetch from server so guard picks it up.
+      // Do NOT mutate status locally — backend is the single source of truth.
+      await queryClient.invalidateQueries({ queryKey: ["seller", "me"] });
+      await queryClient.refetchQueries({ queryKey: ["seller", "me"] });
       
       toast.success("Application submitted successfully");
       router.replace("/dashboard");

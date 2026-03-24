@@ -6,6 +6,7 @@ import { Store, ArrowRight, Phone } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { useSendOtp, useVerifyOtp } from "@/hooks/useSeller";
 import { useSellerAuth } from "@/store";
+import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 export default function SellerAuthPage() {
@@ -14,6 +15,7 @@ export default function SellerAuthPage() {
   const [step, setStep] = useState<"phone"|"otp">("phone");
   const { setUser } = useSellerAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const sendOtpMutation = useSendOtp();
   const verifyOtpMutation = useVerifyOtp();
   const loading = sendOtpMutation.isPending || verifyOtpMutation.isPending;
@@ -39,6 +41,10 @@ export default function SellerAuthPage() {
       // Backend wraps response in { data: { accessToken, user } } — handle both shapes
       const inner = (data as any).data ?? data;
       setUser(inner.user);
+
+      // Force-refresh seller/me so the guard routes based on fresh server status
+      await queryClient.invalidateQueries({ queryKey: ["seller", "me"] });
+
       toast.success("Logged in successfully");
       router.push("/dashboard");
     } catch (error: any) {

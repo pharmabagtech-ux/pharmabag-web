@@ -22,12 +22,12 @@ function InfoRow({ label, value, mono }: { label: string; value?: string | null;
 function VerificationBadge({ status }: { status?: string }) {
   const map: Record<string, { label: string; variant: "success" | "warning" | "error"; icon: React.ElementType }> = {
     APPROVED: { label: "Verified", variant: "success", icon: CheckCircle2 },
-    VERIFIED: { label: "Verified", variant: "success", icon: CheckCircle2 },
     PENDING: { label: "Pending Verification", variant: "warning", icon: Clock },
     REJECTED: { label: "Rejected", variant: "error", icon: XCircle },
-    UNVERIFIED: { label: "Unverified", variant: "error", icon: AlertTriangle },
+    NEW: { label: "Unverified", variant: "error", icon: AlertTriangle },
   };
-  const { label, variant, icon: Icon } = map[status?.toUpperCase() ?? "UNVERIFIED"] ?? map.UNVERIFIED;
+  const key = status?.toUpperCase() ?? "NEW";
+  const { label, variant, icon: Icon } = map[key] ?? map.NEW;
   return <Badge variant={variant}><Icon className="h-3 w-3" />{label}</Badge>;
 }
 
@@ -60,7 +60,7 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-xl font-semibold text-foreground">{p.name || p.businessName || sellerProfile.businessName || "Seller"}</h2>
-              <VerificationBadge status={sellerProfile.verificationStatus || p.verificationStatus} />
+              <VerificationBadge status={p.status} />
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">{sellerProfile.businessName || p.storeName || ""}</p>
             {p.email && <p className="text-xs text-muted-foreground mt-1">{p.email}</p>}
@@ -91,7 +91,7 @@ export default function ProfilePage() {
             <InfoRow label="FSSAI Number" value={sellerProfile.fssaiNumber} mono />
             <InfoRow label="Verification" value={undefined} />
             <div className="pl-0 sm:pl-44 -mt-3 pb-2">
-              <VerificationBadge status={sellerProfile.verificationStatus || p.verificationStatus} />
+              <VerificationBadge status={p.status} />
             </div>
           </div>
         </motion.div>
