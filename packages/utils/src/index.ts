@@ -70,12 +70,3 @@ export {
 } from './validators';
 
 export type { ProductFormValues } from './validators';
-// Local Product Store (dev mode — no backend)
-export {
-  getLocalProducts,
-  addLocalProduct,
-  updateLocalProduct,
-  deleteLocalProduct,
-  findLocalProduct,
-  refreshLocalProducts,
-} from './localProductStore';

@@ -1,26 +1,10 @@
 import { apiClient } from "@/lib/apiClient";
 import type { Product, Order, Payout, Suggestion, CategoryItem } from "@pharmabag/utils";
-import { getLocalProducts, addLocalProduct, updateLocalProduct, deleteLocalProduct, findLocalProduct } from "@pharmabag/utils";
 import type { ProductPayload } from "@pharmabag/utils";
 
 export async function getSellerDashboard() {
-  try {
-    const { data } = await apiClient.get<{ data: { stats: any; overview: any; chartData?: any[] } }>("/sellers/dashboard");
-    return data.data;
-  } catch {
-    const products = getLocalProducts();
-    return {
-      stats: {
-        totalProducts: products.length,
-        activeProducts: products.filter((p) => p.isActive).length,
-        pendingProducts: products.filter((p) => p.approvalStatus === "PENDING").length,
-        totalOrders: 0,
-        totalRevenue: 0,
-      },
-      overview: { revenue: 0, orders: 0 },
-      chartData: [],
-    };
-  }
+  const { data } = await apiClient.get<{ data: { stats: any; overview: any; chartData?: any[] } }>("/sellers/dashboard");
+  return data.data;
 }
 
 export async function getSellerProfile() {
@@ -51,67 +35,23 @@ export async function updateSellerProfile(payload: Partial<any>) {
 }
 
 export async function getSellerProducts() {
-  try {
-    const { data } = await apiClient.get<{ data: { products: Product[] } }>("/products/seller/own");
-    return data.data?.products ?? [];
-  } catch {
-    // Return all products from local store as if seller owns them
-    return getLocalProducts();
-  }
+  const { data } = await apiClient.get<{ data: { products: Product[] } }>("/products/seller/own");
+  return data.data?.products ?? [];
 }
 
 export async function createSellerProduct(input: ProductPayload | Record<string, any>) {
-  try {
-    const { data } = await apiClient.post<{ data: Product }>("/products", input);
-    return data.data;
-  } catch {
-    // Seller-created products ALWAYS start as PENDING — never auto-approve
-    const p = input as Record<string, any>;
-    const newProduct: Product = {
-      id: `seller-p-${Date.now()}`,
-      name: p.name ?? p.product_name ?? "New Product",
-      genericName: p.genericName ?? p.chemical_combination ?? "",
-      manufacturer: p.manufacturer ?? p.company_name ?? "",
-      category: p.category ?? "",
-      categoryId: p.categoryId ?? (p.categories?.[0]) ?? "",
-      price: p.mrp ?? p.product_price ?? 0,
-      mrp: p.mrp ?? p.product_price ?? 0,
-      status: "PENDING",
-      approvalStatus: "PENDING",
-      isActive: false,
-      stock: p.stock ?? 0,
-      images: p.images ?? p.image_list ?? [],
-      description: p.description ?? "",
-      sellerId: "seller-1",
-      sellerName: "Demo Seller",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    addLocalProduct(newProduct);
-    return newProduct;
-  }
+  const { data } = await apiClient.post<{ data: Product }>("/products", input);
+  return data.data;
 }
 
 export async function updateSellerProduct(productId: string, input: Partial<ProductPayload>) {
-  try {
-    const { data } = await apiClient.patch<{ data: Product }>(`/products/${productId}`, input);
-    return data.data;
-  } catch {
-    const updated = updateLocalProduct(productId, input as Partial<Product>);
-    if (!updated) throw new Error("Product not found");
-    return updated;
-  }
+  const { data } = await apiClient.patch<{ data: Product }>(`/products/${productId}`, input);
+  return data.data;
 }
 
 export async function getSellerProductById(productId: string) {
-  try {
-    const { data } = await apiClient.get<{ data: Product }>(`/products/${productId}`);
-    return data.data;
-  } catch {
-    const product = findLocalProduct(productId);
-    if (!product) throw new Error("Product not found");
-    return product;
-  }
+  const { data } = await apiClient.get<{ data: Product }>(`/products/${productId}`);
+  return data.data;
 }
 
 export async function getCategories() {
@@ -129,14 +69,8 @@ export async function getCategories() {
 }
 
 export async function deleteSellerProduct(productId: string) {
-  try {
-    const { data } = await apiClient.delete<{ message: string }>(`/products/${productId}`);
-    return data;
-  } catch {
-    const deleted = deleteLocalProduct(productId);
-    if (!deleted) throw new Error("Product not found");
-    return { message: "Product deleted" };
-  }
+  const { data } = await apiClient.delete<{ message: string }>(`/products/${productId}`);
+  return data;
 }
 
 export async function getSellerOrders() {

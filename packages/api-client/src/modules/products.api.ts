@@ -67,9 +67,6 @@ export const CategorySchema = z.object({
 
 export type Category = z.infer<typeof CategorySchema>;
 
-// ─── Mock Fallback (used when backend is unavailable) ─
-import { getLocalProducts } from '@pharmabag/utils';
-
 // ─── API Functions ──────────────────────────────────
 
 export async function getProducts(params?: {
@@ -84,42 +81,18 @@ export async function getProducts(params?: {
   minPrice?: number;
   maxPrice?: number;
 }): Promise<ProductListResponse> {
-  try {
-    const { data } = await api.get('/products', { params });
-    return {
-      data: data.data.products,
-      total: data.data.meta.total,
-      page: data.data.meta.page,
-      limit: data.data.meta.limit,
-    };
-  } catch {
-    // Fallback to mock data — only return APPROVED products for buyer-facing API
-    const allProducts = getLocalProducts();
-    const approved = allProducts.filter(
-      (p) => (p.status === 'APPROVED' || p.approvalStatus === 'APPROVED') && p.isActive !== false
-    );
-    const search = params?.search?.toLowerCase();
-    const filtered = search
-      ? approved.filter((p) => p.name?.toLowerCase().includes(search) || p.manufacturer?.toLowerCase().includes(search))
-      : approved;
-    const page = params?.page ?? 1;
-    const limit = params?.limit ?? 20;
-    const start = (page - 1) * limit;
-    const paged = filtered.slice(start, start + limit);
-    return { data: paged as Product[], total: filtered.length, page, limit };
-  }
+  const { data } = await api.get('/products', { params });
+  return {
+    data: data.data.products,
+    total: data.data.meta.total,
+    page: data.data.meta.page,
+    limit: data.data.meta.limit,
+  };
 }
 
 export async function getProductById(id: string): Promise<Product> {
-  try {
-    const { data } = await api.get(`/products/${id}`);
-    return data.data;
-  } catch {
-    const allProducts = getLocalProducts();
-    const found = allProducts.find((p: any) => p.id === id);
-    if (found) return found as Product;
-    throw new Error('Product not found');
-  }
+  const { data } = await api.get(`/products/${id}`);
+  return data.data;
 }
 
 export async function getCategories(): Promise<Category[]> {
@@ -133,24 +106,8 @@ export async function getCategories(): Promise<Category[]> {
 
 export async function createProduct(input: CreateProductInput): Promise<Product> {
   const body = CreateProductSchema.parse(input);
-  try {
-    const { data } = await api.post('/products', body);
-    return data;
-  } catch {
-    // Fallback: simulate creation with PENDING status
-    return {
-      id: `p-${Date.now()}`,
-      name: body.name,
-      price: body.mrp,
-      mrp: body.mrp,
-      manufacturer: body.manufacturer,
-      stock: body.stock,
-      isActive: false,
-      status: 'PENDING',
-      approvalStatus: 'PENDING',
-      createdAt: new Date().toISOString(),
-    };
-  }
+  const { data } = await api.post('/products', body);
+  return data;
 }
 
 export async function updateProduct(id: string, input: Partial<CreateProductInput>): Promise<Product> {
@@ -165,17 +122,8 @@ export async function deleteProduct(id: string): Promise<void> {
 // ─── Extended Product APIs ──────────────────────────
 
 export async function getManufacturers(): Promise<{ id: string; name: string; productCount?: number }[]> {
-  try {
-    const { data } = await api.get('/products/manufacturers');
-    return data.data ?? data;
-  } catch {
-    // Derive from mock data
-    const mfrs = new Map<string, number>();
-    for (const p of getLocalProducts() as any[]) {
-      if (p.manufacturer) mfrs.set(p.manufacturer, (mfrs.get(p.manufacturer) || 0) + 1);
-    }
-    return Array.from(mfrs).map(([name, count], i) => ({ id: `mfr-${i}`, name, productCount: count }));
-  }
+  const { data } = await api.get('/products/manufacturers');
+  return data.data ?? data;
 }
 
 export async function getProductsByManufacturer(manufacturer: string, params?: {
