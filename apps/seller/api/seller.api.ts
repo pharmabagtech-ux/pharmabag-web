@@ -1,21 +1,14 @@
 import { apiClient } from "@/lib/apiClient";
 import type { Product, Order, Payout, Suggestion, CategoryItem } from "@pharmabag/utils";
-import { PRODUCTS as MOCK_PRODUCTS } from "@pharmabag/utils/mockData";
+import { getLocalProducts, addLocalProduct, updateLocalProduct, deleteLocalProduct, findLocalProduct } from "@pharmabag/utils";
 import type { ProductPayload } from "@pharmabag/utils";
-
-// Local mock store for seller product mutations
-let _sellerMockProducts: Product[] | null = null;
-function getSellerMockProducts(): Product[] {
-  if (!_sellerMockProducts) _sellerMockProducts = structuredClone(MOCK_PRODUCTS);
-  return _sellerMockProducts;
-}
 
 export async function getSellerDashboard() {
   try {
     const { data } = await apiClient.get<{ data: { stats: any; overview: any; chartData?: any[] } }>("/sellers/dashboard");
     return data.data;
   } catch {
-    const products = getSellerMockProducts();
+    const products = getLocalProducts();
     return {
       stats: {
         totalProducts: products.length,
@@ -62,8 +55,8 @@ export async function getSellerProducts() {
     const { data } = await apiClient.get<{ data: { products: Product[] } }>("/products/seller/own");
     return data.data?.products ?? [];
   } catch {
-    // Return all mock products as if seller owns them
-    return getSellerMockProducts();
+    // Return all products from local store as if seller owns them
+    return getLocalProducts();
   }
 }
 
@@ -94,7 +87,7 @@ export async function createSellerProduct(input: ProductPayload | Record<string,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    getSellerMockProducts().push(newProduct);
+    addLocalProduct(newProduct);
     return newProduct;
   }
 }
@@ -104,11 +97,9 @@ export async function updateSellerProduct(productId: string, input: Partial<Prod
     const { data } = await apiClient.patch<{ data: Product }>(`/products/${productId}`, input);
     return data.data;
   } catch {
-    const products = getSellerMockProducts();
-    const idx = products.findIndex((p) => p.id === productId);
-    if (idx === -1) throw new Error("Product not found");
-    products[idx] = { ...products[idx], ...input, updatedAt: new Date().toISOString() };
-    return products[idx];
+    const updated = updateLocalProduct(productId, input as Partial<Product>);
+    if (!updated) throw new Error("Product not found");
+    return updated;
   }
 }
 
@@ -117,7 +108,7 @@ export async function getSellerProductById(productId: string) {
     const { data } = await apiClient.get<{ data: Product }>(`/products/${productId}`);
     return data.data;
   } catch {
-    const product = getSellerMockProducts().find((p) => p.id === productId);
+    const product = findLocalProduct(productId);
     if (!product) throw new Error("Product not found");
     return product;
   }
@@ -142,10 +133,8 @@ export async function deleteSellerProduct(productId: string) {
     const { data } = await apiClient.delete<{ message: string }>(`/products/${productId}`);
     return data;
   } catch {
-    const products = getSellerMockProducts();
-    const idx = products.findIndex((p) => p.id === productId);
-    if (idx === -1) throw new Error("Product not found");
-    products.splice(idx, 1);
+    const deleted = deleteLocalProduct(productId);
+    if (!deleted) throw new Error("Product not found");
     return { message: "Product deleted" };
   }
 }

@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, SlidersHorizontal, ChevronRight, LayoutGrid, List } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, ChevronRight, LayoutGrid, List, X, Truck, ShieldCheck, Share2, Minus, Plus, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 import Navbar from '@/components/landing/Navbar';
 import LoginModal from '@/components/landing/LoginModal';
 import Footer from '@/components/landing/Footer';
@@ -22,6 +23,8 @@ export default function ProductsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
+  const [quickViewQty, setQuickViewQty] = useState(1);
   
   const debouncedSearch = useDebounce(searchTerm, 500);
   
@@ -59,7 +62,7 @@ export default function ProductsPage() {
       <div className="pt-24 pb-20 px-4 md:px-8 max-w-[1600px] mx-auto relative z-10 w-full">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Filters */}
-          <aside className="w-full lg:w-[260px] flex-shrink-0 space-y-6 lg:mt-[100px]">
+          <aside className="w-full lg:w-[260px] flex-shrink-0 space-y-6">
             {/* Filter by Price */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Filter By Price</h3>
@@ -308,6 +311,16 @@ export default function ProductsPage() {
                           plusColor={product.plusColor}
                           rateLabel={computedPtr ? 'PTR' : (product.rateLabel || 'N. RATE')}
                           infoIcon={product.infoIcon}
+                          onQuickView={() => {
+                            setQuickViewProduct({
+                              ...product,
+                              _image: image,
+                              _sellingPrice: computedSellingPrice,
+                              _ptr: computedPtr,
+                              _discountTag: computedDiscountTag,
+                            });
+                            setQuickViewQty(product.moq || product.minimumOrderQuantity || 1);
+                          }}
                           onClick={() => window.location.href = `/products/${product.id}`}
                         />
                       </div>
@@ -367,6 +380,212 @@ export default function ProductsPage() {
 
       <Footer />
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+
+      {/* Quick View Modal */}
+      <AnimatePresence>
+        {quickViewProduct && (
+          <motion.div
+            key="quick-view-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+            onClick={() => setQuickViewProduct(null)}
+          >
+            {/* Glassmorphism Backdrop */}
+            <div className="absolute inset-0 bg-black/30 backdrop-blur-xl" />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 30 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-[820px] max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50"
+            >
+              {/* Top Actions */}
+              <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+                <button
+                  className="p-2.5 rounded-full bg-white/80 hover:bg-white border border-gray-100 shadow-sm transition-all hover:scale-105"
+                  onClick={() => {}}
+                >
+                  <Share2 className="w-5 h-5 text-gray-700" strokeWidth={2} />
+                </button>
+                <button
+                  className="p-2.5 rounded-full bg-white/80 hover:bg-white border border-gray-100 shadow-sm transition-all hover:scale-105"
+                  onClick={() => setQuickViewProduct(null)}
+                >
+                  <X className="w-5 h-5 text-gray-700" strokeWidth={2.5} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+                {/* Left: Product Image */}
+                <div className="relative flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-white rounded-l-3xl min-h-[350px]">
+                  <div className="relative w-full h-[300px]">
+                    <Image
+                      src={quickViewProduct._image || '/product_placeholder.png'}
+                      alt={quickViewProduct.name}
+                      fill
+                      className="object-contain drop-shadow-lg"
+                      sizes="400px"
+                    />
+                  </div>
+                </div>
+
+                {/* Right: Product Details */}
+                <div className="p-7 pt-14 flex flex-col gap-5">
+                  {/* Product Name */}
+                  <h2 className="text-xl font-bold text-gray-900 tracking-tight leading-snug pr-20">
+                    {quickViewProduct.name}
+                  </h2>
+
+                  {/* Info Grid */}
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-emerald-600 font-bold">Expiry:</span>
+                      <span className="text-gray-700 font-medium">{quickViewProduct.expiryDate || quickViewProduct.expiry || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500 font-bold">Discount:</span>
+                      <span className="text-gray-700 font-medium">{quickViewProduct._discountTag || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-emerald-600 font-bold">Stock:</span>
+                      <span className="text-gray-700 font-medium">{quickViewProduct.stock ?? 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500 font-bold">Buy:</span>
+                      <span className="text-gray-700 font-medium">{quickViewProduct.discountDetails?.buy || quickViewProduct.discountFormDetails?.buy || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-emerald-600 font-bold">Min qty:</span>
+                      <span className="text-gray-700 font-medium">{quickViewProduct.moq || quickViewProduct.minimumOrderQuantity || 1}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500 font-bold">Get:</span>
+                      <span className="text-gray-700 font-medium">{quickViewProduct.discountDetails?.get || quickViewProduct.discountFormDetails?.get || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-emerald-600 font-bold">Max qty:</span>
+                      <span className="text-gray-700 font-medium">{quickViewProduct.maxOrderQuantity || quickViewProduct.stock || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500 font-bold">GST:</span>
+                      <span className="text-gray-700 font-medium">{quickViewProduct.gstPercent != null ? `${quickViewProduct.gstPercent}%` : 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-emerald-600 font-bold">Medicine Type:</span>
+                      <span className="text-gray-700 font-medium">{quickViewProduct.medicineType || quickViewProduct.dosageForm || 'N/A'}</span>
+                    </div>
+                    <div className="col-span-2 flex justify-between">
+                      <span className="text-gray-500 font-bold">{quickViewProduct.manufacturer ? '' : ''}</span>
+                      <span className="text-gray-700 font-bold uppercase text-xs tracking-wide">{quickViewProduct.manufacturer || ''}</span>
+                    </div>
+                  </div>
+
+                  {/* Pricing */}
+                  <div className="bg-gray-50/80 rounded-2xl p-4 space-y-1.5">
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-sm font-bold text-gray-500">MRP:</span>
+                      <span className="text-lg font-extrabold text-gray-900">₹{quickViewProduct.mrp || quickViewProduct._sellingPrice}</span>
+                    </div>
+                    {quickViewProduct._ptr && (
+                      <div className="flex items-baseline gap-3">
+                        <span className="text-sm font-bold text-blue-600">PTR:</span>
+                        <span className="text-lg font-extrabold text-blue-700">₹{quickViewProduct._ptr}</span>
+                      </div>
+                    )}
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-sm font-bold text-emerald-600">Net rate:</span>
+                      <span className="text-lg font-extrabold text-emerald-700">₹{quickViewProduct._sellingPrice}</span>
+                    </div>
+                    {quickViewProduct.country && (
+                      <div className="flex items-baseline gap-3">
+                        <span className="text-sm font-bold text-gray-500">Country:</span>
+                        <span className="text-sm font-medium text-gray-700">{quickViewProduct.country}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quantity Selector */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => setQuickViewQty((q) => Math.max(1, q - 1))}
+                        className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors text-gray-600"
+                      >
+                        <Minus className="w-4 h-4" strokeWidth={2.5} />
+                      </button>
+                      <span className="w-12 h-10 flex items-center justify-center font-bold text-gray-900 text-base tabular-nums border-x border-gray-200">
+                        {quickViewQty}
+                      </span>
+                      <button
+                        onClick={() => setQuickViewQty((q) => q + 1)}
+                        className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors text-gray-600"
+                      >
+                        <Plus className="w-4 h-4" strokeWidth={2.5} />
+                      </button>
+                    </div>
+                    <button className="w-10 h-10 rounded-full bg-gray-900 hover:bg-black flex items-center justify-center shadow-lg hover:scale-105 transition-all">
+                      <ArrowRight className="w-5 h-5 text-white" strokeWidth={2.5} />
+                    </button>
+                  </div>
+
+                  {/* Delivery */}
+                  <div className="flex items-center gap-2 text-sm font-bold text-gray-800">
+                    <Truck className="w-5 h-5 text-purple-500" />
+                    Delivery in 4-8 days
+                  </div>
+
+                  {/* Additional Offers */}
+                  <div className="border border-dashed border-gray-200 rounded-xl p-3">
+                    <span className="inline-block text-[10px] font-bold text-white bg-emerald-500 px-2.5 py-0.5 rounded-lg uppercase tracking-wide mb-1.5">Additional offers</span>
+                    <p className="text-xs text-gray-500 font-medium">Check available bank offers and cashback deals at checkout.</p>
+                  </div>
+
+                  {/* Custom Order */}
+                  <p className="text-sm text-gray-700">
+                    Have a <span className="font-bold underline underline-offset-2 cursor-pointer hover:text-gray-900">Custom Order ?</span>
+                  </p>
+
+                  {/* Badges */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-purple-700">
+                      <Truck className="w-6 h-6 text-purple-600" />
+                      Free Shipping
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5">
+                      <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest leading-none">PHARMA BAG</span>
+                        <span className="text-[11px] font-black text-emerald-700 leading-none">CERTIFIED</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* View Full Page */}
+                  <button
+                    onClick={() => {
+                      setQuickViewProduct(null);
+                      window.location.href = `/products/${quickViewProduct.id}`;
+                    }}
+                    className="flex items-center gap-3 text-sm font-bold text-gray-700 hover:text-gray-900 group mt-1"
+                  >
+                    View Product Page
+                    <div className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center group-hover:bg-gray-900 group-hover:text-white group-hover:border-gray-900 transition-all">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </main>
   );
 }

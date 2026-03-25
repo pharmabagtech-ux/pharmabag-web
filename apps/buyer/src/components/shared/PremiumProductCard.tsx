@@ -20,6 +20,7 @@ interface PremiumProductCardProps {
   infoIcon?: boolean; 
   onBookmark?: (bookmarked: boolean) => void;
   onCartChange?: (quantity: number | null) => void;
+  onQuickView?: () => void;
   onClick?: () => void;
 }
 
@@ -37,6 +38,7 @@ export default function PremiumProductCard({
   infoIcon = false,
   onBookmark,
   onCartChange,
+  onQuickView,
   onClick 
 }: PremiumProductCardProps) {
   const [count, setCount] = useState<number>(cartQuantity ?? 0);
@@ -50,7 +52,11 @@ export default function PremiumProductCard({
       actionClicked.current = false;
       return;
     }
-    onClick?.();
+    if (onQuickView) {
+      onQuickView();
+    } else {
+      onClick?.();
+    }
   };
 
   const addToCart = (e: React.MouseEvent) => {

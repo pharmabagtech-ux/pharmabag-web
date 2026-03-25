@@ -1,13 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
-import { PRODUCTS as MOCK_PRODUCTS, ADMIN_STATS } from "@pharmabag/utils/mockData";
+import { ADMIN_STATS } from "@pharmabag/utils/mockData";
 import type { Product } from "@pharmabag/utils";
-
-// ─── Local mock product store for approve/reject simulation ───
-let _mockProducts: Product[] | null = null;
-function getMockProducts(): Product[] {
-  if (!_mockProducts) _mockProducts = structuredClone(MOCK_PRODUCTS);
-  return _mockProducts;
-}
+import { getLocalProducts, addLocalProduct, updateLocalProduct, deleteLocalProduct, findLocalProduct } from "@pharmabag/utils";
 
 // ─── Dashboard ───────────────────────────────────────
 export async function getAdminDashboard() {
@@ -63,7 +57,7 @@ export async function getAdminProducts(page = 1, limit = 50) {
   } catch (error) {
     console.error("Admin Products Error:", error);
     // Fallback to mock data — admin sees ALL products regardless of status
-    const products = getMockProducts();
+    const products = getLocalProducts();
     const start = (page - 1) * limit;
     return { data: products.slice(start, start + limit), total: products.length, page, limit };
   }
@@ -74,7 +68,7 @@ export async function getProductById(productId: string) {
     const { data } = await apiClient.get<{ data: any }>(`/admin/products/${productId}`);
     return data.data;
   } catch {
-    const product = getMockProducts().find((p) => p.id === productId);
+    const product = findLocalProduct(productId);
     if (!product) throw new Error("Product not found");
     return product;
   }
@@ -85,11 +79,9 @@ export async function disableProduct(productId: string) {
     const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/disable`);
     return data.data;
   } catch {
-    const products = getMockProducts();
-    const idx = products.findIndex((p) => p.id === productId);
-    if (idx === -1) throw new Error("Product not found");
-    products[idx] = { ...products[idx], isActive: false };
-    return products[idx];
+    const updated = updateLocalProduct(productId, { isActive: false });
+    if (!updated) throw new Error("Product not found");
+    return updated;
   }
 }
 
@@ -98,15 +90,14 @@ export async function enableProduct(productId: string) {
     const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/enable`);
     return data.data;
   } catch {
-    const products = getMockProducts();
-    const idx = products.findIndex((p) => p.id === productId);
-    if (idx === -1) throw new Error("Product not found");
+    const product = findLocalProduct(productId);
+    if (!product) throw new Error("Product not found");
     // Only allow enabling if product is APPROVED
-    if (products[idx].status !== "APPROVED" && products[idx].approvalStatus !== "APPROVED") {
+    if (product.status !== "APPROVED" && product.approvalStatus !== "APPROVED") {
       throw new Error("Only approved products can be enabled");
     }
-    products[idx] = { ...products[idx], isActive: true };
-    return products[idx];
+    const updated = updateLocalProduct(productId, { isActive: true });
+    return updated;
   }
 }
 
@@ -115,11 +106,10 @@ export async function deleteProduct(productId: string) {
     const { data } = await apiClient.delete<{ data: any }>(`/admin/products/${productId}`);
     return data.data;
   } catch {
-    const products = getMockProducts();
-    const idx = products.findIndex((p) => p.id === productId);
-    if (idx === -1) throw new Error("Product not found");
-    const removed = products.splice(idx, 1)[0];
-    return removed;
+    const product = findLocalProduct(productId);
+    if (!product) throw new Error("Product not found");
+    deleteLocalProduct(productId);
+    return product;
   }
 }
 
@@ -128,15 +118,13 @@ export async function approveProduct(productId: string) {
     const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/approve`);
     return data.data;
   } catch {
-    const products = getMockProducts();
-    const idx = products.findIndex((p) => p.id === productId);
-    if (idx === -1) throw new Error("Product not found");
-    const current = products[idx];
+    const current = findLocalProduct(productId);
+    if (!current) throw new Error("Product not found");
     if (current.status !== "PENDING" && current.approvalStatus !== "PENDING") {
       throw new Error("Only pending products can be approved");
     }
-    products[idx] = { ...current, status: "APPROVED", approvalStatus: "APPROVED", isActive: true };
-    return products[idx];
+    const updated = updateLocalProduct(productId, { status: "APPROVED", approvalStatus: "APPROVED", isActive: true });
+    return updated;
   }
 }
 
@@ -145,15 +133,13 @@ export async function rejectProduct(productId: string, reason?: string) {
     const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}/reject`, { reason });
     return data.data;
   } catch {
-    const products = getMockProducts();
-    const idx = products.findIndex((p) => p.id === productId);
-    if (idx === -1) throw new Error("Product not found");
-    const current = products[idx];
+    const current = findLocalProduct(productId);
+    if (!current) throw new Error("Product not found");
     if (current.status !== "PENDING" && current.approvalStatus !== "PENDING") {
       throw new Error("Only pending products can be rejected");
     }
-    products[idx] = { ...current, status: "REJECTED", approvalStatus: "REJECTED", isActive: false, rejectionReason: reason };
-    return products[idx];
+    const updated = updateLocalProduct(productId, { status: "REJECTED", approvalStatus: "REJECTED", isActive: false, rejectionReason: reason });
+    return updated;
   }
 }
 
@@ -307,19 +293,19 @@ export async function getAdminProductsFiltered(params: { page?: number; limit?: 
     const { data } = await apiClient.get<{ data: any }>(`/admin/products?${qs}`);
     return data.data;
   } catch {
-    let products = getMockProducts();
+    let products = getLocalProducts();
     if (params.status) {
       const s = params.status.toUpperCase();
-      if (s === "ACTIVE") products = products.filter((p) => p.isActive);
-      else if (s === "INACTIVE") products = products.filter((p) => !p.isActive);
-      else products = products.filter((p) => (p.approvalStatus ?? p.status) === s);
+      if (s === "ACTIVE") products = products.filter((p: Product) => p.isActive);
+      else if (s === "INACTIVE") products = products.filter((p: Product) => !p.isActive);
+      else products = products.filter((p: Product) => (p.approvalStatus ?? p.status) === s);
     }
     if (params.search) {
       const q = params.search.toLowerCase();
-      products = products.filter((p) => p.name.toLowerCase().includes(q));
+      products = products.filter((p: Product) => p.name.toLowerCase().includes(q));
     }
-    if (params.categoryId) products = products.filter((p) => p.categoryId === params.categoryId);
-    if (params.sellerId) products = products.filter((p) => p.sellerId === params.sellerId);
+    if (params.categoryId) products = products.filter((p: Product) => p.categoryId === params.categoryId);
+    if (params.sellerId) products = products.filter((p: Product) => p.sellerId === params.sellerId);
     const page = params.page ?? 1;
     const limit = params.limit ?? 50;
     const start = (page - 1) * limit;
@@ -351,7 +337,7 @@ export async function createProduct(payload: Record<string, any>) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    getMockProducts().push(newProduct);
+    addLocalProduct(newProduct);
     return newProduct;
   }
 }
@@ -361,11 +347,9 @@ export async function updateProduct(productId: string, payload: Record<string, a
     const { data } = await apiClient.patch<{ data: any }>(`/admin/products/${productId}`, payload);
     return data.data;
   } catch {
-    const products = getMockProducts();
-    const idx = products.findIndex((p) => p.id === productId);
-    if (idx === -1) throw new Error("Product not found");
-    products[idx] = { ...products[idx], ...payload, updatedAt: new Date().toISOString() };
-    return products[idx];
+    const updated = updateLocalProduct(productId, { ...payload, updatedAt: new Date().toISOString() } as Partial<Product>);
+    if (!updated) throw new Error("Product not found");
+    return updated;
   }
 }
 

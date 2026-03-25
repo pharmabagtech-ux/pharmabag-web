@@ -68,7 +68,7 @@ export const CategorySchema = z.object({
 export type Category = z.infer<typeof CategorySchema>;
 
 // ─── Mock Fallback (used when backend is unavailable) ─
-import { PRODUCTS as MOCK_PRODUCTS } from '@pharmabag/utils/mockData';
+import { getLocalProducts } from '@pharmabag/utils';
 
 // ─── API Functions ──────────────────────────────────
 
@@ -94,7 +94,8 @@ export async function getProducts(params?: {
     };
   } catch {
     // Fallback to mock data — only return APPROVED products for buyer-facing API
-    const approved = (MOCK_PRODUCTS as any[]).filter(
+    const allProducts = getLocalProducts();
+    const approved = allProducts.filter(
       (p) => (p.status === 'APPROVED' || p.approvalStatus === 'APPROVED') && p.isActive !== false
     );
     const search = params?.search?.toLowerCase();
@@ -114,7 +115,8 @@ export async function getProductById(id: string): Promise<Product> {
     const { data } = await api.get(`/products/${id}`);
     return data.data;
   } catch {
-    const found = (MOCK_PRODUCTS as any[]).find((p) => p.id === id);
+    const allProducts = getLocalProducts();
+    const found = allProducts.find((p: any) => p.id === id);
     if (found) return found as Product;
     throw new Error('Product not found');
   }
@@ -169,7 +171,7 @@ export async function getManufacturers(): Promise<{ id: string; name: string; pr
   } catch {
     // Derive from mock data
     const mfrs = new Map<string, number>();
-    for (const p of MOCK_PRODUCTS as any[]) {
+    for (const p of getLocalProducts() as any[]) {
       if (p.manufacturer) mfrs.set(p.manufacturer, (mfrs.get(p.manufacturer) || 0) + 1);
     }
     return Array.from(mfrs).map(([name, count], i) => ({ id: `mfr-${i}`, name, productCount: count }));
