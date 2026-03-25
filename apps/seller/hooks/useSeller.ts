@@ -72,7 +72,7 @@ export function useDeleteSellerProduct() { const qc = useQueryClient(); return u
 
 export function useSellerProduct(id: string) { return useQuery({ queryKey: ["seller", "product", id], queryFn: () => getSellerProductById(id), enabled: !!id && id !== "new", retry: 1 }); }
 
-export function useCategories() { return useQuery({ queryKey: ["categories"], queryFn: getCategories, staleTime: 300_000, retry: 1 }); }
+export function useCategories() { return useQuery({ queryKey: ["categories"], queryFn: getCategoriesWithSubs, staleTime: 300_000, retry: 1 }); }
 
 export function useSellerOrders() { return useQuery({ queryKey: ["seller", "orders"], queryFn: getSellerOrders, staleTime: 60_000, retry: 1 }); }
 
