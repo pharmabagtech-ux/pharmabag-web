@@ -241,8 +241,8 @@ export async function getCategoriesWithSubs(): Promise<CategoryItem[]> {
                     } else if (sc?.name && typeof sc.name === 'object') {
                       scName = String((sc.name as any).name || (sc.name as any).id || sc.name);
                     }
-                    return { id: scId, name: scName };
-                  }).filter((sc: any) => sc && sc.id && sc.name)
+                    return { id: scId, name: scName, categoryId: c.id };
+                  }).filter((sc: any) => sc && sc.id && sc.name && sc.categoryId)
                 : [],
             };
           })
