@@ -16,12 +16,12 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
 };
 
 function hasPermission(permissions: string | undefined, route: string): boolean {
-  if (permissions?.includes("x")) return true; // Super admin has all access
+  if (!permissions) return false;
+  if (permissions.includes("x")) return true; // Super admin has all access
   const requiredPerm = Object.entries(ROUTE_PERMISSIONS).find(
     ([prefix]) => route === prefix || route.startsWith(prefix + "/")
   );
   if (!requiredPerm) return true; // No specific permission required (dashboard, analytics, etc.)
-  if (!permissions) return false;
   return permissions.includes(requiredPerm[1]);
 }
 

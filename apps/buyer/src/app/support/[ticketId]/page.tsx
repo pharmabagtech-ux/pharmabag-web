@@ -59,9 +59,9 @@ export default function TicketDetailPage() {
     <main className="min-h-screen bg-[#f8fbfa] flex flex-col">
       <Navbar showUserActions={true} />
 
-      <div className="flex-1 pt-32 pb-20 px-6 max-w-5xl mx-auto w-full flex flex-col">
+      <div className="flex-1 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 px-3 sm:px-4 md:px-6 max-w-5xl mx-auto w-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
           <Link 
             href="/support" 
             className="inline-flex items-center gap-2 text-gray-400 font-bold hover:text-gray-900 transition-colors group"
@@ -83,7 +83,7 @@ export default function TicketDetailPage() {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-[32px] p-8 mb-8 shadow-xl"
+          className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 shadow-xl"
         >
           <div className="flex items-start justify-between gap-6">
             <div>
@@ -100,11 +100,11 @@ export default function TicketDetailPage() {
         </motion.div>
 
         {/* Chat Interface */}
-        <div className="flex-1 flex flex-col bg-white/40 backdrop-blur-3xl border border-white/50 rounded-[40px] shadow-2xl overflow-hidden min-h-[500px]">
+        <div className="flex-1 flex flex-col bg-white/40 backdrop-blur-3xl border border-white/50 rounded-2xl sm:rounded-3xl md:rounded-[40px] shadow-2xl overflow-hidden min-h-[400px] sm:min-h-[500px]">
           {/* Message List */}
           <div 
             ref={scrollRef}
-            className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar"
+            className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 custom-scrollbar"
           >
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center opacity-30 gap-4">
@@ -147,20 +147,20 @@ export default function TicketDetailPage() {
           </div>
 
           {/* Input Area */}
-          <div className="p-6 bg-white/60 border-t border-white/40 backdrop-blur-xl">
-            <form onSubmit={handleSendMessage} className="flex gap-4">
+          <div className="p-3 sm:p-4 md:p-6 bg-white/60 border-t border-white/40 backdrop-blur-xl">
+            <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-4">
               <input 
                 type="text" 
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type your message here..."
                 disabled={ticket?.status === 'closed'}
-                className="flex-1 h-14 bg-white rounded-2xl border border-gray-100 px-6 font-medium focus:ring-4 focus:ring-lime-100 focus:border-lime-300 outline-none transition-all disabled:opacity-50"
+                className="flex-1 h-12 sm:h-14 bg-white rounded-xl sm:rounded-2xl border border-gray-100 px-4 sm:px-6 font-medium text-sm sm:text-base focus:ring-4 focus:ring-lime-100 focus:border-lime-300 outline-none transition-all disabled:opacity-50"
               />
               <button 
                 type="submit"
                 disabled={!newMessage.trim() || addMessage.isPending || ticket?.status === 'closed'}
-                className="w-14 h-14 bg-lime-300 hover:bg-lime-400 disabled:opacity-50 disabled:bg-gray-200 text-gray-900 rounded-2xl flex items-center justify-center shadow-lg shadow-lime-300/20 active:scale-90 transition-all"
+                className="w-12 h-12 sm:w-14 sm:h-14 bg-lime-300 hover:bg-lime-400 disabled:opacity-50 disabled:bg-gray-200 text-gray-900 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-lime-300/20 active:scale-90 transition-all flex-shrink-0"
               >
                 {addMessage.isPending ? (
                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full" />

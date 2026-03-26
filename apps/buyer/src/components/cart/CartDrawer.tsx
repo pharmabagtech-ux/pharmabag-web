@@ -43,10 +43,10 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
             className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-[101] flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-8 border-b border-gray-100">
+            <div className="flex items-center justify-between p-4 sm:p-6 md:p-8 border-b border-gray-100">
               <div className="flex items-center gap-3">
-                <ShoppingCart className="w-6 h-6 text-gray-900" />
-                <h2 className="text-2xl font-bold text-gray-900">Your Cart</h2>
+                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900" />
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Your Cart</h2>
                 {items.length > 0 && (
                   <span className="text-xs font-bold bg-lime-300 text-gray-900 px-2 py-0.5 rounded-full">
                     {items.length}
@@ -59,7 +59,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
             </div>
 
             {/* Items */}
-            <div className="flex-1 overflow-y-auto p-8 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-full gap-4">
                   <Loader2 className="w-8 h-8 text-gray-300 animate-spin" />
@@ -133,7 +133,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
 
             {/* Footer */}
             {items.length > 0 && (
-              <div className="p-8 bg-gray-50/50 border-t border-gray-100 space-y-6">
+              <div className="p-4 sm:p-6 md:p-8 bg-gray-50/50 border-t border-gray-100 space-y-4 sm:space-y-6">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm font-medium text-gray-500">
                     <span>Subtotal</span>

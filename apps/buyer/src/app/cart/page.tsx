@@ -52,11 +52,11 @@ export default function CartPage() {
 
         <Navbar showUserActions onLoginClick={() => setIsLoginOpen(true)} />
 
-        <div className="pt-28 pb-20 px-4 md:px-8 max-w-[1200px] mx-auto relative z-10">
+        <div className="pt-20 sm:pt-24 md:pt-28 pb-12 sm:pb-20 px-3 sm:px-4 md:px-8 max-w-[1200px] mx-auto relative z-10">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Shopping Cart</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Shopping Cart</h1>
               <p className="text-gray-500 mt-1">{items.length} item{items.length !== 1 ? 's' : ''}</p>
             </div>
             {items.length > 0 && (
@@ -89,7 +89,7 @@ export default function CartPage() {
               actionHref="/products"
             />
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {/* Cart Items */}
               <div className="lg:col-span-2 space-y-4">
                 {/* Minimum Order Warning */}
@@ -132,10 +132,10 @@ export default function CartPage() {
                         exit={{ opacity: 0, x: -100 }}
                         className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm p-5"
                       >
-                        <div className="flex gap-4">
+                        <div className="flex gap-3 sm:gap-4">
                           {/* Image */}
                           <Link href={`/products/${item.productId}`} className="flex-shrink-0">
-                            <div className="relative w-24 h-24 bg-gray-50 rounded-xl overflow-hidden">
+                            <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-gray-50 rounded-xl overflow-hidden">
                               {itemImage ? (
                                 <Image src={itemImage} alt={itemName} fill className="object-cover" sizes="96px" />
                               ) : (

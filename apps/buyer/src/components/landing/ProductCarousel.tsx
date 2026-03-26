@@ -21,28 +21,30 @@ const FEATURED_PRODUCTS: Product[] = [
   { id: 8, name: 'Fhtture Injection', price: '₹1,200', image: '/products/pharma_bottle.png' },
 ];
 
+// Card width + gap: 136px (w-32=128 + gap 8) per card, 8 cards = 1088px per set
+const CARD_WIDTH = 136;
+const SCROLL_DISTANCE = FEATURED_PRODUCTS.length * CARD_WIDTH;
+
 export default function ProductCarousel() {
-  // Triple products for truly smooth infinite scroll
   const scrollProducts = [...FEATURED_PRODUCTS, ...FEATURED_PRODUCTS, ...FEATURED_PRODUCTS];
 
   return (
-    <div className="w-full py-12 overflow-hidden bg-transparent">
-      {/* Auto-scrolling Container using Framer Motion for better control */}
+    <div className="w-full py-8 sm:py-10 md:py-12 overflow-hidden bg-transparent">
       <div className="relative">
         <motion.div 
-          animate={{ x: [0, -1360] }}
+          animate={{ x: [0, -SCROLL_DISTANCE] }}
           transition={{ 
             x: {
               repeat: Infinity,
               repeatType: "loop",
-              duration: 30,
+              duration: 25,
               ease: "linear",
             }
           }}
-          className="flex gap-2.5 px-6"
+          className="flex gap-2 px-3 sm:px-6"
         >
           {scrollProducts.map((product, index) => (
-            <div key={`${product.id}-${index}`} className="flex-shrink-0 w-40">
+            <div key={`${product.id}-${index}`} className="flex-shrink-0 w-32 sm:w-36 md:w-40">
               <ProductCard 
                 name={product.name} 
                 price={product.price} 
@@ -51,8 +53,6 @@ export default function ProductCarousel() {
             </div>
           ))}
         </motion.div>
-        
-
       </div>
     </div>
   );

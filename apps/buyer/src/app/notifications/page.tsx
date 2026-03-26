@@ -55,20 +55,20 @@ export default function NotificationsPage() {
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
-      <div className="pt-32 pb-20 max-w-4xl mx-auto px-6">
+      <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 max-w-4xl mx-auto px-3 sm:px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-8"
+          className="space-y-6 sm:space-y-8"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-gray-100">
-                <Bell className="w-6 h-6 text-gray-800" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg border border-gray-100">
+                <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Notifications</h1>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Notifications</h1>
                 {unreadCount > 0 && (
                   <p className="text-sm font-medium text-gray-400">{unreadCount} unread</p>
                 )}
@@ -114,13 +114,13 @@ export default function NotificationsPage() {
                       const route = typeRoutes[notif.type ?? ''];
                       if (route) router.push(route);
                     }}
-                    className={`group flex items-center gap-6 p-6 rounded-[32px] border transition-all duration-300 cursor-pointer ${
+                    className={`group flex items-center gap-3 sm:gap-6 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-300 cursor-pointer ${
                       notif.isRead 
                         ? 'bg-white/40 border-gray-100 hover:bg-white/60 shadow-sm' 
                         : 'bg-white border-lime-100 shadow-xl shadow-lime-900/5 hover:border-lime-200'
                     }`}
                   >
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${config.bg}`}>
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ${config.bg}`}>
                       {config.icon}
                     </div>
                     

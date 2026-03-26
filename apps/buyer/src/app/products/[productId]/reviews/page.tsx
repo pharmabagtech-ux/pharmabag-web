@@ -67,10 +67,10 @@ export default function ProductReviewsPage() {
     <main className="min-h-screen bg-[#f8fbfa]">
       <Navbar showUserActions={true} />
 
-      <div className="pt-32 pb-20 px-6 max-w-5xl mx-auto">
+      <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 px-3 sm:px-4 md:px-6 max-w-5xl mx-auto">
         <Link 
           href={`/products/${productId}`} 
-          className="inline-flex items-center gap-2 text-gray-400 font-bold hover:text-gray-900 transition-colors mb-8 group"
+          className="inline-flex items-center gap-2 text-gray-400 font-bold hover:text-gray-900 transition-colors mb-6 sm:mb-8 group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span>Back to Product</span>
@@ -80,9 +80,9 @@ export default function ProductReviewsPage() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-[40px] p-8 md:p-10 mb-12 shadow-xl flex flex-col md:flex-row items-center gap-10"
+          className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-2xl sm:rounded-3xl md:rounded-[40px] p-4 sm:p-6 md:p-8 lg:p-10 mb-8 sm:mb-12 shadow-xl flex flex-col md:flex-row items-center gap-6 sm:gap-8 md:gap-10"
         >
-          <div className="w-40 h-40 bg-[#f1f6ea] rounded-3xl flex-shrink-0 relative overflow-hidden flex items-center justify-center">
+          <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 bg-[#f1f6ea] rounded-2xl sm:rounded-3xl flex-shrink-0 relative overflow-hidden flex items-center justify-center">
             <img 
               src={product?.images?.[0] || '/product_placeholder.png'} 
               alt={product?.name} 
@@ -90,7 +90,7 @@ export default function ProductReviewsPage() {
             />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight mb-4">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 tracking-tight mb-3 sm:mb-4">
               {product?.name}
             </h1>
             <div className="flex items-center justify-center md:justify-start gap-6">
@@ -105,7 +105,7 @@ export default function ProductReviewsPage() {
           </div>
           <button 
             onClick={() => setIsAddingReview(true)}
-            className="px-8 h-16 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-2xl font-black shadow-xl shadow-lime-300/20 active:scale-95 transition-all flex items-center gap-3"
+            className="px-5 sm:px-8 h-12 sm:h-14 md:h-16 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-xl sm:rounded-2xl font-black shadow-xl shadow-lime-300/20 active:scale-95 transition-all flex items-center gap-2 sm:gap-3 text-sm sm:text-base flex-shrink-0"
           >
             <Plus className="w-5 h-5" />
             <span>Write a Review</span>
@@ -121,7 +121,7 @@ export default function ProductReviewsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-[32px] p-8 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <div className="flex items-start justify-between gap-4 mb-6">
                   <div className="flex items-center gap-4">
@@ -190,7 +190,7 @@ export default function ProductReviewsPage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-[160] p-10 flex flex-col"
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-[160] p-5 sm:p-8 md:p-10 flex flex-col"
             >
               <div className="flex items-center justify-between mb-12">
                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">Review Product</h2>

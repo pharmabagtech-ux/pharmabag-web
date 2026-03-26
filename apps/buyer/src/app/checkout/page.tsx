@@ -128,7 +128,7 @@ export default function CheckoutPage() {
     <main className="min-h-screen bg-[#f8fbfa]">
       <Navbar showUserActions={true} />
 
-      <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
+      <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 px-3 sm:px-4 md:px-6 max-w-7xl mx-auto">
         <Link 
           href="/products" 
           className="inline-flex items-center gap-2 text-gray-400 font-bold hover:text-gray-900 transition-colors mb-8 group"
@@ -137,29 +137,29 @@ export default function CheckoutPage() {
           <span>Back to Shopping</span>
         </Link>
 
-        <div className="flex flex-col lg:flex-row gap-12">
+        <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-12">
           {/* Left Side - Delivery Details */}
-          <div className="flex-1 space-y-8">
+          <div className="flex-1 space-y-6 sm:space-y-8">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-[40px] p-8 md:p-12 shadow-2xl"
+              className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-2xl sm:rounded-3xl md:rounded-[40px] p-4 sm:p-6 md:p-8 lg:p-12 shadow-2xl"
             >
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-12 bg-lime-100 rounded-2xl flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-gray-800" />
+              <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 md:mb-10">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-lime-100 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
                 </div>
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Delivery Address</h2>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Delivery Address</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">Receiver Name</label>
                   <input 
                     type="text"
                     value={address.name}
                     onChange={(e) => setAddress({ ...address, name: e.target.value })}
-                    className="w-full h-14 bg-white/70 rounded-2xl border border-white/50 px-6 text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
+                    className="w-full h-12 sm:h-14 bg-white/70 rounded-xl sm:rounded-2xl border border-white/50 px-4 sm:px-6 text-sm sm:text-base text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
                     placeholder="John Doe"
                   />
                 </div>
@@ -169,7 +169,7 @@ export default function CheckoutPage() {
                     type="text"
                     value={address.phone}
                     onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                    className="w-full h-14 bg-white/70 rounded-2xl border border-white/50 px-6 text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
+                    className="w-full h-12 sm:h-14 bg-white/70 rounded-xl sm:rounded-2xl border border-white/50 px-4 sm:px-6 text-sm sm:text-base text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
                     placeholder="+91 98765 43210"
                   />
                 </div>
@@ -179,7 +179,7 @@ export default function CheckoutPage() {
                     type="text"
                     value={address.address}
                     onChange={(e) => setAddress({ ...address, address: e.target.value })}
-                    className="w-full h-14 bg-white/70 rounded-2xl border border-white/50 px-6 text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
+                    className="w-full h-12 sm:h-14 bg-white/70 rounded-xl sm:rounded-2xl border border-white/50 px-4 sm:px-6 text-sm sm:text-base text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
                     placeholder="123 Pharma Lane"
                   />
                 </div>
@@ -189,7 +189,7 @@ export default function CheckoutPage() {
                     type="text"
                     value={address.city}
                     onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                    className="w-full h-14 bg-white/70 rounded-2xl border border-white/50 px-6 text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
+                    className="w-full h-12 sm:h-14 bg-white/70 rounded-xl sm:rounded-2xl border border-white/50 px-4 sm:px-6 text-sm sm:text-base text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
                     placeholder="Mumbai"
                   />
                 </div>
@@ -199,7 +199,7 @@ export default function CheckoutPage() {
                     type="text"
                     value={address.state}
                     onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                    className="w-full h-14 bg-white/70 rounded-2xl border border-white/50 px-6 text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
+                    className="w-full h-12 sm:h-14 bg-white/70 rounded-xl sm:rounded-2xl border border-white/50 px-4 sm:px-6 text-sm sm:text-base text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
                     placeholder="Maharashtra"
                   />
                 </div>
@@ -209,7 +209,7 @@ export default function CheckoutPage() {
                     type="text"
                     value={address.pincode}
                     onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
-                    className="w-full h-14 bg-white/70 rounded-2xl border border-white/50 px-6 text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
+                    className="w-full h-12 sm:h-14 bg-white/70 rounded-xl sm:rounded-2xl border border-white/50 px-4 sm:px-6 text-sm sm:text-base text-gray-900 font-medium focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all"
                     placeholder="400001"
                   />
                 </div>
@@ -220,13 +220,13 @@ export default function CheckoutPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-[40px] p-8 md:p-12 shadow-2xl"
+              className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-2xl sm:rounded-3xl md:rounded-[40px] p-4 sm:p-6 md:p-8 lg:p-12 shadow-2xl"
             >
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-12 bg-sky-100 rounded-2xl flex items-center justify-center">
-                  <CreditCard className="w-6 h-6 text-gray-800" />
+              <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 md:mb-10">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-sky-100 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
                 </div>
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Payment Method</h2>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Payment Method</h2>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
@@ -306,11 +306,11 @@ export default function CheckoutPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="bg-white/60 backdrop-blur-3xl border border-white/50 rounded-[48px] p-8 md:p-10 shadow-2xl sticky top-32"
+              className="bg-white/60 backdrop-blur-3xl border border-white/50 rounded-2xl sm:rounded-3xl md:rounded-[48px] p-4 sm:p-6 md:p-8 lg:p-10 shadow-2xl sticky top-24 sm:top-32"
             >
-              <div className="flex items-center gap-3 mb-8">
-                <ShoppingBag className="w-6 h-6 text-gray-900" />
-                <h3 className="text-2xl font-black text-gray-900">Order Summary</h3>
+              <div className="flex items-center gap-3 mb-6 sm:mb-8">
+                <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900" />
+                <h3 className="text-xl sm:text-2xl font-black text-gray-900">Order Summary</h3>
               </div>
 
               <div className="space-y-6 mb-10 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
@@ -343,7 +343,7 @@ export default function CheckoutPage() {
                   <span>GST ({platformConfig?.gst_rate ?? 12}%)</span>
                   <span>₹{gst.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-[28px] font-black text-gray-900 pt-4 border-t border-gray-100">
+                <div className="flex justify-between text-xl sm:text-2xl md:text-[28px] font-black text-gray-900 pt-4 border-t border-gray-100">
                   <span>Total</span>
                   <span>₹{total.toLocaleString()}</span>
                 </div>
@@ -352,7 +352,7 @@ export default function CheckoutPage() {
               <button 
                 onClick={handlePlaceOrder}
                 disabled={createOrder.isPending || items.length === 0}
-                className="w-full h-16 bg-lime-300 hover:bg-lime-400 disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400 text-gray-900 rounded-2xl text-xl font-black transition-all active:scale-95 flex items-center justify-center gap-3"
+                className="w-full h-12 sm:h-14 md:h-16 bg-lime-300 hover:bg-lime-400 disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400 text-gray-900 rounded-xl sm:rounded-2xl text-base sm:text-lg md:text-xl font-black transition-all active:scale-95 flex items-center justify-center gap-3"
               >
                 {createOrder.isPending ? (
                   <motion.div 

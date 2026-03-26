@@ -58,11 +58,11 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
-      <div className="pt-32 pb-20 max-w-4xl mx-auto px-6">
+      <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 max-w-4xl mx-auto px-3 sm:px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-8"
+          className="space-y-6 sm:space-y-8"
         >
           <div className="flex items-center justify-between">
             <Link href="/payments" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors font-bold">
@@ -71,24 +71,24 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
             </Link>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl overflow-hidden relative">
+          <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8">
                <div className="w-24 h-24 bg-lime-100/30 rounded-full blur-3xl" />
             </div>
 
             <div className="relative z-10">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-14 h-14 bg-gray-900 rounded-2xl flex items-center justify-center text-white shadow-xl">
-                  <CreditCard className="w-6 h-6" />
+              <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 md:mb-10">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-gray-900 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-xl">
+                  <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Order Payment</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Order Payment</h1>
                   <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Order #{params.orderId.slice(-8)}</p>
                 </div>
               </div>
 
               {/* Payment Progress Steps */}
-              <div className="flex items-center gap-0 mb-12">
+              <div className="flex items-center gap-0 mb-6 sm:mb-8 md:mb-12">
                 {['Upload Proof', 'Under Review', 'Verified'].map((stepLabel, idx) => {
                   const stepState = 
                     ['CONFIRMED', 'COMPLETED', 'VERIFIED'].includes(status) ? 3 :
@@ -114,7 +114,7 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
                 })}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8 md:mb-12">
                 <div className="bg-white/40 p-6 rounded-3xl border border-white">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Amount</p>
                   <p className="text-2xl font-bold text-gray-900">₹{amount.toLocaleString('en-IN')}</p>
@@ -140,7 +140,7 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
               ) : !isSuccess && !hasProof ? (
                 <div className="space-y-6">
                   <div 
-                    className={`border-2 border-dashed rounded-[40px] p-12 text-center transition-all ${
+                    className={`border-2 border-dashed rounded-2xl sm:rounded-3xl md:rounded-[40px] p-6 sm:p-8 md:p-12 text-center transition-all ${
                       file ? 'border-lime-400 bg-lime-50/20' : 'border-gray-200 bg-gray-50/30 hover:bg-gray-50/50'
                     }`}
                   >

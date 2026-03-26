@@ -109,7 +109,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
 
-      <div className="pt-32 pb-20 max-w-6xl mx-auto px-6">
+      <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 max-w-6xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -120,11 +120,11 @@ export default function ProductDetailPage({ params }: { params: { productId: str
             Back to Products
           </Link>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 md:gap-10 lg:gap-12">
             {/* Product Image */}
             <motion.div
               whileHover={{ scale: 1.02 }}
-              className="relative bg-white/40 backdrop-blur-xl rounded-[40px] border border-white/40 shadow-xl overflow-hidden flex items-center justify-center aspect-square"
+              className="relative bg-white/40 backdrop-blur-xl rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl overflow-hidden flex items-center justify-center aspect-square max-h-[400px] sm:max-h-[500px] lg:max-h-none"
             >
               {product.images && product.images.length > 0 ? (
                 <Image
@@ -144,26 +144,26 @@ export default function ProductDetailPage({ params }: { params: { productId: str
             </motion.div>
 
             {/* Product Info */}
-            <div className="space-y-8">
+            <div className="space-y-4 sm:space-y-6 md:space-y-8">
               <div>
                 {product.category && (
                   <span className="text-[10px] font-bold text-lime-700 bg-lime-100 px-3 py-1 rounded-2xl uppercase tracking-widest">
                     {typeof product.category === 'object' ? (product.category as any).name : product.category}
                   </span>
                 )}
-                <h1 className="text-4xl font-bold text-gray-900 tracking-tight mt-4">{product.name}</h1>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mt-3 sm:mt-4">{product.name}</h1>
                 {product.manufacturer && (
                   <p className="text-gray-500 font-medium mt-2">by {product.manufacturer}</p>
                 )}
               </div>
 
               {/* Price */}
-              <div className="bg-white/40 backdrop-blur-xl p-6 rounded-3xl border border-white/40 shadow-lg">
-                <div className="flex items-baseline gap-4">
-                  <span className="text-4xl font-bold text-gray-900">₹{sellingPrice.toLocaleString('en-IN')}</span>
+              <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-white/40 shadow-lg">
+                <div className="flex items-baseline gap-2 sm:gap-4 flex-wrap">
+                  <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">₹{sellingPrice.toLocaleString('en-IN')}</span>
                   {product.mrp && product.mrp > sellingPrice && (
                     <>
-                      <span className="text-xl text-gray-400 line-through">₹{product.mrp.toLocaleString('en-IN')}</span>
+                      <span className="text-base sm:text-lg md:text-xl text-gray-400 line-through">₹{product.mrp.toLocaleString('en-IN')}</span>
                       <span className="text-sm font-bold text-green-600 bg-green-50 px-3 py-1 rounded-2xl">
                         {discount}% OFF
                       </span>
@@ -202,7 +202,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
 
               {/* Quantity + Add to Cart */}
               {inStock && (
-                <div className="flex items-center gap-6">
+                <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 sm:gap-4 md:gap-6">
                   <div className="flex items-center bg-white/60 rounded-2xl border border-gray-200 overflow-hidden">
                     <button
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -252,8 +252,8 @@ export default function ProductDetailPage({ params }: { params: { productId: str
 
               {/* Description */}
               {product.description && (
-                <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[32px] border border-white/40 shadow-lg">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Description</h2>
+                <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-lg">
+                  <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Description</h2>
                   <p className="text-gray-600 leading-relaxed font-medium whitespace-pre-wrap">{product.description}</p>
                 </div>
               )}
@@ -328,12 +328,12 @@ function ReviewsSection({ productId }: { productId: string }) {
   };
 
   return (
-    <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Reviews</h2>
+    <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Reviews</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-6 py-2.5 bg-gray-900 text-white rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-black transition-colors shadow-lg"
+          className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gray-900 text-white rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 hover:bg-black transition-colors shadow-lg w-full sm:w-auto justify-center"
         >
           <Star className="w-4 h-4" />
           Write a Review
@@ -341,9 +341,9 @@ function ReviewsSection({ productId }: { productId: string }) {
       </div>
 
       {/* Rating Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        <div className="flex flex-col items-center justify-center bg-lime-50/50 rounded-3xl p-6 border border-lime-100">
-          <p className="text-5xl font-bold text-gray-900">{averageRating.toFixed(1)}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8">
+        <div className="flex flex-col items-center justify-center bg-lime-50/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-lime-100">
+          <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900">{averageRating.toFixed(1)}</p>
           <StarRating rating={Math.round(averageRating)} />
           <p className="text-sm text-gray-500 font-medium mt-2">{totalReviews} review{totalReviews !== 1 ? 's' : ''}</p>
         </div>

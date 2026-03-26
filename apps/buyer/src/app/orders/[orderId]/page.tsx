@@ -79,11 +79,11 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
-      <div className="pt-32 pb-20 max-w-5xl mx-auto px-6">
+      <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 max-w-5xl mx-auto px-3 sm:px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-8"
+          className="space-y-6 sm:space-y-8"
         >
           <div className="flex items-center justify-between">
             <Link href="/orders" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors font-bold">
@@ -97,9 +97,9 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
-              <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl">
-                <div className="flex items-center justify-between mb-8">
-                  <h1 className="text-3xl font-bold text-gray-900">Order #{order.orderNumber ?? order.id.slice(-8)}</h1>
+              <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-6 sm:mb-8">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Order #{order.orderNumber ?? order.id.slice(-8)}</h1>
                   <div className="flex items-center gap-2 text-gray-400">
                     <Calendar className="w-4 h-4" />
                     <span className="text-sm font-bold">{orderDate}</span>
@@ -130,7 +130,7 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
               </div>
 
               {orderItems.length > 0 && (
-                <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl">
+                <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl">
                   <h2 className="text-xl font-bold text-gray-900 mb-6">Order Items</h2>
                   <div className="space-y-4">
                     {orderItems.map((item) => {
@@ -171,7 +171,7 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
 
             {/* Right Col: Timeline */}
             {steps.length > 0 && (
-              <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl h-fit sticky top-32">
+              <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl h-fit sticky top-24 sm:top-32">
                 <div className="flex items-center gap-3 mb-8">
                   <div className="p-2 bg-lime-100 rounded-xl">
                     <Truck className="w-5 h-5 text-gray-900" />

@@ -37,32 +37,32 @@ const TESTIMONIALS: Testimonial[] = [
 
 export default function Testimonials() {
   return (
-    <div className="py-40 px-4">
+    <div className="py-16 sm:py-24 md:py-32 lg:py-40 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-3 gap-20 md:gap-32">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 sm:gap-12 md:gap-16 lg:gap-24">
           {TESTIMONIALS.map((testimonial) => (
             <div
               key={testimonial.id}
               className="group transition-all duration-300"
             >
               {/* Avatar */}
-              <div className="flex justify-center mb-8">
+              <div className="flex justify-center mb-4 sm:mb-6 md:mb-8">
                 <img
                   src={testimonial.avatar}
                   alt={testimonial.name}
-                  className="w-16 h-16 rounded-full grayscale hover:grayscale-0 transition-all duration-500"
+                  className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full grayscale hover:grayscale-0 transition-all duration-500"
                 />
               </div>
 
               {/* Quote */}
-              <p className="text-lg md:text-xl font-light text-gray-600 text-center mb-8 leading-relaxed tracking-wide">
+              <p className="text-base sm:text-lg font-light text-gray-600 text-center mb-4 sm:mb-6 md:mb-8 leading-relaxed tracking-wide">
                 {testimonial.quote}
               </p>
 
               {/* Name & Role */}
               <div className="text-center">
-                <p className="font-semibold text-gray-900 text-lg">{testimonial.name}</p>
-                <p className="text-sm text-gray-500 font-medium uppercase tracking-wider mt-1">{testimonial.role}</p>
+                <p className="font-semibold text-gray-900 text-base sm:text-lg">{testimonial.name}</p>
+                <p className="text-xs sm:text-sm text-gray-500 font-medium uppercase tracking-wider mt-1">{testimonial.role}</p>
               </div>
             </div>
           ))}

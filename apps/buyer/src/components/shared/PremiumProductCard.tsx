@@ -121,15 +121,15 @@ export default function PremiumProductCard({
 
   return (
     <div
-      className="relative flex flex-col w-full rounded-[22px] overflow-hidden bg-gradient-to-b from-[#f4fdf7] to-white shadow-[0_2px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group border border-gray-100/80"
+      className="relative flex flex-col w-full rounded-2xl sm:rounded-[22px] overflow-hidden bg-gradient-to-b from-[#f4fdf7] to-white shadow-[0_2px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group border border-gray-100/80"
       onClick={handleCardClick}
     >
       {/* Image Section */}
-      <div className="relative w-full h-[180px] flex items-center justify-center p-4 pt-10 bg-gradient-to-b from-[#eef9f2]/60 to-transparent">
+      <div className="relative w-full h-[140px] xs:h-[160px] sm:h-[180px] flex items-center justify-center p-3 sm:p-4 pt-8 sm:pt-10 bg-gradient-to-b from-[#eef9f2]/60 to-transparent">
         
         {/* Discount Tag */}
         {discountTag && (
-          <div className="absolute top-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500 px-2.5 py-1 text-[9px] font-black text-white rounded-br-xl z-10 shadow-md tracking-wide truncate max-w-[80%]">
+          <div className="absolute top-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500 px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-[8px] sm:text-[9px] font-black text-white rounded-br-xl z-10 shadow-md tracking-wide truncate max-w-[80%]">
             {discountTag}
           </div>
         )}
@@ -265,10 +265,10 @@ export default function PremiumProductCard({
       </div>
 
       {/* Info Section */}
-      <div className="p-3 px-3.5 bg-white flex flex-col flex-grow rounded-t-3xl -mt-3 relative z-10 overflow-hidden">
+      <div className="p-2.5 px-3 sm:p-3 sm:px-3.5 bg-white flex flex-col flex-grow rounded-t-3xl -mt-3 relative z-10 overflow-hidden">
         {/* Name + Arrow */}
         <div className="flex items-center justify-between gap-1.5 mb-2">
-          <h3 className="font-extrabold text-gray-900 text-[13px] leading-snug line-clamp-1 min-w-0 truncate tracking-tight">
+          <h3 className="font-extrabold text-gray-900 text-[11px] sm:text-[13px] leading-snug line-clamp-1 min-w-0 truncate tracking-tight">
             {name}
           </h3>
           <div className="w-5 h-5 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -286,18 +286,18 @@ export default function PremiumProductCard({
         {/* Pricing Row */}
         <div className="grid grid-cols-3 gap-0.5 items-start w-full min-w-0">
           <div className="flex flex-col min-w-0 overflow-hidden">
-            <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">MRP</span>
-            <span className="text-[12px] font-extrabold text-gray-900 truncate">₹{mrp || price}</span>
+            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">MRP</span>
+            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 truncate">₹{mrp || price}</span>
           </div>
           
           <div className="flex flex-col items-center min-w-0">
-            <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">MOQ</span>
-            <span className="text-[12px] font-extrabold text-gray-900">{moq}</span>
+            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">MOQ</span>
+            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900">{moq}</span>
           </div>
 
           <div className="flex flex-col items-end min-w-0 overflow-hidden">
-            <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5 whitespace-nowrap">{rateLabel}</span>
-            <span className="text-[12px] font-extrabold text-gray-900 truncate max-w-full">₹{ptr || price}</span>
+            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5 whitespace-nowrap">{rateLabel}</span>
+            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 truncate max-w-full">₹{ptr || price}</span>
           </div>
         </div>
 

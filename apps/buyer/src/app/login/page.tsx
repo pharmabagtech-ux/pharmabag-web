@@ -103,8 +103,8 @@ export default function LoginPage() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-200/20 blur-[120px] rounded-full" />
       </div>
 
-      <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto relative z-10">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-24">
+      <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 px-3 sm:px-4 md:px-6 max-w-7xl mx-auto relative z-10">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-10 sm:gap-12 md:gap-16 lg:gap-24">
           
           {/* Left Side - Branding & Trust */}
           <motion.div 
@@ -125,13 +125,13 @@ export default function LoginPage() {
                 />
               </div>
               <div className="space-y-4">
-                <h1 className="text-6xl md:text-[90px] font-black text-black tracking-tight leading-none">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[90px] font-black text-black tracking-tight leading-none">
                   Pharma Bag
                 </h1>
-                <p className="text-3xl md:text-5xl font-normal text-black tracking-tight">
+                <p className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-normal text-black tracking-tight">
                   India&apos;s Only <span className="font-bold text-black border-b-4 border-lime-300">Trusted</span>
                 </p>
-                <p className="text-xl md:text-2xl font-medium text-black/40">B2B Pharma Platform</p>
+                <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-medium text-black/40">B2B Pharma Platform</p>
               </div>
             </div>
 
@@ -158,10 +158,10 @@ export default function LoginPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="w-full max-w-md"
           >
-            <div className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-[48px] p-10 md:p-12 shadow-2xl shadow-lime-900/5">
-              <div className="text-center mb-10">
-                <h2 className="text-4xl md:text-[52px] font-black text-black mb-2 whitespace-nowrap tracking-tight">Express Login!</h2>
-                <p className="text-lg md:text-xl text-black/50 font-medium">No Signup Required</p>
+            <div className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-3xl sm:rounded-[40px] md:rounded-[48px] p-6 sm:p-8 md:p-10 lg:p-12 shadow-2xl shadow-lime-900/5">
+              <div className="text-center mb-8 sm:mb-10">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[52px] font-black text-black mb-2 tracking-tight">Express Login!</h2>
+                <p className="text-base sm:text-lg md:text-xl text-black/50 font-medium">No Signup Required</p>
               </div>
 
               <form 
@@ -182,7 +182,7 @@ export default function LoginPage() {
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="Enter your 10-digit number"
                       autoFocus
-                      className="w-full h-16 bg-white/70 rounded-2xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.08)] text-xl md:text-2xl px-8 text-center focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all placeholder:text-gray-300 border border-white/50"
+                      className="w-full h-12 sm:h-14 md:h-16 bg-white/70 rounded-xl sm:rounded-2xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.08)] text-lg sm:text-xl md:text-2xl px-4 sm:px-6 md:px-8 text-center focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all placeholder:text-gray-300 border border-white/50"
                     />
                   </div>
                 ) : (
@@ -197,7 +197,7 @@ export default function LoginPage() {
                       placeholder="_ _ _ _ _ _"
                       maxLength={6}
                       autoFocus
-                      className="w-full h-16 bg-white/70 rounded-2xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.08)] text-xl md:text-2xl px-8 text-center focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all placeholder:text-gray-300 border border-white/50"
+                      className="w-full h-12 sm:h-14 md:h-16 bg-white/70 rounded-xl sm:rounded-2xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.08)] text-lg sm:text-xl md:text-2xl px-4 sm:px-6 md:px-8 text-center focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all placeholder:text-gray-300 border border-white/50"
                     />
                   </div>
                 )}
@@ -206,7 +206,7 @@ export default function LoginPage() {
                   <button 
                     type="submit"
                     disabled={isLoading}
-                    className="w-full h-16 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-2xl text-xl font-black shadow-xl shadow-lime-300/20 transition-all active:scale-95 flex items-center justify-center gap-3"
+                    className="w-full h-12 sm:h-14 md:h-16 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-xl sm:rounded-2xl text-base sm:text-lg md:text-xl font-black shadow-xl shadow-lime-300/20 transition-all active:scale-95 flex items-center justify-center gap-3"
                   >
                     {isLoading ? (
                       <Loader2 className="w-6 h-6 animate-spin" />

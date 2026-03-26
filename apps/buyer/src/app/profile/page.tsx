@@ -49,17 +49,17 @@ export default function ProfilePage() {
     return (
       <main className="min-h-screen bg-gray-50/50">
         <Navbar showUserActions={true} />
-        <div className="pt-32 pb-20 max-w-5xl mx-auto px-6 space-y-8">
+        <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 max-w-5xl mx-auto px-3 sm:px-4 md:px-6 space-y-6 sm:space-y-8">
           <SkeletonProfileHeader />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl animate-pulse">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+            <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl animate-pulse">
               <div className="h-6 bg-gray-100 rounded-full w-40 mb-8" />
               <div className="space-y-6">
                 <div className="h-5 bg-gray-100 rounded-full w-48" />
                 <div className="h-5 bg-gray-100 rounded-full w-36" />
               </div>
             </div>
-            <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl animate-pulse">
+            <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl animate-pulse">
               <div className="h-6 bg-gray-100 rounded-full w-40 mb-8" />
               <div className="h-16 bg-gray-100 rounded-2xl" />
             </div>
@@ -74,27 +74,27 @@ export default function ProfilePage() {
     return (
       <main className="min-h-screen bg-gray-50/50">
         <Navbar showUserActions={true} />
-        <div className="pt-32 pb-20 max-w-5xl mx-auto px-6">
+        <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 max-w-5xl mx-auto px-3 sm:px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="space-y-8"
+            className="space-y-6 sm:space-y-8"
           >
-            <div className="flex items-center gap-6 bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl">
-              <div className="w-20 h-20 bg-lime-100 rounded-3xl flex items-center justify-center border border-lime-200 shadow-inner">
-                <User className="w-10 h-10 text-gray-800" />
+            <div className="flex items-center gap-4 sm:gap-6 bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-lime-100 rounded-2xl sm:rounded-3xl flex items-center justify-center border border-lime-200 shadow-inner flex-shrink-0">
+                <User className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-gray-800" />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Welcome!</h1>
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Welcome!</h1>
                 <p className="text-gray-500 font-medium">{user?.phone ?? ''}</p>
               </div>
             </div>
 
-            <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl space-y-6">
-              <h2 className="text-xl font-bold text-gray-900">Complete Your Profile</h2>
+            <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl space-y-4 sm:space-y-6">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">Complete Your Profile</h2>
               <p className="text-gray-500 text-sm">Fill in your details to get started with ordering.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {[
                   { key: 'legalName', label: 'Business / Legal Name' },
                   { key: 'gstNumber', label: 'GST Number' },
@@ -152,21 +152,21 @@ export default function ProfilePage() {
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
-      <div className="pt-32 pb-20 max-w-5xl mx-auto px-6">
+      <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 max-w-5xl mx-auto px-3 sm:px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-8"
+          className="space-y-6 sm:space-y-8"
         >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-lime-100 rounded-3xl flex items-center justify-center border border-lime-200 shadow-inner">
-                <User className="w-10 h-10 text-gray-800" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-lime-100 rounded-2xl sm:rounded-3xl flex items-center justify-center border border-lime-200 shadow-inner flex-shrink-0">
+                <User className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-gray-800" />
               </div>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-bold text-gray-900">{profile.name}</h1>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">{profile.name}</h1>
                   {profile.isVerified && (
                     <CheckCircle2 className="w-6 h-6 text-green-500" />
                   )}
@@ -208,10 +208,10 @@ export default function ProfilePage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl space-y-6"
+              className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl space-y-4 sm:space-y-6"
             >
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Edit Profile</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-4">Edit Profile</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {[
                   { key: 'name', label: 'Full Name' },
                   { key: 'email', label: 'Email Address' },
@@ -244,12 +244,12 @@ export default function ProfilePage() {
             </motion.div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
                 <motion.div
                   whileHover={{ y: -5 }}
-                  className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl"
+                  className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl"
                 >
-                  <div className="flex items-center gap-3 mb-8">
+                  <div className="flex items-center gap-3 mb-4 sm:mb-6 md:mb-8">
                     <div className="p-2 bg-purple-100 rounded-xl">
                       <ShieldCheck className="w-6 h-6 text-purple-700" />
                     </div>
@@ -270,13 +270,13 @@ export default function ProfilePage() {
 
                 <motion.div
                   whileHover={{ y: -5 }}
-                  className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl"
+                  className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl"
                 >
-                  <div className="flex items-center gap-3 mb-8">
+                  <div className="flex items-center gap-3 mb-4 sm:mb-6 md:mb-8">
                     <div className="p-2 bg-blue-100 rounded-xl">
                       <MapPin className="w-6 h-6 text-blue-700" />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-900">Delivery Address</h2>
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">Delivery Address</h2>
                   </div>
                   
                   <div className="space-y-6">
@@ -295,13 +295,13 @@ export default function ProfilePage() {
 
               <motion.div
                 whileHover={{ y: -5 }}
-                className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl"
+                className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl"
               >
-                <div className="flex items-center gap-3 mb-8">
+                <div className="flex items-center gap-3 mb-4 sm:mb-6 md:mb-8">
                   <div className="p-2 bg-orange-100 rounded-xl">
                     <CreditCard className="w-6 h-6 text-orange-700" />
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900">Saved Payment Methods</h2>
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">Saved Payment Methods</h2>
                 </div>
                 
                 <div className="flex items-center justify-center h-20 border-2 border-dashed border-gray-200 rounded-3xl">

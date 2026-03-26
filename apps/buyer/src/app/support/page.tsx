@@ -54,23 +54,23 @@ export default function SupportPage() {
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
-      <div className="pt-32 pb-20 max-w-5xl mx-auto px-6">
+      <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 max-w-5xl mx-auto px-3 sm:px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-8"
+          className="space-y-6 sm:space-y-8"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-gray-100">
-                <HelpCircle className="w-6 h-6 text-gray-800" />
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg border border-gray-100">
+                <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Help & Support</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Help & Support</h1>
             </div>
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowForm(true)}
-              className="px-6 py-3 bg-gray-900 text-white rounded-full font-bold flex items-center gap-2 hover:bg-black shadow-lg"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-900 text-white rounded-full font-bold flex items-center gap-2 hover:bg-black shadow-lg text-sm sm:text-base flex-shrink-0"
             >
               <Plus className="w-4 h-4" />
               Create Ticket
@@ -84,7 +84,7 @@ export default function SupportPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-white/60 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl space-y-6"
+                className="bg-white/60 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl space-y-4 sm:space-y-6"
               >
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-gray-900">New Support Ticket</h2>
@@ -129,19 +129,19 @@ export default function SupportPage() {
           </AnimatePresence>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-             <motion.div whileHover={{ y: -4 }} className="bg-white/40 p-6 rounded-[32px] border border-white/40 shadow-xl transition-shadow hover:shadow-2xl">
+             <motion.div whileHover={{ y: -4 }} className="bg-white/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl transition-shadow hover:shadow-2xl">
                <MessageCircle className="w-8 h-8 text-blue-500 mb-4" />
                <h3 className="font-bold text-gray-900">Live Chat</h3>
                <p className="text-sm text-gray-500 mt-2">Speak directly with our support team.</p>
                <button className="text-blue-600 font-bold mt-4 hover:underline">Start Chat</button>
              </motion.div>
-             <motion.div whileHover={{ y: -4 }} className="bg-white/40 p-6 rounded-[32px] border border-white/40 shadow-xl transition-shadow hover:shadow-2xl">
+             <motion.div whileHover={{ y: -4 }} className="bg-white/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl transition-shadow hover:shadow-2xl">
                <AlertCircle className="w-8 h-8 text-orange-500 mb-4" />
                <h3 className="font-bold text-gray-900">Knowledge Base</h3>
                <p className="text-sm text-gray-500 mt-2">Find answers to frequently asked questions.</p>
                <button className="text-orange-600 font-bold mt-4 hover:underline">Read FAQ</button>
              </motion.div>
-             <motion.div whileHover={{ y: -4 }} className="bg-lime-100/40 p-6 rounded-[32px] border border-lime-200 shadow-xl transition-shadow hover:shadow-2xl">
+             <motion.div whileHover={{ y: -4 }} className="bg-lime-100/40 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-lime-200 shadow-xl transition-shadow hover:shadow-2xl">
                <Clock className="w-8 h-8 text-lime-700 mb-4" />
                <h3 className="font-bold text-gray-900">24/7 Support</h3>
                <p className="text-sm text-gray-500 mt-2">Always here to help you grow your business.</p>
@@ -172,7 +172,7 @@ export default function SupportPage() {
                  <Link key={tkt.id} href={`/support/${tkt.id}`}>
                    <motion.div
                      whileHover={{ y: -5 }}
-                     className="bg-white/40 backdrop-blur-xl p-8 rounded-[40px] border border-white/40 shadow-xl flex items-center justify-between cursor-pointer"
+                     className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl flex items-center justify-between cursor-pointer"
                    >
                      <div className="flex flex-col">
                        <div className="flex items-center gap-3 mb-2">

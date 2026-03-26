@@ -47,11 +47,11 @@ export default function WishlistPage() {
 
         <Navbar showUserActions onLoginClick={() => setIsLoginOpen(true)} />
 
-        <div className="pt-28 pb-20 px-4 md:px-8 max-w-[1200px] mx-auto relative z-10">
+        <div className="pt-20 sm:pt-24 md:pt-28 pb-12 sm:pb-20 px-3 sm:px-4 md:px-8 max-w-[1200px] mx-auto relative z-10">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">My Wishlist</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">My Wishlist</h1>
               <p className="text-gray-500 mt-1">{items.length} item{items.length !== 1 ? 's' : ''} saved</p>
             </div>
             <Heart className="w-8 h-8 text-pink-500" />

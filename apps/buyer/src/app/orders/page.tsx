@@ -31,7 +31,7 @@ export default function OrdersPage() {
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
 
-      <div className="pt-32 pb-20 max-w-5xl mx-auto px-6">
+      <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 max-w-5xl mx-auto px-3 sm:px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -39,11 +39,11 @@ export default function OrdersPage() {
           className="space-y-8"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-gray-100">
-                <Package className="w-6 h-6 text-gray-800" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg border border-gray-100">
+                <Package className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">My Orders</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">My Orders</h1>
             </div>
           </div>
 

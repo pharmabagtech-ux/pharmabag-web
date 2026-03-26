@@ -31,19 +31,19 @@ export default function PaymentsPage() {
     <main className="min-h-screen bg-gray-50/50">
       <Navbar showUserActions={true} />
       
-      <div className="pt-32 pb-20 max-w-6xl mx-auto px-6">
+      <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-8"
+          className="space-y-6 sm:space-y-8"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-gray-100">
-                <CreditCard className="w-6 h-6 text-gray-800" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg border border-gray-100">
+                <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Payments</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Payments</h1>
             </div>
           </div>
 
@@ -54,30 +54,30 @@ export default function PaymentsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               whileHover={{ y: -3 }}
-              className="bg-white/60 p-6 rounded-[32px] border border-white shadow-lg"
+              className="bg-white/60 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-white shadow-lg"
             >
               <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Total Outstanding</p>
-              <p className="text-3xl font-bold text-gray-900">₹{totalPending.toLocaleString('en-IN')}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">₹{totalPending.toLocaleString('en-IN')}</p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               whileHover={{ y: -3 }}
-              className="bg-white/60 p-6 rounded-[32px] border border-white shadow-lg"
+              className="bg-white/60 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-white shadow-lg"
             >
               <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Pending Count</p>
-              <p className="text-3xl font-bold text-gray-900">{pendingCount} Orders</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{pendingCount} Orders</p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               whileHover={{ y: -3 }}
-              className="bg-lime-300 p-6 rounded-[32px] shadow-lg shadow-lime-200"
+              className="bg-lime-300 p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-lg shadow-lime-200"
             >
               <p className="text-sm font-bold text-gray-900/60 uppercase tracking-wider mb-2">Total Payments</p>
-              <p className="text-3xl font-bold text-gray-900">{payments.length}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{payments.length}</p>
             </motion.div>
           </div>
 
@@ -113,9 +113,9 @@ export default function PaymentsPage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
                     whileHover={{ y: -3 }}
-                    className="bg-white/40 backdrop-blur-xl border border-white/40 rounded-[32px] p-8 shadow-xl hover:shadow-2xl transition-all duration-300"
+                    className="bg-white/40 backdrop-blur-xl border border-white/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300"
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6 lg:gap-8">
                       <div className="flex-1 space-y-4">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold uppercase tracking-widest text-[#800080]">
@@ -138,7 +138,7 @@ export default function PaymentsPage() {
                         <p className="text-sm text-gray-400 font-medium">{paymentDate}</p>
                       </div>
 
-                      <div className="flex items-center gap-12 lg:border-l lg:pl-12 border-gray-100">
+                      <div className="flex items-center gap-6 sm:gap-8 lg:gap-12 lg:border-l lg:pl-12 border-gray-100">
                         <div className="space-y-2 min-w-[120px]">
                           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Amount</p>
                           <p className="text-2xl font-bold text-gray-900">₹{payment.amount.toLocaleString('en-IN')}</p>
