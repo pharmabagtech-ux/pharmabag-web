@@ -284,20 +284,19 @@ export default function PremiumProductCard({
         <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-2"></div>
 
         {/* Pricing Row */}
-        <div className="grid grid-cols-3 gap-0.5 items-start w-full min-w-0">
-          <div className="flex flex-col min-w-0 overflow-hidden">
-            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">MRP</span>
-            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 truncate">₹{mrp || price}</span>
-          </div>
-          
-          <div className="flex flex-col items-center min-w-0">
-            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">MOQ</span>
-            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900">{moq}</span>
+        <div className="space-y-1.5 w-full min-w-0">
+          {/* Labels Row */}
+          <div className="grid grid-cols-3 gap-0.5 items-start w-full min-w-0">
+            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider">MRP</span>
+            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider text-center">MOQ {moq}</span>
+            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider text-right whitespace-nowrap">{rateLabel}</span>
           </div>
 
-          <div className="flex flex-col items-end min-w-0 overflow-hidden">
-            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5 whitespace-nowrap">{rateLabel}</span>
-            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 truncate max-w-full">₹{ptr || price}</span>
+          {/* Values Row */}
+          <div className="grid grid-cols-3 gap-0.5 items-start w-full min-w-0">
+            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 truncate">₹{mrp || price}</span>
+            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 text-center">&mdash;</span>
+            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 truncate text-right max-w-full">₹{ptr || price}</span>
           </div>
         </div>
 

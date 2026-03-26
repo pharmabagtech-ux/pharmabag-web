@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Share2, Loader2 } from 'lucide-react';
+import { X, Share2, Loader2, Bookmark, Truck, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -25,6 +25,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
   const { toast } = useToast();
   const addToCart = useAddToCart();
   const [showStockAlert, setShowStockAlert] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -110,6 +111,22 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                   className="p-2.5 rounded-full bg-white/80 hover:bg-white border border-gray-100 shadow-sm"
                 />
                 <button
+                  onClick={() => setIsBookmarked(!isBookmarked)}
+                  className={`p-2.5 rounded-full transition-all hover:scale-105 border shadow-sm ${
+                    isBookmarked
+                      ? 'bg-lime-100 hover:bg-lime-200 border-lime-200'
+                      : 'bg-white/80 hover:bg-white border-gray-100'
+                  }`}
+                  title="Add to wishlist"
+                >
+                  <Bookmark
+                    className={`w-5 h-5 ${
+                      isBookmarked ? 'fill-lime-600 text-lime-600' : 'text-gray-700'
+                    }`}
+                    strokeWidth={2.5}
+                  />
+                </button>
+                <button
                   className="p-2.5 rounded-full bg-white/80 hover:bg-white border border-gray-100 shadow-sm transition-all hover:scale-105"
                   onClick={onClose}
                 >
@@ -160,31 +177,84 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                   />
 
                   {/* Info Grid */}
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm bg-gray-50/50 rounded-2xl p-4">
-                    {product.minimumOrderQuantity && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 font-bold">Min Qty:</span>
-                        <span className="text-gray-900 font-medium">{product.minimumOrderQuantity}</span>
-                      </div>
-                    )}
-                    
-                    {product.stock !== undefined && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 font-bold">Stock:</span>
-                        <span className={`font-medium ${inStock ? 'text-green-600' : 'text-red-600'}`}>
-                          {inStock ? `${product.stock} units` : 'Out of Stock'}
-                        </span>
-                      </div>
-                    )}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm bg-gray-50/50 rounded-2xl p-4">
+                      {product.minimumOrderQuantity && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 font-bold">Min Qty:</span>
+                          <span className="text-gray-900 font-medium">{product.minimumOrderQuantity}</span>
+                        </div>
+                      )}
 
-                    {product.expiryDate && (
-                      <div className="flex justify-between col-span-2">
-                        <span className="text-gray-600 font-bold">Expiry:</span>
-                        <span className="text-gray-900 font-medium">
-                          {new Date(product.expiryDate).toLocaleDateString()}
-                        </span>
+                      {(product as any).maximumOrderQuantity && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 font-bold">Max Qty:</span>
+                          <span className="text-gray-900 font-medium">{(product as any).maximumOrderQuantity}</span>
+                        </div>
+                      )}
+                      
+                      {product.stock !== undefined && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 font-bold">Stock:</span>
+                          <span className={`font-medium ${inStock ? 'text-green-600' : 'text-red-600'}`}>
+                            {inStock ? `${product.stock} units` : 'Out of Stock'}
+                          </span>
+                        </div>
+                      )}
+
+                      {product.expiryDate && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 font-bold">Expiry:</span>
+                          <span className="text-gray-900 font-medium">
+                            {new Date(product.expiryDate).toLocaleDateString('en-IN', { year: 'numeric', month: '2-digit' })}
+                          </span>
+                        </div>
+                      )}
+
+                      {(product as any).medicineType && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 font-bold">Type:</span>
+                          <span className="text-gray-900 font-medium">{(product as any).medicineType}</span>
+                        </div>
+                      )}
+
+                      {(product as any).gstPercent && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 font-bold">GST:</span>
+                          <span className="text-gray-900 font-medium">{(product as any).gstPercent}%</span>
+                        </div>
+                      )}
+
+                      {(product as any).country && (
+                        <div className="flex justify-between col-span-2">
+                          <span className="text-gray-600 font-bold">Country:</span>
+                          <span className="text-gray-900 font-medium">{(product as any).country}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Badges Section */}
+                    <div className="flex flex-wrap gap-2">
+                      <div className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                        <Truck className="w-4 h-4 text-blue-600" />
+                        <span className="text-xs font-semibold text-blue-700">Free Shipping</span>
                       </div>
-                    )}
+                      <div className="flex items-center gap-1.5 px-3 py-2 bg-lime-50 rounded-lg border border-lime-200">
+                        <CheckCircle className="w-4 h-4 text-lime-600" />
+                        <span className="text-xs font-semibold text-lime-700">PharmaBag Certified</span>
+                      </div>
+                    </div>
+
+                    {/* Delivery Info */}
+                    <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <Truck className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Delivery</p>
+                        <p className="text-sm font-semibold text-emerald-900">In 4-8 days</p>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Description */}
