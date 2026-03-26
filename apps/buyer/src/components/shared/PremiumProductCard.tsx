@@ -121,9 +121,25 @@ export default function PremiumProductCard({
 
   return (
     <div
-      className="relative flex flex-col w-full rounded-2xl sm:rounded-[22px] overflow-hidden bg-gradient-to-b from-[#f4fdf7] to-white shadow-[0_2px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group border border-gray-100/80"
+      className="relative flex flex-col w-full rounded-2xl sm:rounded-[22px] overflow-visible bg-gradient-to-b from-[#f4fdf7] to-white shadow-[0_2px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group border border-gray-100/80"
       onClick={handleCardClick}
     >
+      {/* Bookmark Icon - Positioned at card center */}
+      <button
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={toggleBookmark}
+        className={`absolute top-1/2 -right-2 -translate-y-1/2 p-2.5 z-20 rounded-full transition-all duration-300 active:scale-90 ${
+          bookmarked 
+            ? 'text-blue-500 bg-blue-50 shadow-md' 
+            : 'text-gray-400 hover:text-blue-400 hover:bg-white/60'
+        }`}
+      >
+        <Bookmark 
+          className={`w-8 h-8 rotate-90 transition-all duration-300 ${bookmarked ? 'fill-blue-500 text-blue-500' : ''}`} 
+          strokeWidth={2} 
+        />
+      </button>
       {/* Image Section */}
       <div className="relative w-full h-[140px] xs:h-[160px] sm:h-[180px] flex items-center justify-center p-3 sm:p-4 pt-8 sm:pt-10 bg-gradient-to-b from-[#eef9f2]/60 to-transparent">
         
@@ -145,22 +161,7 @@ export default function PremiumProductCard({
           />
         </div>
 
-        {/* Middle Right: Bookmark Icon */}
-        <button
-          type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={toggleBookmark}
-          className={`absolute top-1/2 -right-1 -translate-y-1/2 p-2.5 z-10 rounded-full transition-all duration-300 active:scale-90 ${
-            bookmarked 
-              ? 'text-blue-500 bg-blue-50 shadow-sm' 
-              : 'text-gray-400 hover:text-blue-400 hover:bg-white/60'
-          }`}
-        >
-          <Bookmark 
-            className={`w-8 h-8 rotate-90 transition-all duration-300 ${bookmarked ? 'fill-blue-500 text-blue-500' : ''}`} 
-            strokeWidth={2} 
-          />
-        </button>
+
         
         {/* Top Right - Stock-Based Button or Cart Controls */}
         <div
@@ -286,16 +287,20 @@ export default function PremiumProductCard({
         {/* Pricing Row */}
         <div className="space-y-1.5 w-full min-w-0">
           {/* Labels Row */}
-          <div className="grid grid-cols-3 gap-0.5 items-start w-full min-w-0">
+          <div className="grid grid-cols-3 gap-1 items-center w-full min-w-0">
             <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider">MRP</span>
-            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider text-center">MOQ {moq}</span>
+            <div className="flex justify-center">
+              <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider">MOQ</span>
+            </div>
             <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider text-right whitespace-nowrap">{rateLabel}</span>
           </div>
 
           {/* Values Row */}
-          <div className="grid grid-cols-3 gap-0.5 items-start w-full min-w-0">
+          <div className="grid grid-cols-3 gap-1 items-center w-full min-w-0">
             <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 truncate">₹{mrp || price}</span>
-            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 text-center">&mdash;</span>
+            <div className="flex justify-center">
+              <span className="inline-block bg-gray-900 text-white px-2.5 py-1 rounded-md text-[13px] sm:text-[14px] font-black whitespace-nowrap">{moq}</span>
+            </div>
             <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 truncate text-right max-w-full">₹{ptr || price}</span>
           </div>
         </div>
