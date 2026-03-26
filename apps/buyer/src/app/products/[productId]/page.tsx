@@ -283,10 +283,10 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                   )}
 
                   {/* GST */}
-                  {(product as any).gstPercent && (
+                  {product.gstPercent && (
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">GST</span>
-                      <span className="text-sm sm:text-base font-bold text-gray-900">{(product as any).gstPercent}%</span>
+                      <span className="text-sm sm:text-base font-bold text-gray-900">{product.gstPercent}%</span>
                     </div>
                   )}
 
@@ -307,10 +307,10 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                   )}
 
                   {/* Max Qty */}
-                  {(product as any).maximumOrderQuantity && (
+                  {product.maximumOrderQuantity && (
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Max Qty</span>
-                      <span className="text-sm sm:text-base font-bold text-gray-900">{(product as any).maximumOrderQuantity}</span>
+                      <span className="text-sm sm:text-base font-bold text-gray-900">{product.maximumOrderQuantity}</span>
                     </div>
                   )}
 
@@ -324,19 +324,11 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                     </div>
                   )}
 
-                  {/* Medicine Type */}
-                  {(product as any).medicineType && (
+                  {/* Generic Name (from extraFields) */}
+                  {product.genericName && (
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Medicine Type</span>
-                      <span className="text-sm sm:text-base font-bold text-gray-900">{(product as any).medicineType}</span>
-                    </div>
-                  )}
-
-                  {/* Country */}
-                  {(product as any).country && (
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Country</span>
-                      <span className="text-sm sm:text-base font-bold text-gray-900">{(product as any).country}</span>
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Generic</span>
+                      <span className="text-sm sm:text-base font-bold text-gray-900">{product.genericName}</span>
                     </div>
                   )}
 
@@ -345,6 +337,14 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Manufacturer</span>
                       <span className="text-sm sm:text-base font-bold text-gray-900">{product.manufacturer}</span>
+                    </div>
+                  )}
+
+                  {/* Chemical Composition */}
+                  {product.chemicalComposition && (
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Chemical</span>
+                      <span className="text-sm sm:text-base font-bold text-gray-900">{product.chemicalComposition}</span>
                     </div>
                   )}
 
