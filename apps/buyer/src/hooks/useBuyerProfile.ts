@@ -42,7 +42,7 @@ export function useUpdateBuyerProfile() {
 
 export function useVerifyPanGst() {
   return useMutation({
-    mutationFn: (params: { panNumber?: string; gstNumber?: string }) => verifyPanGst(params),
+    mutationFn: (params: { type: 'GST' | 'PAN'; value: string }) => verifyPanGst(params),
   });
 }
 

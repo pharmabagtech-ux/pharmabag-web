@@ -97,11 +97,11 @@ export function ShareButton({
       <AnimatePresence>
         {showMenu && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: -10 }}
+            initial={{ opacity: 0, scale: 0.9, y: -8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 p-1 z-50 min-w-[160px]"
+            exit={{ opacity: 0, scale: 0.9, y: -8 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-2xl border border-gray-200 p-1 z-[60] min-w-[160px]"
             onClick={(e) => e.stopPropagation()}
           >
             <button

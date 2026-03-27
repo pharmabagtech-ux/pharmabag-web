@@ -52,6 +52,8 @@ export default function OnboardingPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [gstVerified, setGstVerified] = useState(false);
   const [panVerified, setPanVerified] = useState(false);
+  const [verifyType, setVerifyType] = useState<'GST' | 'PAN'>('GST');
+  const [verificationResult, setVerificationResult] = useState<{ legalName?: string; address?: string; status?: boolean; message?: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState('');
 
@@ -65,10 +67,17 @@ export default function OnboardingPage() {
   const validateStep1 = () => {
     const e: Record<string, string> = {};
     if (!form.legalName.trim()) e.legalName = 'Legal business name is required';
-    if (!form.gstNumber.trim()) e.gstNumber = 'GST number is required';
-    else if (!/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}\d[Z]{1}[A-Z\d]{1}$/i.test(form.gstNumber.trim())) e.gstNumber = 'Invalid GST number format';
-    if (!form.panNumber.trim()) e.panNumber = 'PAN number is required';
-    else if (!/^[A-Z]{5}\d{4}[A-Z]{1}$/i.test(form.panNumber.trim())) e.panNumber = 'Invalid PAN number format';
+    
+    if (verifyType === 'GST') {
+      if (!form.gstNumber.trim()) e.gstNumber = 'GST number is required';
+      else if (!/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}\d[Z]{1}[A-Z\d]{1}$/i.test(form.gstNumber.trim())) e.gstNumber = 'Invalid GST number format';
+      if (!gstVerified) e.gstNumber = 'Please verify your GST number first';
+    } else {
+      if (!form.panNumber.trim()) e.panNumber = 'PAN number is required';
+      else if (!/^[A-Z]{5}\d{4}[A-Z]{1}$/i.test(form.panNumber.trim())) e.panNumber = 'Invalid PAN number format';
+      if (!panVerified) e.panNumber = 'Please verify your PAN number first';
+    }
+    
     if (!form.drugLicenseNumber.trim()) e.drugLicenseNumber = 'Drug license number is required';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -85,34 +94,37 @@ export default function OnboardingPage() {
     return Object.keys(e).length === 0;
   };
 
-  const handleVerifyGst = () => {
-    if (!form.gstNumber.trim()) return;
-    verifyPanGst.mutate({ gstNumber: form.gstNumber.trim().toUpperCase() }, {
-      onSuccess: (res) => {
-        if (res.valid) {
-          setGstVerified(true);
-          if (res.name) updateField('legalName', res.name);
-          toast('GST verified successfully', 'success');
-        } else {
-          toast(res.message ?? 'GST verification failed', 'error');
-        }
-      },
-      onError: () => toast('GST verification failed', 'error'),
-    });
-  };
+  const handleVerify = () => {
+    const value = verifyType === 'GST' ? form.gstNumber.trim() : form.panNumber.trim();
+    if (!value) return;
 
-  const handleVerifyPan = () => {
-    if (!form.panNumber.trim()) return;
-    verifyPanGst.mutate({ panNumber: form.panNumber.trim().toUpperCase() }, {
+    verifyPanGst.mutate({ 
+      type: verifyType, 
+      value: value.toUpperCase() 
+    }, {
       onSuccess: (res) => {
-        if (res.valid) {
-          setPanVerified(true);
-          toast('PAN verified successfully', 'success');
+        if (res.status) {
+          if (verifyType === 'GST') setGstVerified(true);
+          else setPanVerified(true);
+          
+          setVerificationResult(res);
+          updateField('legalName', res.legalName);
+          if (res.address) updateField('address', res.address);
+          
+          toast(`${res.message}: ${res.legalName}`, 'success');
+          
+          // Auto-submit to profile with gst_pan_response
+          createProfile.mutate({
+            ...form,
+            legalName: res.legalName,
+            address: res.address || form.address,
+            gst_pan_response: res
+          } as any);
         } else {
-          toast(res.message ?? 'PAN verification failed', 'error');
+          toast(res.message || `Invalid ${verifyType}`, 'error');
         }
       },
-      onError: () => toast('PAN verification failed', 'error'),
+      onError: () => toast('Verification failed - retry', 'error'),
     });
   };
 
@@ -219,6 +231,22 @@ export default function OnboardingPage() {
                 >
                   <h2 className="text-lg font-bold text-gray-900 mb-4">Business Details</h2>
 
+                  {/* Verification Type Toggle */}
+                  <div className="flex p-1 bg-gray-100 rounded-xl mb-6">
+                    {(['GST', 'PAN'] as const).map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => { setVerifyType(type); setErrors({}); }}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+                          verifyType === type ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        {type} Verification
+                      </button>
+                    ))}
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Legal Business Name</label>
                     <input
@@ -231,53 +259,77 @@ export default function OnboardingPage() {
                     {errors.legalName && <p className="text-xs text-red-500 mt-1">{errors.legalName}</p>}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={form.gstNumber}
-                        onChange={(e) => { updateField('gstNumber', e.target.value.toUpperCase()); setGstVerified(false); }}
-                        placeholder="22AAAAA0000A1Z5"
-                        maxLength={15}
-                        className={`flex-1 px-4 py-3 rounded-xl border ${errors.gstNumber ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50/50'} focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none transition-colors uppercase`}
-                      />
-                      <button
-                        onClick={handleVerifyGst}
-                        disabled={verifyPanGst.isPending || gstVerified}
-                        className={`px-4 py-3 rounded-xl font-medium text-sm transition-colors ${
-                          gstVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'
-                        } disabled:opacity-60`}
-                      >
-                        {gstVerified ? <CheckCircle2 className="w-4 h-4" /> : verifyPanGst.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
-                      </button>
+                  {verifyType === 'GST' ? (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={form.gstNumber}
+                          onChange={(e) => { updateField('gstNumber', e.target.value.toUpperCase()); setGstVerified(false); }}
+                          placeholder="22AAAAA0000A1Z5"
+                          maxLength={15}
+                          className={`flex-1 px-4 py-3 rounded-xl border ${errors.gstNumber ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50/50'} focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none transition-colors uppercase`}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleVerify}
+                          disabled={verifyPanGst.isPending || gstVerified}
+                          className={`px-4 py-3 rounded-xl font-medium text-sm transition-colors ${
+                            gstVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                          } disabled:opacity-60`}
+                        >
+                          {gstVerified ? <CheckCircle2 className="w-4 h-4" /> : verifyPanGst.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
+                        </button>
+                      </div>
+                      {errors.gstNumber && <p className="text-xs text-red-500 mt-1">{errors.gstNumber}</p>}
                     </div>
-                    {errors.gstNumber && <p className="text-xs text-red-500 mt-1">{errors.gstNumber}</p>}
-                  </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">PAN Number</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={form.panNumber}
+                          onChange={(e) => { updateField('panNumber', e.target.value.toUpperCase()); setPanVerified(false); }}
+                          placeholder="ABCDE1234F"
+                          maxLength={10}
+                          className={`flex-1 px-4 py-3 rounded-xl border ${errors.panNumber ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50/50'} focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none transition-colors uppercase`}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleVerify}
+                          disabled={verifyPanGst.isPending || panVerified}
+                          className={`px-4 py-3 rounded-xl font-medium text-sm transition-colors ${
+                            panVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                          } disabled:opacity-60`}
+                        >
+                          {panVerified ? <CheckCircle2 className="w-4 h-4" /> : verifyPanGst.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
+                        </button>
+                      </div>
+                      {errors.panNumber && <p className="text-xs text-red-500 mt-1">{errors.panNumber}</p>}
+                    </div>
+                  )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">PAN Number</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={form.panNumber}
-                        onChange={(e) => { updateField('panNumber', e.target.value.toUpperCase()); setPanVerified(false); }}
-                        placeholder="ABCDE1234F"
-                        maxLength={10}
-                        className={`flex-1 px-4 py-3 rounded-xl border ${errors.panNumber ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50/50'} focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none transition-colors uppercase`}
-                      />
-                      <button
-                        onClick={handleVerifyPan}
-                        disabled={verifyPanGst.isPending || panVerified}
-                        className={`px-4 py-3 rounded-xl font-medium text-sm transition-colors ${
-                          panVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'
-                        } disabled:opacity-60`}
-                      >
-                        {panVerified ? <CheckCircle2 className="w-4 h-4" /> : verifyPanGst.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
-                      </button>
-                    </div>
-                    {errors.panNumber && <p className="text-xs text-red-500 mt-1">{errors.panNumber}</p>}
-                  </div>
+                  {/* Success Banner */}
+                  {verificationResult && verificationResult.status && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl space-y-2"
+                    >
+                      <div className="flex items-center gap-2 text-emerald-700 font-bold">
+                        <CheckCircle2 className="w-5 h-5" />
+                        <span>✅ Valid: {verificationResult.legalName}</span>
+                      </div>
+                      <p className="text-sm text-emerald-600 ml-7">{verificationResult.address}</p>
+                      <div className="ml-7 pt-1">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-700">
+                          Pending Admin Approval
+                        </span>
+                      </div>
+                    </motion.div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Drug License Number</label>

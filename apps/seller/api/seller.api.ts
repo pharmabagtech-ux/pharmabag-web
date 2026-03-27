@@ -313,3 +313,68 @@ export async function addTicketMessage(ticketId: string, message: string) {
   const { data } = await apiClient.post<any>(`/tickets/${ticketId}/messages`, { message });
   return data.data ?? data;
 }
+// ─── Buyer Onboarding (Seller Portal) ─────────────────
+/**
+ * Verify GST or PAN number via IDFY verification service
+ */
+export async function verifyGstOrPan(type: 'GST' | 'PAN', value: string) {
+  const { data } = await apiClient.post<any>('/verification/pangst', { type, value });
+  return data.data ?? data;
+}
+
+/**
+ * Upload KYC document for buyer profile (licence, bank statement, etc.)
+ */
+export async function uploadKycDocument(formData: FormData) {
+  const { data } = await apiClient.post<any>('/storage/kyc', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data.data ?? data;
+}
+
+/**
+ * Seller onboards a buyer with complete profile
+ */
+export async function onboardBuyer(payload: {
+  phone: string;
+  name: string;
+  email?: string;
+  legalName: string;
+  gstNumber?: string;
+  panNumber?: string;
+  licence?: any[];
+  bankAccount?: any;
+  cancelCheck?: string;
+  document?: string;
+  inviteCode?: string;
+  address?: any;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  latitude?: number;
+  longitude?: number;
+  drugLicenseNumber?: string;
+  drugLicenseUrl?: string;
+  gstPanResponse: any; // Pre-verified via verifyGstOrPan
+}) {
+  const { data } = await apiClient.post<any>('/buyers/onboard', payload);
+  return data.data ?? data;
+}
+
+/**
+ * Get all buyers onboarded by seller (for status tracking)
+ */
+export async function getSellerBuyers(page = 1, limit = 20) {
+  const { data } = await apiClient.get<any>('/buyers/all', {
+    params: { page, limit },
+  });
+  return data.data ?? data;
+}
+
+/**
+ * Get a specific buyer's profile details
+ */
+export async function getBuyerProfile(buyerId: string) {
+  const { data } = await apiClient.get<any>(`/buyers/${buyerId}`);
+  return data.data ?? data;
+}

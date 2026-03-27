@@ -74,9 +74,44 @@ export default function ProductsPage() {
   const manufacturers = Array.isArray(manufacturersData) ? manufacturersData : [];
   const cities = Array.isArray(citiesData) ? citiesData : [];
 
-  const products = productsData?.data ?? [];
+  let products = productsData?.data ?? [];
   const totalProducts = productsData?.total ?? 0;
   const totalPages = Math.ceil(totalProducts / 24) || 1;
+
+  // DEV TESTING: Add a dummy product on page 1
+  if (page === 1) {
+    const dummyProduct = {
+      id: 'dev-dummy-test-001',
+      name: 'DEV TEST: Dummy Premium Product',
+      mrp: 5000,
+      price: 3499,
+      manufacturer: 'DevTest Labs',
+      stock: 15, // Low stock for testing
+      moq: 2,
+      minimumOrderQuantity: 2,
+      images: ['/products/pharma_bottle.png'],
+      imageUrl: '/products/pharma_bottle.png',
+      category: 'Test Category',
+      description: 'This is a dummy product for development testing only. It will help you test cart functionality, pricing, and UI elements.',
+      seller: {
+        id: 'dev-seller-001',
+        companyName: 'Dev Test Seller',
+        rating: 4.5,
+        city: 'Test City',
+        state: 'Test State',
+      },
+      pricing: {
+        buy: 2,
+        get: 1,
+        discountPercent: 30,
+      },
+      ptr: 2800,
+      rateLabel: 'PTR',
+      isBookmarked: false,
+      cartQuantity: null,
+    };
+    products = [dummyProduct, ...products];
+  }
 
   return (
     <main className="min-h-screen bg-[#f2fcf6] relative overflow-hidden">

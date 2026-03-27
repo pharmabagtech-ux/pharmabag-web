@@ -7,7 +7,7 @@ import { Button, Input, Badge, Pagination } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import { useAdminUsers, useAffirmUserStatus, useUserById } from "@/hooks/useAdmin";
+import { useAdminUsers, useAffirmUserStatus, useUserById, useUpdateGstPanStatus } from "@/hooks/useAdmin";
 
 type RoleFilter = "all" | "BUYER" | "SELLER" | "ADMIN";
 type StatusFilter = "all" | "APPROVED" | "PENDING" | "BLOCKED" | "VACATION";
@@ -58,6 +58,7 @@ export default function UsersPage() {
   const limit = 20;
   const { data: usersData, isLoading } = useAdminUsers(page, limit);
   const updateStatus = useAffirmUserStatus();
+  const updateGstStatus = useUpdateGstPanStatus();
 
   // Backend returns { data: [...], total: ... } inside data field
   const users: any[] = Array.isArray(usersData) ? usersData : (usersData?.data ?? []);
@@ -141,12 +142,12 @@ export default function UsersPage() {
                   <tr><td colSpan={6} className="py-12 text-center text-sm text-muted-foreground">No users found</td></tr>
                 ) : filtered.map((u: any, i: number) => {
                   const isSeller = u.role === "SELLER";
-                  const isExpanded = isSeller && expandedUser === u.id;
+                  const isExpanded = (isSeller || u.role === "BUYER") && expandedUser === u.id;
                   return (
                     <React.Fragment key={u.id}>
                       <motion.tr initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                        className={cn("hover:bg-accent/30 transition-colors", isSeller && "cursor-pointer")}
-                        onClick={() => isSeller && setExpandedUser(isExpanded ? null : u.id)}>
+                        className={cn("hover:bg-accent/30 transition-colors", (isSeller || u.role === "BUYER") && "cursor-pointer")}
+                        onClick={() => (isSeller || u.role === "BUYER") && setExpandedUser(isExpanded ? null : u.id)}>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary text-sm flex-shrink-0" aria-hidden>
@@ -176,40 +177,57 @@ export default function UsersPage() {
                         </td>
                         <td className="px-5 py-4 text-xs text-muted-foreground">{u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-IN") : "—"}</td>
                         <td className="px-5 py-4">
-                          <div className="flex items-center gap-1">
-                            <Link href={`/users/${u.id}`} onClick={(e) => e.stopPropagation()} aria-label="View user" title="View user details"
-                              className="h-7 w-7 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors">
-                              <Eye className="h-3.5 w-3.5" />
-                            </Link>
-                            {isSeller && (
-                              <button onClick={(e) => { e.stopPropagation(); setExpandedUser(isExpanded ? null : u.id); }} aria-label="View details" title="View seller details"
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-1">
+                              <Link href={`/users/${u.id}`} onClick={(e) => e.stopPropagation()} aria-label="View user" title="View user details"
                                 className="h-7 w-7 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors">
-                                {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                              </button>
-                            )}
-                            {u.status === "PENDING" && (
-                              <>
-                                <button onClick={(e) => { e.stopPropagation(); void handleAction(u.id, u.phone, "approve"); }} aria-label="Approve" title="Approve"
-                                  className="h-7 w-7 rounded-lg flex items-center justify-center text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
-                                  <UserCheck className="h-3.5 w-3.5" />
+                                <Eye className="h-3.5 w-3.5" />
+                              </Link>
+                              {isSeller && (
+                                <button onClick={(e) => { e.stopPropagation(); setExpandedUser(isExpanded ? null : u.id); }} aria-label="View details" title="View seller details"
+                                  className="h-7 w-7 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors">
+                                  {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); void handleAction(u.id, u.phone, "reject"); }} aria-label="Reject" title="Reject"
-                                  className="h-7 w-7 rounded-lg flex items-center justify-center text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                  <UserX className="h-3.5 w-3.5" />
+                              )}
+                              
+                              {u.status === "PENDING" && (
+                                <>
+                                  <button onClick={(e) => { e.stopPropagation(); void handleAction(u.id, u.phone, "approve"); }} aria-label="Approve" title="Approve"
+                                    className="h-7 w-7 rounded-lg flex items-center justify-center text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
+                                    <UserCheck className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button onClick={(e) => { e.stopPropagation(); void handleAction(u.id, u.phone, "reject"); }} aria-label="Reject" title="Reject"
+                                    className="h-7 w-7 rounded-lg flex items-center justify-center text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                    <UserX className="h-3.5 w-3.5" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+
+                            {/* Legacy IDFY Actions */}
+                            {u.role === 'BUYER' && u.gstPanResponse && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); updateGstStatus.mutate({ userId: u.id, role: 'BUYER', data: { verified: true, creditTier: 'PREPAID' } }); }}
+                                  className="px-2 py-1 text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 rounded hover:bg-blue-100 transition-colors">
+                                  Prepaid
                                 </button>
-                              </>
-                            )}
-                            {u.status === "APPROVED" && (
-                              <button onClick={(e) => { e.stopPropagation(); void handleAction(u.id, u.phone, "block"); }} aria-label="Block" title="Block user"
-                                className="h-7 w-7 rounded-lg flex items-center justify-center text-orange-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors">
-                                <Ban className="h-3.5 w-3.5" />
-                              </button>
-                            )}
-                            {u.status === "BLOCKED" && (
-                              <button onClick={(e) => { e.stopPropagation(); void handleAction(u.id, u.phone, "unblock"); }} aria-label="Unblock" title="Unblock user"
-                                className="h-7 w-7 rounded-lg flex items-center justify-center text-blue-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                                <Unlock className="h-3.5 w-3.5" />
-                              </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); updateGstStatus.mutate({ userId: u.id, role: 'BUYER', data: { verified: true, creditTier: 'EMI' } }); }}
+                                  className="px-2 py-1 text-[10px] font-bold bg-purple-50 text-purple-600 border border-purple-100 rounded hover:bg-purple-100 transition-colors">
+                                  EMI
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); updateGstStatus.mutate({ userId: u.id, role: 'BUYER', data: { verified: true, creditTier: 'FULLCREDIT' } }); }}
+                                  className="px-2 py-1 text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 rounded hover:bg-emerald-100 transition-colors">
+                                  Full
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); updateGstStatus.mutate({ userId: u.id, role: 'BUYER', data: { verified: false } }); }}
+                                  className="px-2 py-1 text-[10px] font-bold bg-red-50 text-red-600 border border-red-100 rounded hover:bg-red-100 transition-colors">
+                                  Reject
+                                </button>
+                              </div>
                             )}
                           </div>
                         </td>
@@ -217,7 +235,16 @@ export default function UsersPage() {
                       {isExpanded && (
                         <tr>
                           <td colSpan={6} className="px-5 bg-muted/10">
-                            <SellerDetails userId={u.id} />
+                            {u.role === "SELLER" ? <SellerDetails userId={u.id} /> : (
+                              <div className="py-4 space-y-4">
+                                <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+                                  <FileText className="h-4 w-4" /> IDFY Verification Response
+                                </div>
+                                <pre className="p-4 bg-muted/20 border border-border rounded-xl text-xs font-mono overflow-auto max-h-60">
+                                  {JSON.stringify(u.gstPanResponse, null, 2)}
+                                </pre>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       )}

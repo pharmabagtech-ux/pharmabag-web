@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, Package, ClipboardList, BarChart3, Warehouse, CreditCard, LogOut, ChevronLeft, Store, Palmtree, LifeBuoy, Bell, User, FileText } from "lucide-react";
+import { LayoutDashboard, Package, ClipboardList, BarChart3, Warehouse, CreditCard, LogOut, ChevronLeft, Store, Palmtree, LifeBuoy, Bell, User, FileText, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSellerAuth } from "@/store";
 import { useSidebar } from "@/context/sidebar-context";
@@ -12,6 +12,7 @@ const NAV = [
   { icon: Package, label: "Products", href: "/products" },
   { icon: ClipboardList, label: "Orders", href: "/orders" },
   { icon: Warehouse, label: "Inventory", href: "/inventory" },
+  { icon: Users, label: "Buyers", href: "/buyers" },
   { icon: BarChart3, label: "Analytics", href: "/analytics" },
   { icon: CreditCard, label: "Payouts", href: "/payouts" },
   { icon: Bell, label: "Notifications", href: "/notifications" },

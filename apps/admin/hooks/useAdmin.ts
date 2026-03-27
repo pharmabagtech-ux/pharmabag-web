@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sendOtp, verifyOtp, getCurrentUser } from "@/api/auth.api";
 import {
   getAdminDashboard, getAdminUsers, getUserById, approveUser, rejectUser, blockUser, unblockUser,
-  getBuyers, getSellers, updateUser, deleteUser, updateUserStatus,
+  getBuyers, getSellers, updateUser, deleteUser, updateUserStatus, updateGstPanStatus,
   getAdminProducts, getAdminProductsFiltered, getProductById, disableProduct, enableProduct, deleteProduct, createProduct, updateProduct, approveProduct, rejectProduct,
   getAdminOrders, getAdminOrdersFiltered, getOrderById, updateAdminOrderStatus, cancelOrder, getOrderInvoice,
   getPayments, confirmPayment, rejectPayment,
@@ -211,6 +211,19 @@ export function useUpdateUserStatus() {
   return useMutation({
     mutationFn: ({ userId, statusLevel }: { userId: string; statusLevel: number }) => updateUserStatus(userId, statusLevel),
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ["admin", "users"] }); void qc.invalidateQueries({ queryKey: ["admin", "buyers"] }); void qc.invalidateQueries({ queryKey: ["admin", "sellers"] }); },
+  });
+}
+
+export function useUpdateGstPanStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, role, data }: { userId: string; role: 'BUYER' | 'SELLER'; data: { verified: boolean; creditTier?: 'PREPAID' | 'EMI' | 'FULLCREDIT' } }) => 
+      updateGstPanStatus(userId, role, data),
+    onSuccess: () => { 
+      void qc.invalidateQueries({ queryKey: ["admin", "users"] }); 
+      void qc.invalidateQueries({ queryKey: ["admin", "buyers"] }); 
+      void qc.invalidateQueries({ queryKey: ["admin", "sellers"] }); 
+    },
   });
 }
 

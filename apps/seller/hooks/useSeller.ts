@@ -11,6 +11,7 @@ import {
   getSellerNotifications, markNotificationRead, markAllNotificationsRead,
   getSellerFullProfile, getProductRequests, createProductRequest, getSellerAnalytics,
   searchSuggestions, getCategoriesWithSubs,
+  verifyGstOrPan, uploadKycDocument,
 } from "@/api/seller.api";
 import type { ProductPayload } from "@pharmabag/utils";
 import { useSellerAuth } from "@/store";
@@ -231,5 +232,18 @@ export function useCategoriesWithSubs() {
     queryFn: getCategoriesWithSubs,
     staleTime: 300_000,
     retry: 1,
+  });
+}
+
+// ─── Verification & KYC ───────────────────────────────
+export function useVerifyPanGst() {
+  return useMutation({
+    mutationFn: ({ type, value }: { type: 'GST' | 'PAN'; value: string }) => verifyGstOrPan(type, value),
+  });
+}
+
+export function useUploadKycDocument() {
+  return useMutation({
+    mutationFn: (formData: FormData) => uploadKycDocument(formData),
   });
 }

@@ -196,6 +196,11 @@ export async function getBuyers(params: { page?: number; limit?: number; status?
   return data.data;
 }
 
+export async function getBuyersList(page = 1, limit = 20) {
+  const { data } = await apiClient.get<{ data: any }>(`/buyers/all?page=${page}&limit=${limit}`);
+  return data.data;
+}
+
 export async function getSellers(params: { page?: number; limit?: number; status?: string; search?: string } = {}) {
   const qs = new URLSearchParams();
   if (params.page) qs.set("page", String(params.page));
@@ -219,6 +224,16 @@ export async function deleteUser(userId: string) {
 export async function updateUserStatus(userId: string, statusLevel: number) {
   const { data } = await apiClient.patch<{ data: any }>(`/admin/users/${userId}/status-level`, { statusLevel });
   return data.data;
+}
+
+export async function updateGstPanStatus(
+  userId: string,
+  role: 'BUYER' | 'SELLER',
+  data: { verified: boolean; creditTier?: 'PREPAID' | 'EMI' | 'FULLCREDIT' }
+) {
+  const rolePath = role === 'BUYER' ? 'buyers' : 'sellers';
+  const { data: response } = await apiClient.patch<{ data: any }>(`/admin/${rolePath}/${userId}/gst-pan-status`, data);
+  return response.data;
 }
 
 // ─── Products (Extended) ─────────────────────────────

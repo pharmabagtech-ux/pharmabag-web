@@ -67,10 +67,10 @@ export async function updateBuyerProfile(input: UpdateBuyerProfileInput): Promis
 // ─── Extended Buyer APIs ────────────────────────────
 
 export async function verifyPanGst(params: {
-  panNumber?: string;
-  gstNumber?: string;
-}): Promise<{ valid: boolean; name?: string; status?: string; message?: string }> {
-  const { data } = await api.post('/buyers/verify-documents', params);
+  type: 'GST' | 'PAN';
+  value: string;
+}): Promise<{ status: boolean; legalName: string; address: string; message: string }> {
+  const { data } = await api.post('/verification/pangst/', params);
   return data;
 }
 

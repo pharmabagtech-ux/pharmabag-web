@@ -18,6 +18,7 @@ interface AuthContextValue {
   sendOtp: (phone: string) => Promise<void>;
   verifyOtp: (phone: string, otp: string) => Promise<void>;
   logout: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -101,6 +102,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const handleRefresh = useCallback(async () => {
+    try {
+      const profile = await getProfile();
+      setUser(profile);
+    } catch (error) {
+      console.error('[Auth] Refresh failed:', error);
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -110,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sendOtp: handleSendOtp,
         verifyOtp: handleVerifyOtp,
         logout: handleLogout,
+        refresh: handleRefresh,
       }}
     >
       {children}
