@@ -27,7 +27,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                         user.verificationStatus === 'VERIFIED' && 
                         !!user.creditTier;
 
-      if (!isVerified && pathname !== '/onboarding' && !pathname.startsWith('/onboarding')) {
+      const allowedPaths = ['/onboarding', '/cart', '/checkout', '/profile'];
+      if (!isVerified && !allowedPaths.some(p => pathname.startsWith(p))) {
         router.push('/onboarding');
       }
     }

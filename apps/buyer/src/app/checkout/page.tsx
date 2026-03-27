@@ -24,10 +24,18 @@ import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import Image from 'next/image';
 import Link from 'next/link';
 import AuthGuard from '@/components/shared/AuthGuard';
+import { useAuth } from '@pharmabag/api-client';
 
 type PaymentMethod = 'COD' | 'UPI' | 'BANK_TRANSFER' | 'CREDIT';
 
 export default function CheckoutPage() {
+  const { user } = useAuth();
+  const isVerified = user?.gstPanResponse?.status && 
+                     user?.verificationStatus === 'VERIFIED' && 
+                     !!user?.creditTier;
+  const isPending = user?.verificationStatus === 'PENDING';
+  const isRejected = user?.verificationStatus === 'REJECTED';
+
   const { data: cartData, isLoading: isCartLoading } = useCart();
   const { data: profileData } = useBuyerProfile();
   const { data: creditData } = useBuyerCreditDetails();
@@ -120,6 +128,59 @@ export default function CheckoutPage() {
           className="w-12 h-12 border-4 border-lime-300 border-t-transparent rounded-full"
         />
       </div>
+    );
+  }
+
+  if (!isVerified) {
+    return (
+      <AuthGuard>
+      <main className="min-h-screen bg-[#f8fbfa] flex flex-col">
+        <Navbar showUserActions={true} />
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center mt-20">
+          {isPending ? (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full bg-white/40 backdrop-blur-3xl border border-white/50 rounded-3xl p-8 shadow-2xl">
+              <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mb-6">
+                <ShieldCheck className="w-8 h-8 text-yellow-600" />
+              </div>
+              <h1 className="text-2xl font-black text-gray-900 mb-4">Verification Under Review</h1>
+              <p className="text-gray-600 font-medium mb-8">
+                Your business documents are currently being reviewed by our Admin team. You will be able to place orders once approved.
+              </p>
+              <Link href="/products" className="inline-flex items-center justify-center w-full h-14 bg-gray-900 text-white rounded-xl font-bold transition-all hover:bg-gray-800">
+                Continue Browsing
+              </Link>
+            </motion.div>
+          ) : isRejected ? (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full bg-white/40 backdrop-blur-3xl border border-red-100 rounded-3xl p-8 shadow-2xl">
+              <div className="mx-auto w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-6">
+                <AlertCircle className="w-8 h-8 text-red-600" />
+              </div>
+              <h1 className="text-2xl font-black text-gray-900 mb-4">Verification Rejected</h1>
+              <p className="text-gray-600 font-medium mb-8">
+                Unfortunately, we could not verify your business details. Please update your profile or contact support.
+              </p>
+              <Link href="/support" className="inline-flex items-center justify-center w-full h-14 bg-gray-900 text-white rounded-xl font-bold transition-all hover:bg-gray-800">
+                Contact Support
+              </Link>
+            </motion.div>
+          ) : (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full bg-white/40 backdrop-blur-3xl border border-emerald-100 rounded-3xl p-8 shadow-2xl">
+              <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mb-6">
+                <ShieldCheck className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h1 className="text-2xl font-black text-gray-900 mb-4">Complete Verification</h1>
+              <p className="text-gray-600 font-medium mb-8">
+                Since it's your first time on our platform, you need to verify your business details to buy items on PharmaBag.
+              </p>
+              <Link href="/onboarding" className="inline-flex items-center justify-center w-full h-14 bg-emerald-500 text-white rounded-xl font-bold transition-all hover:bg-emerald-600 gap-2">
+                Verify Now <ChevronRight className="w-5 h-5" />
+              </Link>
+            </motion.div>
+          )}
+        </div>
+        <Footer />
+      </main>
+      </AuthGuard>
     );
   }
 
