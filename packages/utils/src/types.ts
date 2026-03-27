@@ -103,6 +103,17 @@ export interface Product {
   ptr?: number;
   /** Final selling price per unit incl GST */
   sellingPrice?: number;
+  /** Backend discount type enumeration */
+  discountType?: string;
+  /** Backend discount raw properties array */
+  discountMeta?: {
+    discountPercent?: number;
+    buy?: number;
+    get?: number;
+    bonusProductName?: string;
+    specialPrice?: number;
+    tag?: string;
+  };
 }
 
 export interface OrderItem {

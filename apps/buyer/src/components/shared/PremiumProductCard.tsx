@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Minus, ArrowUpRight, Trash2, Bookmark } from 'lucide-react';
+import { Plus, Minus, ArrowUpRight, Trash2, Share2, RotateCw } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { ShareButton } from './ShareButton';
 import { StockBasedButton } from './StockBasedButton';
@@ -29,11 +29,11 @@ interface PremiumProductCardProps {
   onClick?: () => void;
 }
 
-export default function PremiumProductCard({ 
-  name, 
-  price, 
+export default function PremiumProductCard({
+  name,
+  price,
   mrp,
-  image, 
+  image,
   moq = 1,
   ptr,
   discountTag,
@@ -47,23 +47,53 @@ export default function PremiumProductCard({
   onBookmark,
   onCartChange,
   onQuickView,
-  onClick 
+  onClick
 }: PremiumProductCardProps) {
   const [count, setCount] = useState<number>(cartQuantity ?? 0);
   const [bookmarked, setBookmarked] = useState(isBookmarked);
   const [isEditingQty, setIsEditingQty] = useState(false);
   const [editValue, setEditValue] = useState('');
-  // Track whether an action button was clicked so we can suppress card navigation
+  const [imageError, setImageError] = useState(false);
   const actionClicked = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sync count when cartQuantity prop changes (e.g., from previous session cart data)
+  // Debounce refs to prevent jumping quantity when rapidly clicking
+  const isEditingRef = useRef(false);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    setCount(cartQuantity ?? 0);
+    // Only auto-sync from server if the user is not actively modifying the quantity
+    if (!isEditingRef.current) {
+      setCount(cartQuantity ?? 0);
+    }
   }, [cartQuantity]);
 
+  const notifyCartChange = (qty: number | null) => {
+    isEditingRef.current = true;
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    // Wait until they finish clicking (400ms pause)
+    debounceTimer.current = setTimeout(() => {
+      onCartChange?.(qty);
+      debounceTimer.current = null;
+
+      // Keep the "editing lock" active while API request actually processes (give it 1.5s)
+      setTimeout(() => {
+        if (!debounceTimer.current) {
+          isEditingRef.current = false;
+        }
+      }, 1500);
+    }, 400);
+  };
+
+  const cleanName = name?.trim() || 'Product';
+  const firstChar = cleanName.charAt(0).toUpperCase();
+  const lastChar = cleanName.length > 1 ? cleanName.charAt(cleanName.length - 1).toUpperCase() : '';
+  const initials = `${firstChar}${lastChar}`;
+
+  const hasValidImage = image && image !== '/product_placeholder.png' && !imageError;
+
   const handleCardClick = () => {
-    // Only navigate if no action button was clicked
     if (actionClicked.current) {
       actionClicked.current = false;
       return;
@@ -78,7 +108,7 @@ export default function PremiumProductCard({
   const handleAddToCart = () => {
     actionClicked.current = true;
     setCount(moq);
-    onCartChange?.(moq);
+    notifyCartChange(moq);
   };
 
   const increment = (e: React.MouseEvent) => {
@@ -87,7 +117,7 @@ export default function PremiumProductCard({
     actionClicked.current = true;
     setCount(prev => {
       const next = prev + 1;
-      onCartChange?.(next);
+      notifyCartChange(next);
       return next;
     });
   };
@@ -98,8 +128,7 @@ export default function PremiumProductCard({
     actionClicked.current = true;
     setCount(prev => {
       const next = prev - 1;
-      // If quantity goes below MOQ, remove from cart entirely
-      onCartChange?.(next >= moq ? next : null);
+      notifyCartChange(next >= moq ? next : null);
       return next >= moq ? next : 0;
     });
   };
@@ -109,7 +138,7 @@ export default function PremiumProductCard({
     e.preventDefault();
     actionClicked.current = true;
     setCount(0);
-    onCartChange?.(null);
+    notifyCartChange(null);
   };
 
   const toggleBookmark = (e: React.MouseEvent) => {
@@ -126,61 +155,53 @@ export default function PremiumProductCard({
 
   return (
     <div
-      className="relative flex flex-col w-full rounded-2xl sm:rounded-[22px] overflow-visible bg-gradient-to-b from-[#f4fdf7] to-white shadow-[0_2px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group border border-gray-100/80"
+      className="relative flex flex-col w-full rounded-[18px] sm:rounded-[22px] bg-[#f2fbf5] overflow-visible shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group border border-gray-100/60 p-3 pt-6"
       onClick={handleCardClick}
     >
-      {/* Bookmark Icon - Positioned at card center */}
-      <button
-        type="button"
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={toggleBookmark}
-        className={`absolute top-1/2 -right-2 -translate-y-1/2 p-2.5 z-20 rounded-full transition-all duration-300 active:scale-90 ${
-          bookmarked 
-            ? 'text-blue-500 bg-blue-50 shadow-md' 
-            : 'text-gray-400 hover:text-blue-400 hover:bg-white/60'
-        }`}
-      >
-        <Bookmark 
-          className={`w-8 h-8 rotate-90 transition-all duration-300 ${bookmarked ? 'fill-blue-500 text-blue-500' : ''}`} 
-          strokeWidth={2} 
-        />
-      </button>
-      {/* Image Section */}
-      <div className="relative w-full h-[140px] xs:h-[160px] sm:h-[180px] flex items-center justify-center p-3 sm:p-4 pt-8 sm:pt-10 bg-gradient-to-b from-[#eef9f2]/60 to-transparent">
-        
-        {/* Discount Tag */}
-        {discountTag && (
-          <div className="absolute top-0 left-0 bg-gradient-to-r from-emerald-500 to-teal-500 px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-[8px] sm:text-[9px] font-black text-white rounded-br-xl z-10 shadow-md tracking-wide truncate max-w-[80%]">
-            {discountTag}
-          </div>
-        )}
-        
-        {/* Top Left: Share Icon */}
-        <div className="absolute top-3 left-2 z-10">
-          <ShareButton
-            productName={name}
-            productPrice={Number(price)}
-            productImage={image}
-            productId={productId || ''}
-            className="p-2.5"
-          />
-        </div>
-
-
-        
-        {/* Top Right - Stock-Based Button or Cart Controls */}
-        <div
-          className="absolute top-3 right-3 z-20"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
+      {/* Discount Tag - overlapping the top-left corner */}
+      {discountTag && (
+        <div 
+          className={`absolute -top-[16px] left-[4px] sm:left-[8px] bg-white border border-gray-400 font-normal text-gray-900 rounded-full z-20 whitespace-nowrap shadow-none w-[95px] h-[22px] flex items-center justify-center ${
+            discountTag.length > 12 ? 'text-[9.5px]' : 'text-[11px] sm:text-[11.5px]'
+          }`}
         >
-          {hasItems ? (
-            <div className="flex items-center gap-0.5 bg-black/90 backdrop-blur-sm rounded-full pl-1 pr-1 py-1 shadow-lg animate-in fade-in zoom-in-90 duration-200">
+          {discountTag}
+        </div>
+      )}
+
+      {/* Share Button (Top Left) - Slightly lower to match Plus button and avoid tag */}
+      <div className="absolute top-[14px] left-[6px] z-10 w-7 h-7 flex items-center justify-center">
+        <ShareButton
+          productName={name}
+          productPrice={Number(price)}
+          productImage={image}
+          productId={productId || ''}
+          className="p-1 opacity-70 hover:opacity-100"
+        />
+      </div>
+
+      {/* Top Right - Status/Cart - Aligned with Share button */}
+      <div
+        className="absolute top-[14px] right-2 z-20"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {hasItems ? (
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={removeFromCart}
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors"
+            >
+              <RotateCw className="w-4 h-4 text-gray-800" strokeWidth={2.5} />
+            </button>
+            <div className="flex items-center gap-1 bg-black rounded-[8px] sm:rounded-[10px] pl-1 pr-1 py-1 shadow-md animate-in fade-in zoom-in-90 duration-200">
               <button
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={count === 1 ? removeFromCart : decrement}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-all"
+                className="w-6 h-6 rounded flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-all"
               >
                 {count === 1 ? (
                   <Trash2 className="w-3.5 h-3.5 text-red-400" strokeWidth={2.5} />
@@ -199,13 +220,13 @@ export default function PremiumProductCard({
                     const parsed = parseInt(editValue, 10);
                     if (!isNaN(parsed) && parsed >= moq) {
                       setCount(parsed);
-                      onCartChange?.(parsed);
+                      notifyCartChange(parsed);
                     } else if (!isNaN(parsed) && parsed > 0 && parsed < moq) {
                       setCount(moq);
-                      onCartChange?.(moq);
+                      notifyCartChange(moq);
                     } else if (parsed === 0 || editValue === '') {
                       setCount(0);
-                      onCartChange?.(null);
+                      notifyCartChange(null);
                     }
                     setIsEditingQty(false);
                   }}
@@ -214,7 +235,7 @@ export default function PremiumProductCard({
                       (e.target as HTMLInputElement).blur();
                     }
                   }}
-                  className="w-[36px] bg-transparent text-white text-[13px] font-black text-center tabular-nums outline-none border-b border-white/40 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="w-[28px] bg-transparent text-white text-[13px] font-bold text-center tabular-nums outline-none border-b border-white/40 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   autoFocus
                 />
               ) : (
@@ -228,7 +249,7 @@ export default function PremiumProductCard({
                     setIsEditingQty(true);
                     setTimeout(() => inputRef.current?.select(), 0);
                   }}
-                  className="text-white text-[13px] font-black min-w-[28px] text-center tabular-nums select-none cursor-text hover:opacity-80 transition-opacity"
+                  className="text-white text-[13px] font-bold min-w-[26px] text-center tabular-nums select-none cursor-text hover:opacity-80 transition-opacity"
                 >
                   {count}
                 </button>
@@ -238,97 +259,101 @@ export default function PremiumProductCard({
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={increment}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-all"
+                className="w-6 h-6 rounded flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" strokeWidth={3} />
               </button>
             </div>
-          ) : (
-            <StockBasedButton
-              stock={stock}
-              moq={moq}
-              onAddToCart={handleAddToCart}
-              onNotifyStockAlert={() => {
-                actionClicked.current = true;
-                // This would open a modal - for now just show a message
-              }}
-              disabled={isLoadingCart}
-              isLoading={isLoadingCart}
-            />
-          )}
-        </div>
-
-        {/* Product Image */}
-        <div className="relative w-[80%] h-[80%] mt-1">
-          <Image
-            src={image}
-            alt={name}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-            className="object-contain group-hover:scale-110 transition-transform duration-500 ease-out mix-blend-multiply drop-shadow-sm"
+          </div>
+        ) : (
+          <StockBasedButton
+            stock={stock}
+            moq={moq}
+            onAddToCart={handleAddToCart}
+            onNotifyStockAlert={() => {
+              actionClicked.current = true;
+            }}
+            disabled={isLoadingCart}
+            isLoading={isLoadingCart}
           />
+        )}
+      </div>
+
+      {/* Image Section */}
+      <div className="relative w-full h-[120px] xs:h-[140px] sm:h-[160px] flex items-center justify-center mt-3 group-hover:scale-105 transition-transform duration-500 ease-out z-10">
+        <div className="relative w-[70%] h-[90%] drop-shadow-sm mix-blend-multiply flex items-center justify-center">
+          {hasValidImage ? (
+            <Image
+              src={image}
+              alt={name}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+              className="object-contain"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-[80px] h-[80px] sm:w-[96px] sm:h-[96px] bg-[#dcf3e8] rounded-full flex items-center justify-center shadow-inner border border-teal-200/40">
+              <span className="text-2xl sm:text-3xl font-black text-[#1bd1d4] tracking-widest drop-shadow-sm select-none">{initials}</span>
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Feature / Bookmark Ribbon Toggle */}
+      <button
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={toggleBookmark}
+        className="absolute right-[-1px] top-[38%] -translate-y-1/2 z-20 outline-none w-[30px] sm:w-[34px] h-[30px] flex items-center justify-end hover:scale-105 transition-transform group/ribbon"
+      >
+        <svg viewBox="0 0 24 36" preserveAspectRatio="none" className="w-[80%] h-[70%] drop-shadow-sm transition-colors" fill={bookmarked ? "#1bd1d4" : "white"} stroke={bookmarked ? "#1bd1d4" : "#cbd5e1"} strokeWidth="1.5">
+          <path d="M24 0 H0 L8 18 L0 36 H24 Z" strokeLinejoin="round" />
+        </svg>
+      </button>
+
       {/* Info Section */}
-      <div className="p-2.5 px-3 sm:p-3 sm:px-3.5 bg-white flex flex-col flex-grow rounded-t-3xl -mt-3 relative z-10 overflow-hidden">
-        {/* Name + Arrow */}
-        <div className="flex items-center justify-between gap-1.5 mb-2">
-          <h3 className="font-extrabold text-gray-900 text-[11px] sm:text-[13px] leading-snug line-clamp-1 min-w-0 truncate tracking-tight">
+      <div className="mt-auto flex flex-col z-10 w-full pb-1">
+        {/* Product Name & Arrow Button */}
+        <div className="flex items-center justify-between mb-2 pl-1 pr-0">
+          <h3 className="font-medium text-gray-900 text-[16px] sm:text-[17px] leading-snug line-clamp-1 truncate tracking-tight flex-1">
             {name}
           </h3>
-          <div className="w-5 h-5 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
-            {infoIcon ? (
-              <span className="text-white font-bold text-[9px] font-serif italic">i</span>
-            ) : (
-              <ArrowUpRight className="w-3 h-3 text-white" strokeWidth={2.5} />
-            )}
-          </div>
+          <button
+            type="button"
+            className="w-[22px] h-[22px] bg-black rounded-full flex items-center justify-center ml-2 mr-[-8px] flex-shrink-0 hover:scale-110 transition-transform shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              actionClicked.current = true;
+              onQuickView?.();
+            }}
+          >
+            <ArrowUpRight className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+          </button>
         </div>
 
         {/* Divider */}
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-2"></div>
+        <div className="w-full h-px bg-gray-300 mb-2 rounded-full"></div>
 
-        {/* Pricing Row */}
-        <div className="space-y-1.5 w-full min-w-0">
-          {/* Labels Row */}
-          <div className="grid grid-cols-3 gap-1 items-center w-full min-w-0">
-            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider">MRP</span>
-            <div className="flex justify-center">
-              <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">MOQ <span className="inline-block bg-gray-900 text-white px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-black leading-none">{moq}</span></span>
-            </div>
-            <span className="text-[7px] sm:text-[8px] font-bold text-gray-400 uppercase tracking-wider text-right whitespace-nowrap">{rateLabel}</span>
+        {/* Pricing Grid */}
+        <div className="flex flex-col gap-0.5 px-1 w-full relative">
+
+          {/* Top Header Row */}
+          <div className="flex justify-between items-center w-full min-w-0 mb-0.5">
+            <span className="text-[11px] sm:text-[12px] font-medium text-gray-600 uppercase tracking-wide min-w-[30%] text-left">MRP</span>
+            <span className="text-[11px] sm:text-[12px] font-medium text-gray-600 uppercase tracking-wide text-center flex-1">MOQ {moq}</span>
+            <span className="text-[11px] sm:text-[12px] font-medium text-gray-600 uppercase tracking-wide min-w-[30%] text-right whitespace-nowrap">{rateLabel}</span>
           </div>
 
           {/* Values Row */}
-          <div className="grid grid-cols-3 gap-1 items-center w-full min-w-0">
-            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 truncate">₹{mrp || price}</span>
-            <div className="flex justify-center"></div>
-            <span className="text-[11px] sm:text-[12px] font-extrabold text-gray-900 truncate text-right max-w-full">₹{ptr || price}</span>
+          <div className="flex justify-between items-center w-full min-w-0">
+            <span className="text-[13px] sm:text-[14px] font-medium text-gray-800 truncate min-w-[30%] text-left">₹{mrp || price}</span>
+            <span className="text-[13px] sm:text-[14px] text-transparent text-center flex-1 select-none pointer-events-none">-</span>
+            <span className="text-[13px] sm:text-[14px] font-medium text-gray-800 truncate min-w-[30%] text-right">₹{ptr || price}</span>
           </div>
+
         </div>
 
-        {/* Cart indicator bar */}
-        <AnimatePresence>
-          {hasItems && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0, marginTop: 0 }}
-              animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
-              exit={{ opacity: 0, height: 0, marginTop: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="pt-2 border-t border-dashed border-gray-200">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">In Cart</span>
-                  <span className="text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                    {count} {count === 1 ? 'unit' : 'units'}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );

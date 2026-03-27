@@ -84,21 +84,71 @@ export default function ProductDetailPage({ params }: { params: { productId: str
   }
 
   // Compute pricing from discount details if available
-  const dd = (product as any).discountDetails || (product as any).discountFormDetails;
+  const backendTypeMap: Record<string, string> = {
+    "PTR_DISCOUNT": "ptr_discount",
+    "SAME_PRODUCT_BONUS": "same_product_bonus",
+    "PTR_PLUS_SAME_PRODUCT_BONUS": "ptr_discount_and_same_product_bonus",
+    "DIFFERENT_PRODUCT_BONUS": "different_product_bonus",
+    "PTR_PLUS_DIFFERENT_PRODUCT_BONUS": "ptr_discount_and_different_product_bonus",
+    "SPECIAL_PRICE": "special_price",
+  };
+  const mappedType = (product as any).discountType ? backendTypeMap[(product as any).discountType] : undefined;
+  
+  const dd = (product as any).discountDetails || (product as any).discountFormDetails || (mappedType ? {
+    type: mappedType,
+    ...(product as any).discountMeta
+  } : null);
+
   let sellingPrice = (product as any).sellingPrice || (product as any).ptr || product.price || product.mrp || 0;
-  let computedPtr: number | undefined;
-  let buyGetTag = '';
+  let computedPtr: number | undefined = (product as any).ptr;
+  let discountDisplayTag = "";
+
+  // Rebuild exactly matching the required UI format (Matches the Card)
+  if ((product as any).discountType) {
+    const d = (product as any).discountMeta;
+    const type = (product as any).discountType;
+    if (type === "PTR_DISCOUNT" && (d?.discountPercent ?? 0) > 0) {
+      discountDisplayTag = `${d?.discountPercent}% Off`;
+    } else if (type === "SAME_PRODUCT_BONUS" && (d?.get ?? 0) > 0) {
+      discountDisplayTag = `(${d?.buy ?? 0}+${d?.get ?? 0}) Free`;
+    } else if (type === "PTR_PLUS_SAME_PRODUCT_BONUS") {
+      if ((d?.discountPercent ?? 0) > 0 && (d?.get ?? 0) > 0) {
+        discountDisplayTag = `${d?.discountPercent}% Off (${d?.buy ?? 0}+${d?.get ?? 0})`;
+      } else if ((d?.discountPercent ?? 0) > 0) {
+        discountDisplayTag = `${d?.discountPercent}% Off`;
+      } else if ((d?.get ?? 0) > 0) {
+        discountDisplayTag = `(${d?.buy ?? 0}+${d?.get ?? 0}) Free`;
+      }
+    } else if (type === "DIFFERENT_PRODUCT_BONUS" && (d?.get ?? 0) > 0) {
+      discountDisplayTag = `(${d?.buy ?? 0}+${d?.get ?? 0} ${d?.bonusProductName || ''}) Free`;
+    } else if (type === "PTR_PLUS_DIFFERENT_PRODUCT_BONUS") {
+      if ((d?.discountPercent ?? 0) > 0 && (d?.get ?? 0) > 0) {
+        discountDisplayTag = `${d?.discountPercent}% Off (${d?.buy ?? 0}+${d?.get ?? 0} ${d?.bonusProductName || ''})`;
+      } else if ((d?.discountPercent ?? 0) > 0) {
+        discountDisplayTag = `${d?.discountPercent}% Off`;
+      } else if ((d?.get ?? 0) > 0) {
+        discountDisplayTag = `(${d?.buy ?? 0}+${d?.get ?? 0} ${d?.bonusProductName || ''}) Free`;
+      }
+    } else if (type === "SPECIAL_PRICE") {
+      discountDisplayTag = `Special Price`;
+    }
+  }
+
+  // Fallback to manual tag if still empty
+  if (!discountDisplayTag) {
+     discountDisplayTag = (product as any).discountTag || (product as any).discountMeta?.tag || '';
+  }
 
   if (dd?.type && product.mrp && (product as any).gstPercent != null) {
     try {
       const pricing = calculatePricing(product.mrp, (product as any).gstPercent, dd);
       sellingPrice = getSellingPrice(pricing);
       computedPtr = pricing.ptr;
-      if (pricing.get > 0) {
-        buyGetTag = `Buy ${pricing.buy} Get ${pricing.get}`;
+      if (!discountDisplayTag && pricing.get > 0) {
+        discountDisplayTag = `Buy ${pricing.buy} Get ${pricing.get}`;
       }
     } catch {
-      // Fallback to raw product values
+      // Fallback
     }
   }
 
@@ -167,18 +217,21 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                   {product.mrp && product.mrp > sellingPrice && (
                     <>
                       <span className="text-base sm:text-lg md:text-xl text-gray-400 line-through">₹{product.mrp.toLocaleString('en-IN')}</span>
-                      <span className="text-sm font-bold text-green-600 bg-green-50 px-3 py-1 rounded-2xl">
-                        {discount}% OFF
-                      </span>
+                      {discountDisplayTag && (
+                        <span className="text-[15px] font-normal text-green-800 bg-green-50 border border-green-300 px-10 py-0.5 rounded-full whitespace-nowrap">
+                          {discountDisplayTag}
+                        </span>
+                      )}
                     </>
                   )}
                 </div>
                 {computedPtr && (
                   <p className="text-sm text-gray-500 mt-1 font-medium">PTR: ₹{computedPtr.toLocaleString('en-IN')}</p>
                 )}
-                {buyGetTag && (
-                  <span className="inline-block text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-2xl mt-2">
-                    {buyGetTag}
+                {/* Fallback to computed discount if no structured tag exists */}
+                {!discountDisplayTag && discount > 0 && (
+                  <span className="inline-block text-[14px] font-normal text-green-800 bg-green-50 border border-green-300 px-8 py-0.5 rounded-full mt-2">
+                    {discount}% OFF
                   </span>
                 )}
                 <p className="text-xs text-gray-400 mt-2 font-medium">Inclusive of all taxes</p>
@@ -351,11 +404,13 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                     </div>
                   )}
 
-                  {/* Buy Get Tag */}
-                  {buyGetTag && (
+                  {/* Discount Display Tag */}
+                  {discountDisplayTag && (
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Offer</span>
-                      <span className="text-sm sm:text-base font-bold text-blue-600">{buyGetTag}</span>
+                      <span className="text-sm sm:text-base font-normal text-green-800 bg-green-50/50 border border-green-300 px-6 py-0.5 rounded-full w-fit">
+                        {discountDisplayTag}
+                      </span>
                     </div>
                   )}
                 </div>

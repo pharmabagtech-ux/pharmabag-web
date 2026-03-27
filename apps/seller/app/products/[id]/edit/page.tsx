@@ -44,7 +44,17 @@ export default function EditProductPage() {
                 gst_percent: product.gstPercent || 12,
                 image_list: product.images || [],
                 custom_extra_fields: product.extraFields || [],
-                discount_form_details: product.discountFormDetails || { type: "ptr_discount", discountPercent: product.discount },
+                discount_form_details: product.discountFormDetails || (product.discountType ? {
+                  type: {
+                    "PTR_DISCOUNT": "ptr_discount",
+                    "SAME_PRODUCT_BONUS": "same_product_bonus",
+                    "PTR_PLUS_SAME_PRODUCT_BONUS": "ptr_discount_and_same_product_bonus",
+                    "DIFFERENT_PRODUCT_BONUS": "different_product_bonus",
+                    "PTR_PLUS_DIFFERENT_PRODUCT_BONUS": "ptr_discount_and_different_product_bonus",
+                    "SPECIAL_PRICE": "special_price",
+                  }[product.discountType] || "ptr_discount",
+                  ...product.discountMeta
+                } : { type: "ptr_discount", discountPercent: product.discount }) as any,
               }} 
             />
           )}

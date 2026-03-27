@@ -14,7 +14,7 @@ import { SkeletonCard } from '@/components/shared/LoaderSkeleton';
 import EmptyState from '@/components/shared/EmptyState';
 import { useProducts, useCategories, useManufacturers, useCities } from '@/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useAddToCart, useCart } from '@/hooks/useCart';
+import { useAddToCart, useCart, useRemoveCartItem, useUpdateCartItem } from '@/hooks/useCart';
 import { useToast } from '@/components/shared/Toast';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent } from '@pharmabag/utils';
 
@@ -39,6 +39,8 @@ export default function ProductsPage() {
   }, [showMobileFilters]);
 
   const addToCart = useAddToCart();
+  const removeCartItem = useRemoveCartItem();
+  const updateCartItem = useUpdateCartItem();
   const { toast } = useToast();
   const { data: cartData } = useCart();
   
@@ -282,35 +284,36 @@ export default function ProductsPage() {
           {/* Product Grid Container */}
           <div className="flex-1 w-full relative">
             {/* Top Bar with Search and Filter Toggle */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 md:mb-10 mt-2 sm:mt-4">
-              <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-500 flex-wrap">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6 mt-1">
+              <div className="flex items-center gap-1.5 text-xs sm:text-[13px] font-medium text-gray-400 flex-wrap">
                 <span className="cursor-pointer hover:text-black transition-colors">Home</span>
-                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-30" />
+                <ChevronRight className="w-3.5 h-3.5 opacity-20" />
                 <span className="cursor-pointer hover:text-black transition-colors">Products</span>
-                <span className="text-[10px] sm:text-[11px] font-black text-gray-400 uppercase tracking-widest ml-2 sm:ml-4">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 sm:ml-2">
                   {totalProducts} Products
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto sm:max-w-[520px]">
-                {/* Mobile filter toggle */}
+              <div className="flex items-center gap-2 w-full sm:w-auto sm:max-w-[600px]">
+                {/* Filter toggle - Universal */}
                 <button
                   onClick={() => setShowMobileFilters(true)}
-                  className="p-2.5 sm:p-3 bg-white/60 rounded-xl sm:rounded-2xl hover:bg-white transition-all border border-white/60 shadow-sm group lg:hidden"
+                  className="p-2 sm:px-4 sm:py-3 bg-white/60 rounded-xl sm:rounded-2xl hover:bg-white transition-all border border-white/60 shadow-sm group flex items-center gap-2"
                 >
-                  <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-800 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
+                  <Filter className="w-4 h-4 text-gray-700 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
+                  <span className="hidden sm:inline text-xs sm:text-sm font-bold text-gray-700">Filters</span>
                 </button>
                 <div className="flex-1 relative group">
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search brands, products..."
-                    className="w-full h-10 sm:h-12 bg-white/60 backdrop-blur-md border border-white/60 rounded-xl sm:rounded-2xl pl-4 sm:pl-6 pr-10 sm:pr-14 text-xs sm:text-sm text-gray-900 font-bold placeholder:text-gray-400 focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all shadow-sm"
+                    placeholder="Search medicines, health products..."
+                    className="w-full h-10 sm:h-[48px] bg-white/60 backdrop-blur-md border border-white/60 rounded-xl sm:rounded-2xl pl-4 sm:pl-6 pr-10 sm:pr-14 text-xs sm:text-sm text-gray-900 font-bold placeholder:text-gray-400 focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all shadow-sm"
                   />
-                  <button className="absolute inset-y-0 right-3 sm:right-5 flex items-center text-gray-400 hover:text-gray-900 transition-colors">
+                  <div className="absolute inset-y-0 right-3 sm:right-5 flex items-center text-gray-400">
                     <Search className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={3} />
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -375,10 +378,68 @@ export default function ProductsPage() {
                         : '/product_placeholder.png');
 
                     // Compute pricing from discount details if available
-                    const dd = product.discountDetails || product.discountFormDetails;
+                    const backendTypeMap: Record<string, string> = {
+                      "PTR_DISCOUNT": "ptr_discount",
+                      "SAME_PRODUCT_BONUS": "same_product_bonus",
+                      "PTR_PLUS_SAME_PRODUCT_BONUS": "ptr_discount_and_same_product_bonus",
+                      "DIFFERENT_PRODUCT_BONUS": "different_product_bonus",
+                      "PTR_PLUS_DIFFERENT_PRODUCT_BONUS": "ptr_discount_and_different_product_bonus",
+                      "SPECIAL_PRICE": "special_price",
+                    };
+                    const mappedType = product.discountType ? backendTypeMap[product.discountType] : undefined;
+                    
+                    const dd = product.discountDetails || product.discountFormDetails || (mappedType ? {
+                      type: mappedType,
+                      ...product.discountMeta
+                    } : null);
+
                     let computedPtr = product.ptr;
                     let computedSellingPrice = product.sellingPrice || product.ptr || product.price || product.mrp || 0;
-                    let computedDiscountTag = product.discountTag || product.discountMeta?.tag;
+                    let computedDiscountTag = "";
+                    
+                    // Rebuild exactly matching the image UI
+                    if (product.discountType) {
+                       const d = product.discountMeta;
+                       if (product.discountType === "PTR_DISCOUNT" && (d?.discountPercent ?? 0) > 0) {
+                          computedDiscountTag = `${d?.discountPercent}% Off`;
+                       } else if (product.discountType === "SAME_PRODUCT_BONUS" && (d?.get ?? 0) > 0) {
+                          computedDiscountTag = `(${d?.buy ?? 0}+${d?.get ?? 0}) Free`;
+                       } else if (product.discountType === "PTR_PLUS_SAME_PRODUCT_BONUS") {
+                          if ((d?.discountPercent ?? 0) > 0 && (d?.get ?? 0) > 0) {
+                             computedDiscountTag = `${d?.discountPercent}% Off (${d?.buy ?? 0}+${d?.get ?? 0})`;
+                          } else if ((d?.discountPercent ?? 0) > 0) {
+                             computedDiscountTag = `${d?.discountPercent}% Off`;
+                          } else if ((d?.get ?? 0) > 0) {
+                             computedDiscountTag = `(${d?.buy ?? 0}+${d?.get ?? 0}) Free`;
+                          }
+                       } else if (product.discountType === "DIFFERENT_PRODUCT_BONUS" && (d?.get ?? 0) > 0) {
+                          computedDiscountTag = `(${d?.buy ?? 0}+${d?.get ?? 0} ${d?.bonusProductName || ''}) Free`;
+                       } else if (product.discountType === "PTR_PLUS_DIFFERENT_PRODUCT_BONUS") {
+                          if ((d?.discountPercent ?? 0) > 0 && (d?.get ?? 0) > 0) {
+                             computedDiscountTag = `${d?.discountPercent}% Off (${d?.buy ?? 0}+${d?.get ?? 0} ${d?.bonusProductName || ''})`;
+                          } else if ((d?.discountPercent ?? 0) > 0) {
+                             computedDiscountTag = `${d?.discountPercent}% Off`;
+                          } else if ((d?.get ?? 0) > 0) {
+                             computedDiscountTag = `(${d?.buy ?? 0}+${d?.get ?? 0} ${d?.bonusProductName || ''}) Free`;
+                          }
+                       } else if (product.discountType === "SPECIAL_PRICE") {
+                          computedDiscountTag = `Special Price`;
+                       }
+                    } else if (dd?.discountPercent || dd?.buy) {
+                       // Fallback for older schemas
+                       if ((dd.discountPercent ?? 0) > 0 && (dd.get ?? 0) > 0) {
+                           computedDiscountTag = `${dd.discountPercent}% Off (${dd.buy}+${dd.get})`;
+                       } else if ((dd.discountPercent ?? 0) > 0) {
+                           computedDiscountTag = `${dd.discountPercent}% Off`;
+                       } else if ((dd.get ?? 0) > 0) {
+                           computedDiscountTag = `(${dd.buy}+${dd.get}) Free`;
+                       }
+                    }
+
+                    // Final safety - if tag is empty string, don't use it
+                    if (!computedDiscountTag) {
+                      computedDiscountTag = product.discountTag || product.discountMeta?.tag || "";
+                    }
 
                     if (dd?.type && product.mrp && product.gstPercent != null) {
                       try {
@@ -386,13 +447,6 @@ export default function ProductsPage() {
                         const sp = getSellingPrice(pricing);
                         computedPtr = pricing.ptr;
                         computedSellingPrice = sp;
-                        const effDiscount = getEffectiveDiscountPercent(product.mrp, sp);
-                        if (effDiscount > 0) {
-                          computedDiscountTag = computedDiscountTag || `${effDiscount}% OFF`;
-                        }
-                        if (pricing.get > 0) {
-                          computedDiscountTag = `Buy ${pricing.buy} Get ${pricing.get}` + (effDiscount > 0 ? ` + ${effDiscount}% OFF` : '');
-                        }
                       } catch {
                         // Fallback to raw product values if pricing computation fails
                       }
@@ -403,9 +457,21 @@ export default function ProductsPage() {
                       computedSellingPrice = product.mrp || 0;
                     }
 
+                    const cartItemObj = cartData?.items?.find((item: any) => item.productId === product.id);
+
                     const handleCartChange = (quantity: number | null) => {
                       if (quantity === null) {
                         // Remove from cart
+                        if (cartItemObj) {
+                          removeCartItem.mutate(cartItemObj.id, {
+                            onSuccess: () => {
+                              toast(`${product.name} removed from cart`, 'success');
+                            },
+                            onError: () => {
+                              toast('Failed to remove item', 'error');
+                            }
+                          });
+                        }
                         return;
                       }
                       
@@ -415,56 +481,68 @@ export default function ProductsPage() {
                       }
                       
                       setPendingCartProducts(prev => new Set(prev).add(product.id));
-                      
                       const moq = product.moq || product.minimumOrderQuantity || 1;
-                      console.log(`[Cart Debug] Product: ${product.name}, MOQ from product: moq=${product.moq}, minimumOrderQuantity=${product.minimumOrderQuantity}, final moq=${moq}, requested quantity=${quantity}`);
                       
-                      addToCart.mutate(
-                        { productId: product.id, quantity },
-                        {
+                      const cleanupPending = () => {
+                        setPendingCartProducts(prev => {
+                          const next = new Set(prev);
+                          next.delete(product.id);
+                          return next;
+                        });
+                      };
+
+                      if (cartItemObj) {
+                        // Product is already in cart, update absolute quantity
+                        updateCartItem.mutate({ itemId: cartItemObj.id, quantity }, {
                           onSuccess: () => {
-                            toast(`${product.name} added to cart!`, 'success');
-                            setPendingCartProducts(prev => {
-                              const next = new Set(prev);
-                              next.delete(product.id);
-                              return next;
-                            });
+                            toast(`Quantity updated to ${quantity}`, 'success');
+                            cleanupPending();
                           },
                           onError: (err: any) => {
-                            const status = err?.response?.status || err?.status;
-                            const message = err?.response?.data?.message || err?.message || '';
-                            let errorMsg = 'Failed to add to cart';
-                            let isSuccess = false;
-                            
-                            if (status === 401 || status === 403) {
-                              errorMsg = 'Please log in to add items to cart';
-                            } else if (status === 429) {
-                              errorMsg = 'Too many requests. Please try again in a moment';
-                            } else if (status === 400) {
-                              if (message.includes('already in cart')) {
-                                errorMsg = 'Product quantity has been updated in cart';
-                                isSuccess = true;
-                              } else if (message.includes('Minimum order quantity')) {
-                                // Extract the required quantity from message
-                                const match = message.match(/(\d+)/);
-                                const requiredQty = match ? match[1] : '1';
-                                errorMsg = `Minimum order quantity is ${requiredQty}. Please add at least ${requiredQty} items.`;
-                              } else {
+                            toast(err?.response?.data?.message || err?.message || 'Failed to update quantity', 'error');
+                            cleanupPending();
+                          }
+                        });
+                      } else {
+                        // Product not in cart, add it
+                        addToCart.mutate(
+                          { productId: product.id, quantity },
+                          {
+                            onSuccess: () => {
+                              toast(`${product.name} added to cart!`, 'success');
+                              cleanupPending();
+                            },
+                            onError: (err: any) => {
+                              const status = err?.response?.status || err?.status;
+                              const message = err?.response?.data?.message || err?.message || '';
+                              let errorMsg = 'Failed to add to cart';
+                              let isSuccess = false;
+                              
+                              if (status === 401 || status === 403) {
+                                errorMsg = 'Please log in to add items to cart';
+                              } else if (status === 429) {
+                                errorMsg = 'Too many requests. Please try again in a moment';
+                              } else if (status === 400) {
+                                if (message.includes('already in cart')) {
+                                  errorMsg = 'Product quantity has been updated in cart';
+                                  isSuccess = true;
+                                } else if (message.includes('Minimum order quantity')) {
+                                  const match = message.match(/(\d+)/);
+                                  const requiredQty = match ? match[1] : '1';
+                                  errorMsg = `Minimum order quantity is ${requiredQty}. Please add at least ${requiredQty} items.`;
+                                } else {
+                                  errorMsg = message;
+                                }
+                              } else if (message) {
                                 errorMsg = message;
                               }
-                            } else if (message) {
-                              errorMsg = message;
-                            }
-                            
-                            toast(errorMsg, isSuccess ? 'success' : 'error');
-                            setPendingCartProducts(prev => {
-                              const next = new Set(prev);
-                              next.delete(product.id);
-                              return next;
-                            });
-                          },
-                        }
-                      );
+                              
+                              toast(errorMsg, isSuccess ? 'success' : 'error');
+                              cleanupPending();
+                            },
+                          }
+                        );
+                      }
                     };
 
                     return (

@@ -135,28 +135,32 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         ptr_discount_and_same_product_bonus: "PTR_PLUS_SAME_PRODUCT_BONUS",
         different_product_bonus: "DIFFERENT_PRODUCT_BONUS",
         ptr_discount_and_different_product_bonus: "PTR_PLUS_DIFFERENT_PRODUCT_BONUS",
+        special_price: "SPECIAL_PRICE",
       };
-
       const discountMeta: Record<string, any> = {};
       const formDiscountType = data.discount_form_details?.type;
+      const df = data.discount_form_details;
 
-      // Extract discount metadata based on type
-      if (formDiscountType === "ptr_discount" && data.discount_form_details?.discountPercent) {
-        discountMeta.discountPercent = data.discount_form_details.discountPercent;
-      } else if (formDiscountType === "same_product_bonus" && data.discount_form_details?.bonusProductName) {
-        discountMeta.bonusProductName = data.discount_form_details.bonusProductName;
-      } else if (formDiscountType === "different_product_bonus" && data.discount_form_details?.bonusProductName) {
-        discountMeta.bonusProductName = data.discount_form_details.bonusProductName;
-      } else if (formDiscountType === "ptr_discount_and_same_product_bonus" && data.discount_form_details?.discountPercent) {
-        discountMeta.discountPercent = data.discount_form_details.discountPercent;
-        if (data.discount_form_details?.bonusProductName) {
-          discountMeta.bonusProductName = data.discount_form_details.bonusProductName;
-        }
-      } else if (formDiscountType === "ptr_discount_and_different_product_bonus" && data.discount_form_details?.discountPercent) {
-        discountMeta.discountPercent = data.discount_form_details.discountPercent;
-        if (data.discount_form_details?.bonusProductName) {
-          discountMeta.bonusProductName = data.discount_form_details.bonusProductName;
-        }
+      if (formDiscountType === "ptr_discount") {
+        if (df?.discountPercent) discountMeta.discountPercent = df.discountPercent;
+      } else if (formDiscountType === "same_product_bonus") {
+        if (df?.buy) discountMeta.buy = df.buy;
+        if (df?.get) discountMeta.get = df.get;
+      } else if (formDiscountType === "different_product_bonus") {
+        if (df?.buy) discountMeta.buy = df.buy;
+        if (df?.get) discountMeta.get = df.get;
+        if (df?.bonusProductName) discountMeta.bonusProductName = df.bonusProductName;
+      } else if (formDiscountType === "ptr_discount_and_same_product_bonus") {
+        if (df?.discountPercent) discountMeta.discountPercent = df.discountPercent;
+        if (df?.buy) discountMeta.buy = df.buy;
+        if (df?.get) discountMeta.get = df.get;
+      } else if (formDiscountType === "ptr_discount_and_different_product_bonus") {
+        if (df?.discountPercent) discountMeta.discountPercent = df.discountPercent;
+        if (df?.buy) discountMeta.buy = df.buy;
+        if (df?.get) discountMeta.get = df.get;
+        if (df?.bonusProductName) discountMeta.bonusProductName = df.bonusProductName;
+      } else if (formDiscountType === "special_price") {
+        if (df?.specialPrice) discountMeta.specialPrice = df.specialPrice;
       }
 
       // Map discount type if present
@@ -271,12 +275,12 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
                 control={control}
                 name="sub_categories"
                 render={({ field: { value: subcats, onChange: setSubcats } }: any) => (
-                  <CategorySelector 
-                    selectedCategoryIds={cats} 
-                    onChangeCategories={setCats} 
-                    selectedSubcategoryIds={subcats || []} 
-                    onChangeSubcategories={setSubcats} 
-                    error={errors.categories?.message} 
+                  <CategorySelector
+                    selectedCategoryIds={cats}
+                    onChangeCategories={setCats}
+                    selectedSubcategoryIds={subcats || []}
+                    onChangeSubcategories={setSubcats}
+                    error={errors.categories?.message}
                   />
                 )}
               />

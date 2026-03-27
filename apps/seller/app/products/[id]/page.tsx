@@ -107,10 +107,29 @@ export default function ProductDetailPage() {
                  
                  <div className="glass-card p-6 rounded-2xl space-y-4">
                    <h3 className="font-semibold text-lg border-b border-border/50 pb-2">Discounts</h3>
-                   {product.discount ? (
-                     <div><p className="text-xs text-muted-foreground font-medium uppercase">PTR Discount</p><p className="font-bold text-green-600 text-xl">{product.discount}%</p></div>
-                   ) : (
+                   {!product.discountType ? (
                      <p className="text-sm text-muted-foreground text-center py-4">No active discounts configured</p>
+                   ) : (
+                     <div className="space-y-3">
+                       {product.discountType === "PTR_DISCOUNT" && (
+                         <div><p className="text-xs text-muted-foreground font-medium uppercase">PTR Discount</p><p className="font-bold text-green-600 text-xl">{product.discountMeta?.discountPercent}% OFF</p></div>
+                       )}
+                       {product.discountType === "SAME_PRODUCT_BONUS" && (
+                         <div><p className="text-xs text-muted-foreground font-medium uppercase">Same Product Bonus</p><p className="font-bold text-blue-600 text-xl">Buy {product.discountMeta?.buy}, Get {product.discountMeta?.get} Free</p></div>
+                       )}
+                       {product.discountType === "DIFFERENT_PRODUCT_BONUS" && (
+                         <div><p className="text-xs text-muted-foreground font-medium uppercase">Different Product Bonus</p><p className="font-bold text-blue-600 text-lg">Buy {product.discountMeta?.buy}, Get {product.discountMeta?.get} {product.discountMeta?.bonusProductName} Free</p></div>
+                       )}
+                       {product.discountType === "PTR_PLUS_SAME_PRODUCT_BONUS" && (
+                         <div><p className="text-xs text-muted-foreground font-medium uppercase">Combo Discount</p><p className="font-bold text-purple-600 text-lg">{product.discountMeta?.discountPercent}% OFF + Buy {product.discountMeta?.buy} Get {product.discountMeta?.get}</p></div>
+                       )}
+                       {product.discountType === "PTR_PLUS_DIFFERENT_PRODUCT_BONUS" && (
+                         <div><p className="text-xs text-muted-foreground font-medium uppercase">Combo Discount (Diff Product)</p><p className="font-bold text-purple-600 text-lg">{product.discountMeta?.discountPercent}% OFF + Buy {product.discountMeta?.buy} Get {product.discountMeta?.get} {product.discountMeta?.bonusProductName}</p></div>
+                       )}
+                       {product.discountType === "SPECIAL_PRICE" && (
+                         <div><p className="text-xs text-muted-foreground font-medium uppercase">Special Price</p><p className="font-bold text-orange-600 text-xl">₹{product.discountMeta?.specialPrice}</p></div>
+                       )}
+                     </div>
                    )}
                  </div>
                </div>

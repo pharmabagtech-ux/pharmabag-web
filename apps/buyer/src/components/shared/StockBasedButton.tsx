@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Bell, Loader2 } from 'lucide-react';
+import { Plus, Clock, Loader2 } from 'lucide-react';
 
 export type StockStatus = 'good' | 'selling-fast' | 'low' | 'out-of-stock';
 
@@ -38,7 +38,7 @@ export function StockBasedButton({
     'good': 'text-black hover:text-gray-700',
     'selling-fast': 'text-yellow-500 hover:text-yellow-600',
     'low': 'text-red-500 hover:text-red-600',
-    'out-of-stock': 'text-gray-400 cursor-not-allowed',
+    'out-of-stock': 'text-red-500 cursor-not-allowed',
   };
 
   // Badge text mapping
@@ -46,7 +46,7 @@ export function StockBasedButton({
     'good': '',
     'selling-fast': 'SELLING FAST',
     'low': '',
-    'out-of-stock': 'OUT OF STOCK',
+    'out-of-stock': '',
   };
 
   const handleClick = (e: React.MouseEvent) => {
@@ -76,7 +76,7 @@ export function StockBasedButton({
         {isLoading ? (
           <Loader2 className="w-6 h-6 animate-spin" />
         ) : status === 'out-of-stock' ? (
-          <Bell className="w-6 h-6" strokeWidth={2} />
+          <Clock className="w-6 h-6 text-red-500" strokeWidth={2.5} />
         ) : (
           <Plus className="w-6 h-6" strokeWidth={2.5} />
         )}
