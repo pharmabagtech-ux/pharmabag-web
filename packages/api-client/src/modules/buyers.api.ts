@@ -70,7 +70,7 @@ export async function verifyPanGst(params: {
   type: 'GST' | 'PAN';
   value: string;
 }): Promise<{ status: boolean; legalName: string; address: string; message: string }> {
-  const { data } = await api.post('/verification/pangst/', params);
+  const { data } = await api.post('/verification/pangst', params);
   return data;
 }
 
