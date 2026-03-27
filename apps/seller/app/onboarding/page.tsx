@@ -14,14 +14,6 @@ export default function SellerOnboardingPage() {
   const router = useRouter();
   const { user } = useSellerAuth();
   
-  // Defence-in-depth: Ensure only NEW sellers can see this form
-  useEffect(() => {
-    // If the seller already has a designated status (PENDING, APPROVED, etc.), kick them out
-    if (user && user.status) {
-      router.replace("/dashboard");
-    }
-  }, [user, router]);
-
   const queryClient = useQueryClient();
   const updateProfile = useUpdateSellerProfile();
   const verifyPanGst = useVerifyPanGst();

@@ -17,7 +17,27 @@ import { SidebarProvider, useSidebar } from "@/context/sidebar-context";
  */
 function getUserStatus(user: any): string {
   if (!user) return "NEW";
-  return String(user.status || "NEW").toUpperCase();
+  
+  const rawStatus = String(user.status || "NEW").toUpperCase();
+  
+  // The backend defaults new users to PENDING. 
+  // We must differentiate a truly NEW user (needs onboarding) from a submitted PENDING user.
+  // A submitted user will have their business details attached.
+  if (rawStatus === "PENDING") {
+    const hasBusinessDetails = !!(
+      user.businessName || 
+      user.sellerProfile?.businessName || 
+      user.sellerProfile?.gstNumber || 
+      user.sellerProfile?.panNumber
+    );
+    
+    // If they have no business details, they haven't completed onboarding yet.
+    if (!hasBusinessDetails) {
+      return "NEW";
+    }
+  }
+  
+  return rawStatus;
 }
 
 export function SellerGuard({ children }: { children: React.ReactNode }) {
