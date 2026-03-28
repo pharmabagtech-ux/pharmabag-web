@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { CreditCard, ChevronRight, Clock, AlertCircle, Wallet } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
 import { SkeletonList } from '@/components/shared/LoaderSkeleton';
 import Link from 'next/link';
 import { usePaymentHistory } from '@/hooks/usePayments';
@@ -159,9 +158,7 @@ export default function PaymentsPage() {
           </div>
         </motion.div>
       </div>
-
-      <Footer />
-    </main>
+</main>
     </AuthGuard>
   );
 }

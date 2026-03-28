@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
 import { useAuth } from '@pharmabag/api-client';
 import { useToast } from '@/components/shared/Toast';
 
@@ -257,10 +256,6 @@ export default function LoginPage() {
           </motion.div>
         </div>
       </div>
-
-      <Footer />
-
-
-    </main>
+</main>
   );
 }

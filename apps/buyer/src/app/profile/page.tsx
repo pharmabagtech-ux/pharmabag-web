@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { User, ShieldCheck, MapPin, Edit3, CreditCard, AlertCircle, Save, X, CheckCircle2 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
 import { SkeletonProfileHeader } from '@/components/shared/LoaderSkeleton';
 import { useToast } from '@/components/shared/Toast';
 import { useBuyerProfile, useUpdateBuyerProfile, useCreateBuyerProfile } from '@/hooks/useBuyerProfile';
@@ -65,8 +64,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-        <Footer />
-      </main>
+</main>
     );
   }
 
@@ -140,8 +138,7 @@ export default function ProfilePage() {
             </div>
           </motion.div>
         </div>
-        <Footer />
-      </main>
+</main>
     );
   }
 
@@ -314,9 +311,7 @@ export default function ProfilePage() {
           )}
         </motion.div>
       </div>
-
-      <Footer />
-    </main>
+</main>
     </AuthGuard>
   );
 }

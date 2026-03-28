@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Bell, CheckCircle2, AlertCircle, Info, ChevronRight, Inbox } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
 import { SkeletonList } from '@/components/shared/LoaderSkeleton';
 import { useNotifications, useMarkAsRead, useMarkAllAsRead } from '@/hooks/useNotifications';
 import AuthGuard from '@/components/shared/AuthGuard';
@@ -148,9 +147,7 @@ export default function NotificationsPage() {
           )}
         </motion.div>
       </div>
-
-      <Footer />
-    </main>
+</main>
     </AuthGuard>
   );
 }

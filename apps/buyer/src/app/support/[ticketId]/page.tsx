@@ -13,7 +13,7 @@ import {
   AlertCircle 
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+
 import { useTicketById, useAddTicketMessage } from '@/hooks/useTickets';
 import Link from 'next/link';
 import AuthGuard from '@/components/shared/AuthGuard';
@@ -179,7 +179,6 @@ export default function TicketDetailPage() {
         </div>
       </div>
 
-      <Footer />
     </main>
     </AuthGuard>
   );

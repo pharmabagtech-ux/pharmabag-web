@@ -7,7 +7,6 @@ import { Search, Filter, SlidersHorizontal, ChevronRight, LayoutGrid, List, Truc
 import Image from 'next/image';
 import Navbar from '@/components/landing/Navbar';
 import LoginModal from '@/components/landing/LoginModal';
-import Footer from '@/components/landing/Footer';
 import PremiumProductCard from '@/components/shared/PremiumProductCard';
 import { QuickViewModal } from '@/components/products/QuickViewModal';
 import { SkeletonCard } from '@/components/shared/LoaderSkeleton';
@@ -657,9 +656,7 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
-
-      <Footer />
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+<LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
 
       {/* Quick View Modal - Now using separate component */}
       <QuickViewModal 

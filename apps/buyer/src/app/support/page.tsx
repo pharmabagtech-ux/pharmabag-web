@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, MessageCircle, ChevronRight, Plus, AlertCircle, Clock, Inbox, X, Send } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
 import { SkeletonList } from '@/components/shared/LoaderSkeleton';
 import { useToast } from '@/components/shared/Toast';
 import { useTickets, useCreateTicket } from '@/hooks/useTickets';
@@ -208,9 +207,7 @@ export default function SupportPage() {
           </div>
         </motion.div>
       </div>
-
-      <Footer />
-    </main>
+</main>
     </AuthGuard>
   );
 }

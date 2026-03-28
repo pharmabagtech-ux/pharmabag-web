@@ -6,7 +6,6 @@ import { Heart, ShoppingCart, Trash2, Package, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
 import LoginModal from '@/components/landing/LoginModal';
 import AuthGuard from '@/components/shared/AuthGuard';
 import EmptyState from '@/components/shared/EmptyState';
@@ -162,9 +161,7 @@ export default function WishlistPage() {
             </div>
           )}
         </div>
-
-        <Footer />
-        <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+<LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
       </main>
     </AuthGuard>
   );

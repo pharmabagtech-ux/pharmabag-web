@@ -14,7 +14,6 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
 import { useCart } from '@/hooks/useCart';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { useCreatePayment } from '@/hooks/usePayments';
@@ -178,8 +177,7 @@ export default function CheckoutPage() {
             </motion.div>
           )}
         </div>
-        <Footer />
-      </main>
+</main>
       </AuthGuard>
     );
   }
@@ -437,9 +435,7 @@ export default function CheckoutPage() {
           </aside>
         </div>
       </div>
-
-      <Footer />
-    </main>
+</main>
     </AuthGuard>
   );
 }

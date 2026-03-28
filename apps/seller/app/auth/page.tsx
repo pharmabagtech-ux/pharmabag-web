@@ -35,7 +35,7 @@ export default function SellerAuthPage() {
     e.preventDefault();
     if (otp.length < 4) { toast.error("Enter OTP"); return; }
     try {
-      const data = await verifyOtpMutation.mutateAsync({ phone, otp, role: "SELLER" });
+      const data = await verifyOtpMutation.mutateAsync({ phone, otp });
       // Backend wraps response in { data: { accessToken, user } } — handle both shapes
       const inner = (data as any).data ?? data;
       setUser(inner.user);

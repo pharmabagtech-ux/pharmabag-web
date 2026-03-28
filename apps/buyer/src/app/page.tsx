@@ -6,7 +6,6 @@ import BrandsStrip from '@/components/landing/BrandsStrip';
 import ProductCarousel from '@/components/landing/ProductCarousel';
 import TrustSection from '@/components/landing/TrustSection';
 import Testimonials from '@/components/landing/Testimonials';
-import Footer from '@/components/landing/Footer';
 
 export default function HomePage() {
   return (
@@ -25,7 +24,6 @@ export default function HomePage() {
       </section>
       <TrustSection />
       <Testimonials />
-      <Footer />
-    </main>
+</main>
   );
 }

@@ -14,7 +14,7 @@ import {
   X
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+
 import { useProductById } from '@/hooks/useProducts';
 import { useProductReviews, useCreateReview } from '@/hooks/useReviews';
 import Link from 'next/link';
@@ -247,7 +247,6 @@ export default function ProductReviewsPage() {
         )}
       </AnimatePresence>
 
-      <Footer />
     </main>
   );
 }

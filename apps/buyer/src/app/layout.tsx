@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Open_Sans } from 'next/font/google';
 import '@/styles/globals.css';
 import { Providers } from './providers';
+import Footer from '@/components/landing/Footer';
 
 const openSans = Open_Sans({ subsets: ['latin'] });
 
@@ -23,7 +24,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       }}
     >
       <body className={openSans.className}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <div style={{ flex: 1 }}>
+              {children}
+            </div>
+            <Footer />
+          </div>
+        </Providers>
       </body>
     </html>
   );

@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Package, ShoppingCart, Star, Loader2, AlertCircle, Minus, Plus, Check, Send, User, Heart } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+
 import { useProductById } from '@/hooks/useProducts';
 import { useAddToCart, useCart } from '@/hooks/useCart';
 import { useProductReviews, useCreateReview } from '@/hooks/useReviews';
@@ -81,7 +81,6 @@ export default function ProductDetailPage({ params }: { params: { productId: str
         <div className="pt-32 pb-20 flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-gray-300 animate-spin" />
         </div>
-        <Footer />
       </main>
     );
   }
@@ -95,7 +94,6 @@ export default function ProductDetailPage({ params }: { params: { productId: str
           <p className="text-lg font-bold text-gray-400">Product not found</p>
           <Link href="/" className="text-sm font-bold text-blue-600 hover:underline">Back to Home</Link>
         </div>
-        <Footer />
       </main>
     );
   }
@@ -448,7 +446,6 @@ export default function ProductDetailPage({ params }: { params: { productId: str
         </motion.div>
       </div>
 
-      <Footer />
     </main>
   );
 }

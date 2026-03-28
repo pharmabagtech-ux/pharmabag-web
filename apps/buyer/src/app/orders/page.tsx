@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { Package, AlertCircle, Filter, ShoppingBag } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
 import OrderCard from '@/components/shared/OrderCard';
 import { SkeletonList } from '@/components/shared/LoaderSkeleton';
 import Link from 'next/link';
@@ -137,9 +136,7 @@ export default function OrdersPage() {
           )}
         </motion.div>
       </div>
-
-      <Footer />
-    </main>
+</main>
     </AuthGuard>
   );
 }

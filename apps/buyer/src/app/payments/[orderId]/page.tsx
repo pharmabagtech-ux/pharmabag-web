@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { CreditCard, UploadCloud, ChevronLeft, Info, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+
 import { useToast } from '@/components/shared/Toast';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -44,7 +44,6 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
         <div className="pt-32 pb-20 flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-gray-300 animate-spin" />
         </div>
-        <Footer />
       </main>
     );
   }
@@ -241,7 +240,6 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
         </motion.div>
       </div>
 
-      <Footer />
     </main>
     </AuthGuard>
   );
