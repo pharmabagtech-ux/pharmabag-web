@@ -35,8 +35,13 @@ const TRUST_HIGHLIGHTS = [
   }
 ];
 
-export default function LoginModal() {
-  const [isOpen, setIsOpen] = useState(false);
+interface LoginModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }: LoginModalProps = {}) {
+  const [isOpenState, setIsOpenState] = useState(false);
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
@@ -44,13 +49,19 @@ export default function LoginModal() {
   const { toast } = useToast();
   const { sendOtp, verifyOtp } = useAuth();
 
+  // Use prop if provided, otherwise use internal state
+  const isOpen = isOpenProp !== undefined ? isOpenProp : isOpenState;
+  const onClose = onCloseProp !== undefined ? onCloseProp : () => setIsOpenState(false);
+
   useEffect(() => {
-    const handleOpen = () => setIsOpen(true);
+    const handleOpen = () => {
+      if (isOpenProp === undefined) {
+        setIsOpenState(true);
+      }
+    };
     window.addEventListener('open-login', handleOpen);
     return () => window.removeEventListener('open-login', handleOpen);
-  }, []);
-
-  const onClose = () => setIsOpen(false);
+  }, [isOpenProp]);
 
   if (!isOpen) return null;
 
