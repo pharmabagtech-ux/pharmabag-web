@@ -53,6 +53,38 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
   const isOpen = isOpenProp !== undefined ? isOpenProp : isOpenState;
   const onClose = onCloseProp !== undefined ? onCloseProp : () => setIsOpenState(false);
 
+  // Restore phone and step from sessionStorage on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const savedPhone = sessionStorage.getItem('loginModal_phone') || '';
+    const savedStep = (sessionStorage.getItem('loginModal_step') as 'phone' | 'otp') || 'phone';
+    
+    if (savedPhone) {
+      setPhone(savedPhone);
+      setStep(savedStep);
+    }
+  }, []);
+
+  // Persist phone and step to sessionStorage whenever they change
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    if (phone) {
+      sessionStorage.setItem('loginModal_phone', phone);
+    }
+    sessionStorage.setItem('loginModal_step', step);
+  }, [phone, step]);
+
+  // Clear sessionStorage when modal closes
+  const handleCloseWithCleanup = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('loginModal_phone');
+      sessionStorage.removeItem('loginModal_step');
+    }
+    onClose();
+  };
+
   useEffect(() => {
     const handleOpen = () => {
       if (isOpenProp === undefined) {
@@ -103,7 +135,7 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
     try {
       await verifyOtp(cleanPhone, otp);
       toast('Login successful!', 'success');
-      onClose();
+      handleCloseWithCleanup();
       window.location.href = '/products';
     } catch (error: any) {
       toast(error?.response?.data?.message || 'Invalid OTP', 'error');
@@ -124,7 +156,7 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
     >
       {/* Close Button */}
       <button 
-        onClick={onClose}
+        onClick={handleCloseWithCleanup}
         className="fixed top-6 right-6 p-3 text-black/40 hover:text-black hover:bg-black/5 rounded-full transition-all z-[110]"
       >
         <X size={32} strokeWidth={2} />
