@@ -16,7 +16,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!isLoading && !isAuthenticated) {
       setShowRedirect(true);
       const timeout = setTimeout(() => {
-        router.push('/login');
+        window.dispatchEvent(new CustomEvent('open-login'));
       }, 1500);
       return () => clearTimeout(timeout);
     }

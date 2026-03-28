@@ -10,11 +10,33 @@ import Footer from '@/components/landing/Footer';
 import { useAuth } from '@pharmabag/api-client';
 import { useToast } from '@/components/shared/Toast';
 
+import ProductCarousel from '@/components/landing/ProductCarousel';
+
 const TRUST_HIGHLIGHTS = [
-  { label: 'Fastest Delivery' },
-  { label: 'Controlled Quality' },
-  { label: 'Only B2B rates' },
-  { label: 'Zero Tolerance to Duplicacy' },
+  { 
+    label: 'STRICTLY AUTHENTIC',
+    icon: (
+      <Image src="/authentic_icon.png" alt="Strictly Authentic" width={80} height={80} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
+    )
+  },
+  { 
+    label: 'FASTEST SHIPPING',
+    icon: (
+      <Image src="/shipping_icon.png" alt="Fastest Shipping" width={80} height={80} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
+    )
+  },
+  { 
+    label: 'ONLY B2B PRICES',
+    icon: (
+      <Image src="/b2b_icon.png" alt="Only B2B Prices" width={80} height={80} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
+    )
+  },
+  { 
+    label: 'SECURE CHECKOUT',
+    icon: (
+      <Image src="/secure_checkout_icon.png" alt="Secure Checkout" width={80} height={80} className="w-16 h-16 md:w-20 md:h-20 object-contain" />
+    )
+  }
 ];
 
 export default function LoginPage() {
@@ -45,6 +67,8 @@ export default function LoginPage() {
       </main>
     );
   }
+
+
 
   const sanitizePhone = (input: string) => {
     let cleaned = input.replace(/\D/g, '');
@@ -106,49 +130,33 @@ export default function LoginPage() {
       <div className="pt-32 pb-20 px-[4vw] w-full mx-auto relative z-10">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-24">
           
-          {/* Left Side - Branding & Trust */}
+          {/* Left Side - Trust Icons */}
           <motion.div 
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="flex-1 flex flex-col items-center text-center lg:items-start lg:text-left gap-12"
+            className="flex-1 flex flex-col items-center justify-center w-full max-w-3xl xl:max-w-4xl mx-auto lg:pr-12"
           >
-            <div className="flex flex-col items-center lg:items-start gap-8">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-black/10 blur-3xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-700" />
-                <Image 
-                  src="/pharmabag_logo.png" 
-                  alt="PharmaBag Logo" 
-                  width={160} 
-                  height={160} 
-                  className="relative w-40 md:w-48 h-auto drop-shadow-2xl transition-transform duration-500 hover:scale-105"
-                />
-              </div>
-              <div className="space-y-4">
-                <h1 className="text-6xl md:text-[90px] font-black text-black tracking-tight leading-none">
-                  Pharma Bag
-                </h1>
-                <p className="text-3xl md:text-5xl font-normal text-black tracking-tight">
-                  India&apos;s Only <span className="font-bold text-black border-b-4 border-lime-300">Trusted</span>
-                </p>
-                <p className="text-xl md:text-2xl font-medium text-black/40">B2B Pharma Platform</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-10 max-w-2xl">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 lg:gap-x-8 gap-y-10 w-full">
               {TRUST_HIGHLIGHTS.map((item, idx) => (
                 <motion.div 
                   key={item.label}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 + idx * 0.1 }}
-                  className="flex items-center gap-4"
+                  className="flex flex-col items-center justify-start text-center gap-4"
                 >
-                  <div className="w-2 h-2 rounded-full bg-lime-400" />
-                  <p className="text-xl md:text-2xl font-bold text-gray-800 whitespace-nowrap">{item.label}</p>
+                  {item.icon}
+                  <p className="text-xs lg:text-sm font-bold text-gray-500 uppercase tracking-widest px-1 leading-snug">{item.label}</p>
                 </motion.div>
               ))}
             </div>
+
+            {/* Trending Products Carousel */}
+            <div className="w-full mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200/60 overflow-hidden">
+              <ProductCarousel />
+            </div>
+
           </motion.div>
 
           {/* Right Side - Form */}
@@ -156,7 +164,7 @@ export default function LoginPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="w-full max-w-md"
+            className="w-full max-w-md mx-auto"
           >
             <div className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-[48px] p-10 md:p-12 shadow-2xl shadow-lime-900/5">
               <div className="text-center mb-10">
@@ -251,6 +259,8 @@ export default function LoginPage() {
       </div>
 
       <Footer />
+
+
     </main>
   );
 }

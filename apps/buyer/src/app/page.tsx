@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Navbar from '@/components/landing/Navbar';
 import HeroSection from '@/components/landing/HeroSection';
 import BrandsStrip from '@/components/landing/BrandsStrip';
@@ -8,14 +7,11 @@ import ProductCarousel from '@/components/landing/ProductCarousel';
 import TrustSection from '@/components/landing/TrustSection';
 import Testimonials from '@/components/landing/Testimonials';
 import Footer from '@/components/landing/Footer';
-import LoginModal from '@/components/landing/LoginModal';
 
 export default function HomePage() {
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-
   return (
     <main className="w-full">
-      <Navbar showUserActions={true} onLoginClick={() => setIsLoginOpen(true)} />
+      <Navbar showUserActions={true} />
       <section className="h-screen overflow-hidden flex flex-col bg-transparent">
         <div className="h-[50%] overflow-hidden bg-transparent">
           <HeroSection />
@@ -30,7 +26,6 @@ export default function HomePage() {
       <TrustSection />
       <Testimonials />
       <Footer />
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </main>
   );
 }

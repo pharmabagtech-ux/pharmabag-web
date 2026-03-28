@@ -46,6 +46,14 @@ export default function Navbar({ onLoginClick, showUserActions = false }: Navbar
 
   const navItems = ['Brands', 'Ethical', 'Generic', 'Surgical', 'Ayurvedic', 'OTC'];
 
+  const handleLoginClick = () => {
+    if (onLoginClick) {
+      onLoginClick();
+    } else {
+      window.dispatchEvent(new CustomEvent('open-login'));
+    }
+  };
+
   const handleMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setIsBrandsMenuOpen(true);
@@ -210,7 +218,7 @@ export default function Navbar({ onLoginClick, showUserActions = false }: Navbar
               {isMounted ? (
                 !isAuthenticated ? (
                   <button
-                    onClick={onLoginClick}
+                    onClick={handleLoginClick}
                     className="px-3 sm:px-5 py-2 rounded-xl bg-lime-300 hover:bg-lime-400 font-bold text-gray-900 transition-all hover:shadow-[0_8px_16px_rgba(217,255,0,0.3)] shadow-md text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2"
                   >
                     <span className="hidden xs:inline">Start Now</span>
@@ -299,7 +307,7 @@ export default function Navbar({ onLoginClick, showUserActions = false }: Navbar
                   </div>
                 ) : (
                   <button
-                    onClick={() => { onLoginClick?.(); setIsMobileMenuOpen(false); }}
+                    onClick={() => { handleLoginClick(); setIsMobileMenuOpen(false); }}
                     className="w-full py-3 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
                   >
                     Sign In <ArrowRight className="w-4 h-4" />

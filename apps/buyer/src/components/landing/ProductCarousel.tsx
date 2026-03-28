@@ -25,7 +25,7 @@ const FEATURED_PRODUCTS: Product[] = [
 // Each product card width = 92vw / 8 = 11.5vw (including gap)
 const PRODUCTS_VISIBLE = 8;
 
-export default function ProductCarousel() {
+export default function ProductCarousel({ reverse = false }: { reverse?: boolean } = {}) {
   const scrollProducts = [...FEATURED_PRODUCTS, ...FEATURED_PRODUCTS, ...FEATURED_PRODUCTS];
   const cardWidthVw = (92 / PRODUCTS_VISIBLE); // 11.5vw per product card
   const gapPercentage = 1.5; // gap as percentage of available width
@@ -35,7 +35,7 @@ export default function ProductCarousel() {
     <div className="w-full h-full overflow-hidden bg-transparent mx-auto px-[4vw] flex flex-col justify-center items-center pt-4">
       <div className="relative w-full flex items-center justify-center bg-transparent">
         <motion.div 
-          animate={{ x: [0, -scrollDistance + '%'] }}
+          animate={{ x: reverse ? [-scrollDistance + '%', 0] : [0, -scrollDistance + '%'] }}
           transition={{ 
             x: {
               repeat: Infinity,

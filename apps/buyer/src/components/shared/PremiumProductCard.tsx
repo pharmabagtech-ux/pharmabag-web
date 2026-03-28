@@ -160,10 +160,9 @@ export default function PremiumProductCard({
     >
       {/* Discount Tag - overlapping the top-left corner */}
       {discountTag && (
-        <div 
-          className={`absolute -top-[16px] left-[4px] sm:left-[8px] bg-white border border-gray-400 font-normal text-gray-900 rounded-full z-20 whitespace-nowrap shadow-none w-[95px] h-[22px] flex items-center justify-center ${
-            discountTag.length > 12 ? 'text-[9.5px]' : 'text-[11px] sm:text-[11.5px]'
-          }`}
+        <div
+          className={`absolute -top-[16px] left-[4px] sm:left-[8px] bg-white border border-gray-400 font-normal text-gray-900 rounded-full z-20 whitespace-nowrap shadow-none w-[95px] h-[22px] flex items-center justify-center ${discountTag.length > 12 ? 'text-[9.5px]' : 'text-[11px] sm:text-[11.5px]'
+            }`}
         >
           {discountTag}
         </div>
