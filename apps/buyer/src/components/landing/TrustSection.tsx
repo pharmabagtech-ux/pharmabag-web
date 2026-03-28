@@ -1,44 +1,56 @@
 'use client';
 
-interface TrustItem {
-  title: string;
-  subtitle: string;
-}
+import Image from 'next/image';
+import { motion } from 'framer-motion';
 
-const TRUST_ITEMS: TrustItem[] = [
-  {
-    title: 'Fastest Delivery',
-    subtitle: '',
+const TRUST_HIGHLIGHTS = [
+  { 
+    label: '0 Tolerance to Duplicacy',
+    icon: (
+      <Image src="/authentic_icon.png" alt="0 Tolerance" width={100} height={100} className="w-20 h-20 md:w-24 md:h-24 object-contain" />
+    )
   },
-  {
-    title: 'Controlled Quality',
-    subtitle: '',
+  { 
+    label: 'Fastest Delivery',
+    icon: (
+      <Image src="/shipping_icon.png" alt="Fastest Delivery" width={100} height={100} className="w-20 h-20 md:w-24 md:h-24 object-contain" />
+    )
   },
-  {
-    title: 'Only B2B rates',
-    subtitle: '',
+  { 
+    label: 'Only B2B rates',
+    icon: (
+      <Image src="/b2b_icon.png" alt="Only B2B Rates" width={100} height={100} className="w-20 h-20 md:w-24 md:h-24 object-contain" />
+    )
   },
-  {
-    title: '0 Tolerance to Duplicacy',
-    subtitle: '',
-  },
+  { 
+    label: 'Controlled Quality',
+    icon: (
+      <Image src="/secure_checkout_icon.png" alt="Controlled Quality" width={100} height={100} className="w-20 h-20 md:w-24 md:h-24 object-contain" />
+    )
+  }
 ];
 
 export default function TrustSection() {
   return (
-    <div className="py-16 sm:py-24 md:py-32 lg:py-40 px-[4vw]">
-      <div className="w-full mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 md:gap-y-24 lg:gap-y-32 md:gap-x-16 lg:gap-x-24 text-center">
-          {TRUST_ITEMS.map((item, index) => (
-            <div
-              key={index}
-              className="space-y-2 sm:space-y-4 transform hover:scale-105 transition-transform duration-300"
+    <div className="pt-16 md:pt-24 pb-0 bg-transparent px-[4vw]">
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-16">
+          {TRUST_HIGHLIGHTS.map((item, idx) => (
+            <motion.div 
+              key={item.label}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.15, duration: 0.6 }}
+              className="flex flex-col items-center justify-center text-center gap-6 group cursor-default"
             >
-              <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight tracking-tight">
-                {item.title}
-              </h3>
-              {item.subtitle && <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700">{item.subtitle}</p>}
-            </div>
+              <div className="transform transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2">
+                {item.icon}
+              </div>
+              <p className="text-sm md:text-base font-bold text-gray-700 uppercase tracking-widest px-2 leading-snug group-hover:text-black transition-colors duration-300">
+                {item.label}
+              </p>
+            </motion.div>
           ))}
         </div>
       </div>
