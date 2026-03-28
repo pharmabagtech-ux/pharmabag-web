@@ -11,6 +11,7 @@ interface ShareButtonProps {
   productId: string;
   discount?: number;
   className?: string;
+  iconClassName?: string;
 }
 
 export function ShareButton({
@@ -20,6 +21,7 @@ export function ShareButton({
   productId,
   discount,
   className = '',
+  iconClassName = 'w-[18px] h-[18px]',
 }: ShareButtonProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -90,7 +92,7 @@ export function ShareButton({
         className={`text-gray-700 hover:text-black transition-colors z-10 ${className}`}
         title="Share product"
       >
-        <Share2 className="w-[18px] h-[18px]" strokeWidth={2} />
+        <Share2 className={iconClassName} strokeWidth={2} />
       </motion.button>
 
       {/* Share Menu */}
