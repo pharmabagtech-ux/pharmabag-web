@@ -14,6 +14,7 @@ export function useProducts(params?: {
   sortOrder?: 'asc' | 'desc';
   minPrice?: number;
   maxPrice?: number;
+  city?: string;
 }) {
   return useQuery({
     queryKey: ['products', params],

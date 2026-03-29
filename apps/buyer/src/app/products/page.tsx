@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { Search, Filter, SlidersHorizontal, ChevronRight, LayoutGrid, List, Truck, ShieldCheck } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, ChevronRight, LayoutGrid, List, Truck, ShieldCheck, ArrowUpDown, Check } from 'lucide-react';
 import Image from 'next/image';
 import Navbar from '@/components/landing/Navbar';
 import LoginModal from '@/components/landing/LoginModal';
@@ -30,6 +30,11 @@ export default function ProductsPage() {
   const [quickViewQty, setQuickViewQty] = useState(1);
   const [pendingCartProducts, setPendingCartProducts] = useState<Set<string>>(new Set());
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [sortOption, setSortOption] = useState<string>('default');
+  const [filterNewItems, setFilterNewItems] = useState(false);
+  const [filterBestSelling, setFilterBestSelling] = useState(false);
+  const [filterDiscountItems, setFilterDiscountItems] = useState(false);
+  const [discountType, setDiscountType] = useState<'all' | 'ptr_only'>('all');
   
   // Lock body scroll when mobile filter is open
   useEffect(() => {
@@ -55,6 +60,14 @@ export default function ProductsPage() {
     });
   }
   
+  // Derive sort params from sortOption
+  const sortBy = sortOption === 'price_low_high' || sortOption === 'price_high_low' ? 'price'
+    : sortOption === 'newest' ? 'createdAt'
+    : undefined;
+  const sortOrder = sortOption === 'price_low_high' ? 'asc' as const
+    : sortOption === 'price_high_low' || sortOption === 'newest' ? 'desc' as const
+    : undefined;
+
   // Real API calls with mock fallbacks (only APPROVED products are returned)
   const { data: productsData, isLoading, isError } = useProducts({
     page,
@@ -64,6 +77,9 @@ export default function ProductsPage() {
     manufacturer: selectedManufacturer ?? undefined,
     minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
     maxPrice: priceRange[1] < 10000 ? priceRange[1] : undefined,
+    sortBy,
+    sortOrder,
+    city: selectedCity ?? undefined,
   });
   const { data: categoriesData } = useCategories();
   const { data: manufacturersData } = useManufacturers();
@@ -76,6 +92,19 @@ export default function ProductsPage() {
   let products = productsData?.data ?? [];
   const totalProducts = productsData?.total ?? 0;
   const totalPages = Math.ceil(totalProducts / 24) || 1;
+
+  // Client-side filtering for checkbox filters
+  if (filterNewItems) {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    products = products.filter((p: any) => p.createdAt && new Date(p.createdAt) >= sevenDaysAgo);
+  }
+  if (filterDiscountItems) {
+    products = products.filter((p: any) => p.discountType || p.discountMeta?.discountPercent > 0 || p.discountMeta?.get > 0);
+  }
+  if (discountType === 'ptr_only') {
+    products = products.filter((p: any) => p.discountType === 'PTR_DISCOUNT' || p.discountType === 'PTR_PLUS_SAME_PRODUCT_BONUS' || p.discountType === 'PTR_PLUS_DIFFERENT_PRODUCT_BONUS');
+  }
 
   // DEV TESTING: Add a dummy product on page 1
   if (page === 1) {
@@ -178,17 +207,23 @@ export default function ProductsPage() {
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.15em] mb-6">Filter By</h3>
               <div className="space-y-5">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="w-4 h-4 rounded-md border-2 border-gray-200 group-hover:border-lime-400 transition-colors flex items-center justify-center bg-white"></div>
-                  <span className="text-[13px] font-bold text-gray-500 group-hover:text-gray-900 transition-colors tracking-tight">New Items</span>
+                <label onClick={() => { setFilterNewItems(!filterNewItems); setPage(1); }} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded-md border-2 transition-colors flex items-center justify-center ${filterNewItems ? 'bg-lime-400 border-lime-500' : 'border-gray-200 group-hover:border-lime-400 bg-white'}`}>
+                    {filterNewItems && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </div>
+                  <span className={`text-[13px] font-bold transition-colors tracking-tight ${filterNewItems ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>New Items</span>
                 </label>
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="w-4 h-4 rounded-md border-2 border-gray-200 group-hover:border-lime-400 transition-colors flex items-center justify-center bg-white"></div>
-                  <span className="text-[13px] font-bold text-gray-500 group-hover:text-gray-900 transition-colors tracking-tight">Best Selling</span>
+                <label onClick={() => { setFilterBestSelling(!filterBestSelling); setPage(1); }} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded-md border-2 transition-colors flex items-center justify-center ${filterBestSelling ? 'bg-lime-400 border-lime-500' : 'border-gray-200 group-hover:border-lime-400 bg-white'}`}>
+                    {filterBestSelling && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </div>
+                  <span className={`text-[13px] font-bold transition-colors tracking-tight ${filterBestSelling ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>Best Selling</span>
                 </label>
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="w-4 h-4 rounded-md border-2 border-gray-200 group-hover:border-lime-400 transition-colors flex items-center justify-center bg-white"></div>
-                  <span className="text-[13px] font-bold text-gray-500 group-hover:text-gray-900 transition-colors tracking-tight">Discount Items</span>
+                <label onClick={() => { setFilterDiscountItems(!filterDiscountItems); setPage(1); }} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded-md border-2 transition-colors flex items-center justify-center ${filterDiscountItems ? 'bg-lime-400 border-lime-500' : 'border-gray-200 group-hover:border-lime-400 bg-white'}`}>
+                    {filterDiscountItems && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </div>
+                  <span className={`text-[13px] font-bold transition-colors tracking-tight ${filterDiscountItems ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>Discount Items</span>
                 </label>
               </div>
             </div>
@@ -256,13 +291,17 @@ export default function ProductsPage() {
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Discount Type</h3>
               <div className="space-y-4">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="w-4 h-4 rounded border border-gray-300 group-hover:border-lime-500 transition-colors flex items-center justify-center"></div>
-                  <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">All</span>
+                <label onClick={() => { setDiscountType('all'); setPage(1); }} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded-full border-2 transition-colors flex items-center justify-center ${discountType === 'all' ? 'border-lime-500' : 'border-gray-300 group-hover:border-lime-500'}`}>
+                    {discountType === 'all' && <div className="w-2 h-2 rounded-full bg-lime-500" />}
+                  </div>
+                  <span className={`text-sm font-medium transition-colors ${discountType === 'all' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>All</span>
                 </label>
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="w-4 h-4 rounded border border-gray-300 group-hover:border-lime-500 transition-colors flex items-center justify-center"></div>
-                  <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Discount PTR Only</span>
+                <label onClick={() => { setDiscountType('ptr_only'); setPage(1); }} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded-full border-2 transition-colors flex items-center justify-center ${discountType === 'ptr_only' ? 'border-lime-500' : 'border-gray-300 group-hover:border-lime-500'}`}>
+                    {discountType === 'ptr_only' && <div className="w-2 h-2 rounded-full bg-lime-500" />}
+                  </div>
+                  <span className={`text-sm font-medium transition-colors ${discountType === 'ptr_only' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>Discount PTR Only</span>
                 </label>
               </div>
             </div>
@@ -283,9 +322,24 @@ export default function ProductsPage() {
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.15em] mb-6">Filter By</h3>
               <div className="space-y-5">
-                <label className="flex items-center gap-3 cursor-pointer group"><div className="w-4 h-4 rounded-md border-2 border-gray-200 group-hover:border-lime-400 transition-colors flex items-center justify-center bg-white"></div><span className="text-[13px] font-bold text-gray-500 group-hover:text-gray-900 transition-colors tracking-tight">New Items</span></label>
-                <label className="flex items-center gap-3 cursor-pointer group"><div className="w-4 h-4 rounded-md border-2 border-gray-200 group-hover:border-lime-400 transition-colors flex items-center justify-center bg-white"></div><span className="text-[13px] font-bold text-gray-500 group-hover:text-gray-900 transition-colors tracking-tight">Best Selling</span></label>
-                <label className="flex items-center gap-3 cursor-pointer group"><div className="w-4 h-4 rounded-md border-2 border-gray-200 group-hover:border-lime-400 transition-colors flex items-center justify-center bg-white"></div><span className="text-[13px] font-bold text-gray-500 group-hover:text-gray-900 transition-colors tracking-tight">Discount Items</span></label>
+                <label onClick={() => { setFilterNewItems(!filterNewItems); setPage(1); }} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded-md border-2 transition-colors flex items-center justify-center ${filterNewItems ? 'bg-lime-400 border-lime-500' : 'border-gray-200 group-hover:border-lime-400 bg-white'}`}>
+                    {filterNewItems && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </div>
+                  <span className={`text-[13px] font-bold transition-colors tracking-tight ${filterNewItems ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>New Items</span>
+                </label>
+                <label onClick={() => { setFilterBestSelling(!filterBestSelling); setPage(1); }} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded-md border-2 transition-colors flex items-center justify-center ${filterBestSelling ? 'bg-lime-400 border-lime-500' : 'border-gray-200 group-hover:border-lime-400 bg-white'}`}>
+                    {filterBestSelling && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </div>
+                  <span className={`text-[13px] font-bold transition-colors tracking-tight ${filterBestSelling ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>Best Selling</span>
+                </label>
+                <label onClick={() => { setFilterDiscountItems(!filterDiscountItems); setPage(1); }} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded-md border-2 transition-colors flex items-center justify-center ${filterDiscountItems ? 'bg-lime-400 border-lime-500' : 'border-gray-200 group-hover:border-lime-400 bg-white'}`}>
+                    {filterDiscountItems && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </div>
+                  <span className={`text-[13px] font-bold transition-colors tracking-tight ${filterDiscountItems ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>Discount Items</span>
+                </label>
               </div>
             </div>
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
@@ -309,8 +363,18 @@ export default function ProductsPage() {
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Discount Type</h3>
               <div className="space-y-4">
-                <label className="flex items-center gap-3 cursor-pointer group"><div className="w-4 h-4 rounded border border-gray-300 group-hover:border-lime-500 transition-colors flex items-center justify-center"></div><span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">All</span></label>
-                <label className="flex items-center gap-3 cursor-pointer group"><div className="w-4 h-4 rounded border border-gray-300 group-hover:border-lime-500 transition-colors flex items-center justify-center"></div><span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Discount PTR Only</span></label>
+                <label onClick={() => { setDiscountType('all'); setPage(1); }} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded-full border-2 transition-colors flex items-center justify-center ${discountType === 'all' ? 'border-lime-500' : 'border-gray-300 group-hover:border-lime-500'}`}>
+                    {discountType === 'all' && <div className="w-2 h-2 rounded-full bg-lime-500" />}
+                  </div>
+                  <span className={`text-sm font-medium transition-colors ${discountType === 'all' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>All</span>
+                </label>
+                <label onClick={() => { setDiscountType('ptr_only'); setPage(1); }} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded-full border-2 transition-colors flex items-center justify-center ${discountType === 'ptr_only' ? 'border-lime-500' : 'border-gray-300 group-hover:border-lime-500'}`}>
+                    {discountType === 'ptr_only' && <div className="w-2 h-2 rounded-full bg-lime-500" />}
+                  </div>
+                  <span className={`text-sm font-medium transition-colors ${discountType === 'ptr_only' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>Discount PTR Only</span>
+                </label>
               </div>
             </div>
           </aside>
@@ -328,7 +392,7 @@ export default function ProductsPage() {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto sm:max-w-[600px]">
+              <div className="flex items-center gap-2 w-full sm:w-auto sm:max-w-[700px]">
                 {/* Filter toggle - Universal */}
                 <button
                   onClick={() => setShowMobileFilters(true)}
@@ -347,6 +411,22 @@ export default function ProductsPage() {
                   />
                   <div className="absolute inset-y-0 right-3 sm:right-5 flex items-center text-gray-400">
                     <Search className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={3} />
+                  </div>
+                </div>
+                {/* Sort Dropdown */}
+                <div className="relative">
+                  <select
+                    value={sortOption}
+                    onChange={(e) => { setSortOption(e.target.value); setPage(1); }}
+                    className="appearance-none h-10 sm:h-[48px] bg-white/60 backdrop-blur-md border border-white/60 rounded-xl sm:rounded-2xl pl-3 sm:pl-4 pr-8 sm:pr-10 text-xs sm:text-sm text-gray-900 font-bold focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none transition-all shadow-sm cursor-pointer"
+                  >
+                    <option value="default">Sort By</option>
+                    <option value="price_low_high">Price: Low → High</option>
+                    <option value="price_high_low">Price: High → Low</option>
+                    <option value="newest">Newest First</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-2 sm:right-3 flex items-center pointer-events-none text-gray-400">
+                    <ArrowUpDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={2.5} />
                   </div>
                 </div>
               </div>
@@ -396,6 +476,11 @@ export default function ProductsPage() {
                         setSelectedManufacturer(null);
                         setSelectedCity(null);
                         setPriceRange([0, 10000]);
+                        setSortOption('default');
+                        setFilterNewItems(false);
+                        setFilterBestSelling(false);
+                        setFilterDiscountItems(false);
+                        setDiscountType('all');
                         setPage(1);
                     }}
                   />
