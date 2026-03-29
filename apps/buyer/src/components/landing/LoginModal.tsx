@@ -138,7 +138,7 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
             {/* FORM SECTION (Desktop Right, Mobile Top) */}
             <motion.div initial={{ opacity: 0, y: 15, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="w-full lg:w-[45%] flex flex-col items-center justify-center order-1 lg:order-2 px-0 lg:px-0">
               <div className="w-full md:max-w-lg md:bg-white/60 md:backdrop-blur-3xl md:border md:border-white/60 md:rounded-[48px] p-0 sm:p-4 md:p-10 xl:p-12 md:shadow-2xl md:shadow-lime-900/10 transition-all flex flex-col items-center">
-                
+
                 {/* Titles - Mobile: mb-3, Desktop: mb-10 */}
                 <div className="text-center mb-3 md:mb-10 w-full">
                   <h2 className="text-[36px] md:text-[52px] font-black text-[#1A1A1A] md:text-black mb-0 tracking-tighter leading-none uppercase md:normal-case">Express Login!</h2>
@@ -164,12 +164,12 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
                     </button>
                   </div>
 
-                   {/* Desktop App Badges */}
-                   <div className="hidden md:block pt-8 border-t border-gray-100/50 w-full">
+                  {/* Desktop App Badges */}
+                  <div className="hidden md:block pt-8 border-t border-gray-100/50 w-full">
                     <p className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Experience on our App</p>
-                    <div className="flex flex-row gap-4 max-w-sm mx-auto">
-                      <Image src="/app_store_badge.png" alt="App Store" width={160} height={50} className="w-full h-auto cursor-pointer" />
-                      <Image src="/google_play_badge.png" alt="Google Play" width={160} height={50} className="w-full h-auto cursor-pointer" />
+                    <div className="flex flex-row gap-3 md:gap-4 justify-center items-center">
+                      <Image src="/app_store_badge.png" alt="App Store" width={160} height={50} className="h-10 md:h-32 w-auto cursor-pointer object-contain" />
+                      <Image src="/google_play_badge.png" alt="Google Play" width={160} height={50} className="h-10 md:h-32 w-auto cursor-pointer object-contain" />
                     </div>
                   </div>
                 </form>

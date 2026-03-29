@@ -113,9 +113,9 @@ export default function LoginPage() {
                     {/* DESKTOP ONLY BADGES */}
                     <div className="hidden md:block pt-8 border-t border-gray-100/50 w-full">
                        <p className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Experience on our App</p>
-                       <div className="flex flex-row gap-4 max-w-sm mx-auto">
-                        <Image src="/app_store_badge.png" alt="App Store" width={160} height={50} className="w-full h-auto cursor-pointer" />
-                        <Image src="/google_play_badge.png" alt="Google Play" width={160} height={50} className="w-auto h-auto cursor-pointer" />
+                       <div className="flex flex-row gap-3 md:gap-4 justify-center items-center">
+                        <Image src="/app_store_badge.png" alt="App Store" width={160} height={50} className="h-10 md:h-12 w-auto cursor-pointer object-contain" />
+                        <Image src="/google_play_badge.png" alt="Google Play" width={160} height={50} className="h-10 md:h-12 w-auto cursor-pointer object-contain" />
                       </div>
                     </div>
                   </form>
