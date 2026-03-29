@@ -83,6 +83,7 @@ export async function getProducts(params?: {
   sortOrder?: 'asc' | 'desc';
   minPrice?: number;
   maxPrice?: number;
+  city?: string;
 }): Promise<ProductListResponse> {
   try {
     const { data } = await api.get('/products', { params });
