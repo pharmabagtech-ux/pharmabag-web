@@ -57,7 +57,7 @@ export default function SellerAuthPage() {
     let cleaned = phone.replace(/\D/g, "");
     if (cleaned.length === 12 && cleaned.startsWith("91")) cleaned = cleaned.slice(2);
     try {
-      const data = await verifyOtpMutation.mutateAsync({ phone: cleaned, otp });
+      const data = await verifyOtpMutation.mutateAsync({ phone: cleaned, otp, role: "SELLER" });
       // Backend wraps response in { data: { accessToken, user } } — handle both shapes
       const inner = (data as any).data ?? data;
       setUser(inner.user);

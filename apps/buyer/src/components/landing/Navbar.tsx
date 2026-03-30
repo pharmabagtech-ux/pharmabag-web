@@ -78,28 +78,24 @@ export default function Navbar({ onLoginClick, showUserActions = false }: Navbar
     <>
       <nav className="fixed bottom-2 lg:bottom-auto lg:top-0 left-0 right-0 z-40 flex justify-center pb-2 lg:pb-0 lg:pt-2 px-2 sm:px-4">
         <div className="w-[92vw] mx-auto px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl backdrop-blur-xl bg-white/40 border border-white/40 shadow-[0_-8px_32px_rgba(0,0,0,0.12)] lg:shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-          <div className="flex items-center justify-between">
-            {/* Hamburger Menu (Mobile) */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 -ml-1 text-gray-700 hover:text-gray-900 transition-colors"
-              aria-label="Toggle menu"
-            >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-1.5 xs:gap-2 no-wrap">
+            {/* Logo — Far Left */}
+            <Link href="/" className="flex-shrink-0 flex items-center gap-2">
               <Image
                 src="/pharmabag_logo.png"
                 alt="PharmaBag Logo"
-                width={110}
-                height={32}
-                className="h-6 sm:h-7 w-auto"
+                width={100}
+                height={28}
+                className="h-5 sm:h-7 w-auto"
               />
             </Link>
 
-            {/* Center Navigation — Desktop Only */}
+            {/* Mobile/Tablet Search Bar — Next to Logo */}
+            <div className="lg:hidden flex-1 min-w-0 max-w-[120px] xs:max-w-none">
+              <SearchBar />
+            </div>
+
+            {/* Desktop Navigation Items — Hidden on Mobile */}
             <div className="hidden lg:flex items-center gap-6 xl:gap-8">
               {navItems.map((item) => (
                 item === 'Brands' ? (
@@ -125,19 +121,24 @@ export default function Navbar({ onLoginClick, showUserActions = false }: Navbar
               ))}
             </div>
 
-            {/* Right Side Actions */}
-            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-              {/* Mobile: Cart icon always visible for authenticated users */}
+            {/* Search Bar — Desktop (Already in logic but keep it here for desktop) */}
+            <div className="hidden lg:block flex-1 max-w-md mx-4">
+              <SearchBar />
+            </div>
+
+            {/* Right Side Actions — Login Button and Menu Button */}
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+              {/* Mobile: Cart icon */}
               {isMounted && isAuthenticated && showUserActions && (
                 <button
                   onClick={() => setIsCartOpen(true)}
-                  className="md:hidden p-2 text-gray-700 hover:text-sky-600 transition-colors relative"
+                  className="md:hidden p-1.5 text-gray-700 hover:text-sky-600 transition-colors relative"
                 >
-                  <ShoppingCart className="w-5 h-5" />
+                  <ShoppingCart className="w-4.5 h-4.5" />
                 </button>
               )}
 
-              {/* Desktop Action Icons */}
+              {/* Desktop Icons */}
               {isMounted && isAuthenticated && showUserActions && (
               <div className="hidden md:flex items-center gap-2 lg:gap-3">
                 <Link href="/wishlist" className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group">
@@ -229,6 +230,15 @@ export default function Navbar({ onLoginClick, showUserActions = false }: Navbar
               ) : (
                 <div className="px-4 py-2 rounded-full bg-gray-200 text-gray-400 font-bold text-sm">Loading...</div>
               )}
+
+              {/* Hamburger Menu (Mobile) — Moved to Far Right */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden p-1.5 text-gray-700 hover:text-gray-900 transition-colors"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
             </div>
           </div>
         </div>

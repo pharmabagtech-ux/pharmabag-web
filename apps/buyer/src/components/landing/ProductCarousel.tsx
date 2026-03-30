@@ -27,7 +27,7 @@ export default function ProductCarousel({ reverse = false }: { reverse?: boolean
   const scrollProducts = [...FEATURED_PRODUCTS, ...FEATURED_PRODUCTS, ...FEATURED_PRODUCTS];
 
   return (
-    <div className="w-full h-full overflow-hidden bg-transparent mx-auto pl-[4vw] lg:pl-4 pr-[4vw] flex flex-col justify-center items-center pt-4">
+    <div className="w-full h-full overflow-hidden bg-transparent mx-auto pl-[4vw] lg:pl-4 pr-[4vw] flex flex-col justify-center items-center pt-0 lg:pt-4">
       <div className="relative w-full flex items-center bg-transparent">
         <motion.div
           animate={{ x: reverse ? ['-33.33%', 0] : [0, '-33.33%'] }}

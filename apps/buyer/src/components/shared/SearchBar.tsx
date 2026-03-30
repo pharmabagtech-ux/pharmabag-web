@@ -69,9 +69,9 @@ export default function SearchBar() {
   };
 
   return (
-    <div ref={containerRef} className="relative hidden lg:block">
-      <div className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
-        isFocused ? 'bg-white border-lime-300 shadow-lg shadow-lime-100/50 w-80' : 'bg-white/60 border-transparent w-64'
+    <div ref={containerRef} className="relative flex-1 max-w-[200px] xs:max-w-[280px] sm:max-w-md lg:max-w-none">
+      <div className={`flex items-center gap-1.5 xs:gap-2 px-2.5 xs:px-4 py-1.5 xs:py-2 rounded-full border transition-all ${
+        isFocused ? 'bg-white border-lime-300 shadow-lg shadow-lime-100/50 w-full' : 'bg-white/60 border-transparent w-full'
       }`}>
         <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
         <input

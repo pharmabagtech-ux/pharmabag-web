@@ -2,7 +2,7 @@ import { apiClient } from "@/lib/apiClient";
 import type { User } from "@pharmabag/utils";
 
 export interface SendOtpPayload { phone: string; }
-export interface VerifyOtpPayload { phone: string; otp: string; }
+export interface VerifyOtpPayload { phone: string; otp: string; role: string; }
 
 export interface AuthResponse { data: { accessToken: string; refreshToken?: string; user: User; isNewUser?: boolean }; message?: string; }
 
@@ -12,10 +12,10 @@ export async function sendOtp(payload: SendOtpPayload) {
 }
 
 export async function verifyOtp(payload: VerifyOtpPayload) {
-  // API only accepts { phone, otp } — strip any extra fields
   const { data } = await apiClient.post<AuthResponse>("/auth/verify-otp", {
     phone: payload.phone,
     otp: payload.otp,
+    role: payload.role,
   });
   return data;
 }
