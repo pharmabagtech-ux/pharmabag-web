@@ -87,11 +87,15 @@ export async function getProducts(params?: {
 }): Promise<ProductListResponse> {
   try {
     const { data } = await api.get('/products', { params });
+    const payload = data?.data ?? data;
+    const products = Array.isArray(payload?.products) ? payload.products : (Array.isArray(payload) ? payload : []);
+    const meta = payload?.meta ?? (data?.meta ?? {});
+    
     return {
-      data: data.data.products,
-      total: data.data.meta.total,
-      page: data.data.meta.page,
-      limit: data.data.meta.limit,
+      data: products,
+      total: meta?.total ?? products.length,
+      page: meta?.page ?? params?.page ?? 1,
+      limit: meta?.limit ?? params?.limit ?? 24,
     };
   } catch (err) {
     console.warn('[Products] Failed to fetch products:', (err as any)?.response?.status, (err as any)?.message);
@@ -118,8 +122,10 @@ export async function getProductById(id: string): Promise<Product> {
 export async function getCategories(): Promise<Category[]> {
   try {
     const { data } = await api.get('/products/categories');
-    return data.data;
-  } catch {
+    const payload = data?.data ?? data;
+    return Array.isArray(payload) ? payload : (Array.isArray(payload?.categories) ? payload.categories : []);
+  } catch (err) {
+    console.warn('[Categories] Failed to fetch categories:', (err as any)?.response?.status, (err as any)?.message);
     return [];
   }
 }
@@ -144,7 +150,8 @@ export async function deleteProduct(id: string): Promise<void> {
 export async function getManufacturers(): Promise<{ id: string; name: string; productCount?: number }[]> {
   try {
     const { data } = await api.get('/products/manufacturers');
-    return data.data ?? data;
+    const payload = data?.data ?? data;
+    return Array.isArray(payload) ? payload : (Array.isArray(payload?.manufacturers) ? payload.manufacturers : []);
   } catch (err) {
     console.warn('[Manufacturers] Failed to fetch manufacturers:', (err as any)?.response?.status, (err as any)?.message);
     return [];
@@ -177,7 +184,8 @@ export async function getNearbyProducts(params: {
 export async function getCities(): Promise<{ id: string; name: string; state: string }[]> {
   try {
     const { data } = await api.get('/locations/cities');
-    return data.data ?? data;
+    const payload = data?.data ?? data;
+    return Array.isArray(payload) ? payload : (Array.isArray(payload?.cities) ? payload.categories : []);
   } catch (err) {
     console.warn('[Cities] Failed to fetch cities:', (err as any)?.response?.status, (err as any)?.message);
     return [];

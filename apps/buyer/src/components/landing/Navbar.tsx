@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, User, ShoppingCart, LogOut, ClipboardList, CreditCard, HelpCircle, ArrowRight, Heart, Bookmark, Menu, X } from 'lucide-react';
+import { Bell, User, ShoppingCart, LogOut, ClipboardList, CreditCard, HelpCircle, ArrowRight, Heart, Bookmark, Menu, X, SlidersHorizontal, Filter, LifeBuoy } from 'lucide-react';
 import BrandsMegaMenu from '@/components/landing/BrandsMegaMenu';
 import CartDrawer from '@/components/cart/CartDrawer';
 import SearchBar from '@/components/shared/SearchBar';
@@ -12,10 +12,11 @@ import { useAuth } from '@pharmabag/api-client';
 
 interface NavbarProps {
   onLoginClick?: () => void;
+  onFilterClick?: () => void;
   showUserActions?: boolean;
 }
 
-export default function Navbar({ onLoginClick, showUserActions = false }: NavbarProps) {
+export default function Navbar({ onLoginClick, onFilterClick, showUserActions = false }: NavbarProps) {
   const { isAuthenticated, user, logout } = useAuth();
   const [isBrandsMenuOpen, setIsBrandsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -129,13 +130,28 @@ export default function Navbar({ onLoginClick, showUserActions = false }: Navbar
             {/* Right Side Actions — Login Button and Menu Button */}
             <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
               {/* Mobile: Cart icon */}
+              {/* Mobile: Saved and Filter icon */}
               {isMounted && isAuthenticated && showUserActions && (
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="md:hidden p-1.5 text-gray-700 hover:text-sky-600 transition-colors relative"
-                >
-                  <ShoppingCart className="w-4.5 h-4.5" />
-                </button>
+                <div className="lg:hidden flex items-center gap-1 sm:gap-2">
+                  <Link
+                    href="/wishlist"
+                    className="p-1.5 text-black hover:text-sky-600 transition-colors"
+                  >
+                    <Bookmark className="w-5 h-5" />
+                  </Link>
+                  <button
+                    onClick={onFilterClick}
+                    className="p-1.5 text-black hover:text-sky-600 transition-colors"
+                  >
+                    <Filter className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="p-1.5 text-black hover:text-sky-600 transition-colors"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                  </button>
+                </div>
               )}
 
               {/* Desktop Icons */}
@@ -256,22 +272,51 @@ export default function Navbar({ onLoginClick, showUserActions = false }: Navbar
               className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[90] lg:hidden"
             />
             <motion.div
-              initial={{ x: '-100%' }}
+              initial={{ x: '100%' }}
               animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
+              exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 h-full w-[280px] sm:w-[320px] bg-white z-[91] lg:hidden flex flex-col shadow-2xl safe-bottom"
+              className="fixed top-0 right-0 h-full w-[280px] sm:w-[320px] bg-white z-[91] lg:hidden flex flex-col shadow-2xl safe-bottom"
             >
-              {/* Menu Header */}
-              <div className="flex items-center justify-between p-5 border-b border-gray-100">
-                <Image src="/pharmabag_logo.png" alt="PharmaBag" width={100} height={28} className="h-6 w-auto" />
-                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
+              {/* Menu Top Actions: User Info & Logout (Redesigned) */}
+              {isMounted && isAuthenticated && (
+                <div className="p-5 border-b border-gray-100 flex flex-col gap-4 bg-gray-50/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1.5">User Account</p>
+                      <p className="text-base font-bold text-gray-900 tracking-tight">{user?.phone || user?.email}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Link
+                        href="/support"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="p-2 text-gray-600 hover:text-sky-600 transition-colors"
+                      >
+                        <LifeBuoy className="w-5 h-5" />
+                      </Link>
+                      <Link
+                        href="/profile"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="p-2 text-gray-600 hover:text-sky-600 transition-colors"
+                      >
+                        <User className="w-5 h-5" />
+                      </Link>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors border border-red-100/50"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
 
-              {/* Category Links */}
-              <div className="p-4 border-b border-gray-100">
+              <div className="flex-1" />
+
+              {/* Category Links (Moved to Bottom) */}
+              <div className="p-4 border-t border-gray-100 bg-white">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Categories</p>
                 <div className="flex flex-wrap gap-2">
                   {navItems.map((item) => (
@@ -279,7 +324,7 @@ export default function Navbar({ onLoginClick, showUserActions = false }: Navbar
                       key={item}
                       href={item === 'Brands' ? '/products' : `/products?category=${item.toLowerCase()}`}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100"
                     >
                       {item}
                     </Link>
@@ -287,43 +332,17 @@ export default function Navbar({ onLoginClick, showUserActions = false }: Navbar
                 </div>
               </div>
 
-              {/* Navigation Links */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                {mobileMenuLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-3 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
-                  >
-                    <link.icon className="w-5 h-5 text-gray-400" />
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-
-              {/* Menu Footer */}
-              <div className="p-4 border-t border-gray-100">
-                {isMounted && isAuthenticated ? (
-                  <div className="space-y-3">
-                    <p className="text-xs font-bold text-gray-500 px-1">{user?.phone}</p>
-                    <button
-                      onClick={() => { logout(); setIsMobileMenuOpen(false); }}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
-                  </div>
-                ) : (
+              {/* Menu Footer — Static help links if needed */}
+              {!isAuthenticated && (
+                <div className="p-5 border-t border-gray-100">
                   <button
                     onClick={() => { handleLoginClick(); setIsMobileMenuOpen(false); }}
-                    className="w-full py-3 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-2xl font-bold shadow-lg shadow-lime-200 transition-all flex items-center justify-center gap-2"
                   >
-                    Sign In <ArrowRight className="w-4 h-4" />
+                    Start Now <ArrowRight className="w-4 h-4" />
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </motion.div>
           </>
         )}

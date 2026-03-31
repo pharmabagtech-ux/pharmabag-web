@@ -61,6 +61,14 @@ export default function SearchBar() {
     router.push(`/products/${productId}`);
   };
 
+  const handleFullSearch = (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
+    saveRecentSearch(searchQuery.trim());
+    setIsFocused(false);
+    setQuery('');
+    router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+  };
+
   const handleSearchSubmit = (searchQuery: string) => {
     if (searchQuery.trim()) {
       saveRecentSearch(searchQuery.trim());
@@ -79,6 +87,11 @@ export default function SearchBar() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleFullSearch(query);
+            }
+          }}
           placeholder="Search products..."
           className="w-full bg-transparent text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none"
         />
@@ -105,7 +118,7 @@ export default function SearchBar() {
                 {recentSearches.map((search) => (
                   <button
                     key={search}
-                    onClick={() => { setQuery(search); handleSearchSubmit(search); }}
+                    onClick={() => handleFullSearch(search)}
                     className="flex items-center gap-3 w-full px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors"
                   >
                     <Clock className="w-3.5 h-3.5 text-gray-300" />

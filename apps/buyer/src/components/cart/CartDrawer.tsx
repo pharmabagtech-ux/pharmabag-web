@@ -6,7 +6,9 @@ import EmptyState from '@/components/shared/EmptyState';
 import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/hooks/useCart';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { useToast } from '@/components/shared/Toast';
+import { useAuth } from '@pharmabag/api-client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { data: cart, isLoading, isError } = useCart();
@@ -14,6 +16,8 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
   const updateItem = useUpdateCartItem();
   const removeItem = useRemoveCartItem();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const gstRate = (config?.gst_rate ?? 12) / 100;
   const items = cart?.items ?? [];
@@ -148,13 +152,19 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                     <span>₹{total.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
-                <Link
-                  href="/checkout"
-                  onClick={onClose}
+                <button
+                  onClick={() => {
+                    if (isAuthenticated) {
+                      onClose();
+                      router.push('/checkout');
+                    } else {
+                      window.dispatchEvent(new CustomEvent('open-login'));
+                    }
+                  }}
                   className="w-full py-4 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-2xl font-bold shadow-lg shadow-lime-200 transition-all block text-center"
                 >
                   Checkout Now
-                </Link>
+                </button>
               </div>
             )}
           </motion.div>

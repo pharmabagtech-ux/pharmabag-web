@@ -22,7 +22,6 @@ export function useApiEventHandler() {
           localStorage.removeItem('pb_access_token');
           localStorage.removeItem('pb_refresh_token');
         }
-        window.dispatchEvent(new CustomEvent('open-login'));
       }),
       onApiEvent('error:forbidden', (detail) => {
         toast(detail?.message || 'You do not have permission to perform this action.', 'error');
