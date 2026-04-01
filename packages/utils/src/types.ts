@@ -35,9 +35,11 @@ export type ProductStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED';
 export interface SellerProfile {
   verificationStatus?: string;
   businessName?: string;
+  companyName?: string;
   gstNumber?: string;
   panNumber?: string;
   drugLicenseNumber?: string;
+  drugLicenseUrl?: string;
   address?: string;
   city?: string;
   state?: string;

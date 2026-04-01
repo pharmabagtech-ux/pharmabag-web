@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Phone, Mail, Building2, FileText, MapPin, Calendar, ShieldCheck, Edit, Trash2, Ban, Unlock, UserCheck, UserX } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Building2, FileText, MapPin, Calendar, ShieldCheck, Edit, Trash2, Ban, Unlock, UserCheck, UserX, ExternalLink, Image } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button, Badge, Input, Modal, Skeleton } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -136,10 +136,29 @@ export default function UserDetailPage() {
             <h2 className="font-semibold text-foreground mb-4">{isSeller ? "Seller Profile" : "Buyer Profile"}</h2>
             {isSeller && sp ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <InfoRow icon={Building2} label="Company" value={sp.companyName ?? "—"} />
+                <InfoRow icon={Building2} label="Company" value={sp.companyName ?? sp.businessName ?? "—"} />
                 <InfoRow icon={FileText} label="GST Number" value={sp.gstNumber ?? "—"} mono />
                 <InfoRow icon={FileText} label="PAN Number" value={sp.panNumber ?? "—"} mono />
                 <InfoRow icon={FileText} label="Drug License" value={sp.drugLicenseNumber ?? "—"} mono />
+                {sp.drugLicenseUrl && (
+                  <div className="space-y-1 sm:col-span-2">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                      <Image className="h-3 w-3" />Drug License Document
+                    </div>
+                    <div className="mt-2">
+                      {/\.(jpe?g|png|webp)$/i.test(sp.drugLicenseUrl) ? (
+                        <a href={sp.drugLicenseUrl} target="_blank" rel="noopener noreferrer" className="block">
+                          <img src={sp.drugLicenseUrl} alt="Drug License" className="max-w-xs max-h-48 rounded-xl border border-border object-contain" />
+                        </a>
+                      ) : (
+                        <a href={sp.drugLicenseUrl} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-accent/30 text-sm font-medium text-foreground hover:bg-accent transition-colors">
+                          <FileText className="h-4 w-4" />View Drug License Document<ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <InfoRow icon={MapPin} label="Address" value={[sp.address, sp.city, sp.state, sp.pincode].filter(Boolean).join(", ") || "—"} className="sm:col-span-2" />
                 {sp.bankAccountNumber && <InfoRow icon={Building2} label="Bank Account" value={`${sp.bankName ?? ""} — ${sp.bankAccountNumber}`} mono />}
                 {sp.ifscCode && <InfoRow icon={FileText} label="IFSC" value={sp.ifscCode} mono />}

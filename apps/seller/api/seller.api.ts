@@ -8,30 +8,13 @@ export async function getSellerDashboard() {
 }
 
 export async function getSellerProfile() {
-  try {
-    const { data } = await apiClient.get<any>("/sellers/profile");
-    return data.data ?? data.profile ?? data;
-  } catch {
-    return {
-      id: "seller-1",
-      name: "Demo Seller",
-      phone: "9831864222",
-      email: "seller@demo.com",
-      businessName: "Demo Pharmacy",
-      gstNumber: "22AAAAA0000A1Z5",
-      isVerified: true,
-      isOnVacation: false,
-    };
-  }
+  const { data } = await apiClient.get<any>("/sellers/profile");
+  return data.data ?? data.profile ?? data;
 }
 
 export async function updateSellerProfile(payload: Partial<any>) {
-  try {
-    const { data } = await apiClient.patch<any>("/sellers/profile", payload);
-    return data.data ?? data.profile ?? data;
-  } catch {
-    return { id: "seller-1", name: "Demo Seller", ...payload };
-  }
+  const { data } = await apiClient.patch<any>("/sellers/profile", payload);
+  return data.data ?? data.profile ?? data;
 }
 
 export async function getSellerProducts() {
@@ -327,6 +310,16 @@ export async function verifyGstOrPan(type: 'GST' | 'PAN', value: string) {
  */
 export async function uploadKycDocument(formData: FormData) {
   const { data } = await apiClient.post<any>('/storage/kyc', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data.data ?? data;
+}
+
+/**
+ * Upload drug license document during seller onboarding
+ */
+export async function uploadDrugLicense(formData: FormData) {
+  const { data } = await apiClient.post<any>('/storage/drug-license', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return data.data ?? data;

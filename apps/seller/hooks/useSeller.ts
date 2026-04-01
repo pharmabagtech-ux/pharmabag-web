@@ -11,7 +11,7 @@ import {
   getSellerNotifications, markNotificationRead, markAllNotificationsRead,
   getSellerFullProfile, getProductRequests, createProductRequest, getSellerAnalytics,
   searchSuggestions, getCategoriesWithSubs,
-  verifyGstOrPan, uploadKycDocument,
+  verifyGstOrPan, uploadKycDocument, uploadDrugLicense,
 } from "@/api/seller.api";
 import type { ProductPayload } from "@pharmabag/utils";
 import { useSellerAuth } from "@/store";
@@ -245,5 +245,11 @@ export function useVerifyPanGst() {
 export function useUploadKycDocument() {
   return useMutation({
     mutationFn: (formData: FormData) => uploadKycDocument(formData),
+  });
+}
+
+export function useUploadDrugLicense() {
+  return useMutation({
+    mutationFn: (formData: FormData) => uploadDrugLicense(formData),
   });
 }

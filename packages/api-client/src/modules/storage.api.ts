@@ -19,3 +19,12 @@ export async function uploadKycDocument(file: File): Promise<{ url: string }> {
   });
   return data;
 }
+
+export async function uploadDrugLicense(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const { data } = await api.post('/storage/drug-license', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+}

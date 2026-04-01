@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, UserCheck, UserX, Eye, Ban, Unlock, ChevronDown, ChevronUp, Building2, FileText, MapPin, Palmtree } from "lucide-react";
+import { Search, UserCheck, UserX, Eye, Ban, Unlock, ChevronDown, ChevronUp, Building2, FileText, MapPin, Palmtree, ExternalLink } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button, Input, Badge, Pagination } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ function SellerDetails({ userId }: { userId: string }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
       <div className="space-y-1">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><Building2 className="h-3 w-3" />Business</div>
-        <p className="text-sm font-medium text-foreground">{sp.companyName || "—"}</p>
+        <p className="text-sm font-medium text-foreground">{sp.companyName || sp.businessName || "—"}</p>
       </div>
       <div className="space-y-1">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />GST Number</div>
@@ -35,6 +35,21 @@ function SellerDetails({ userId }: { userId: string }) {
         <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />Drug License</div>
         <p className="text-sm font-mono text-foreground">{sp.drugLicenseNumber || "—"}</p>
       </div>
+      {sp.drugLicenseUrl && (
+        <div className="space-y-1 lg:col-span-3">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />Drug License Document</div>
+          {/\.(jpe?g|png|webp)$/i.test(sp.drugLicenseUrl) ? (
+            <a href={sp.drugLicenseUrl} target="_blank" rel="noopener noreferrer">
+              <img src={sp.drugLicenseUrl} alt="Drug License" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain" />
+            </a>
+          ) : (
+            <a href={sp.drugLicenseUrl} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+              View Document <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
+        </div>
+      )}
       <div className="space-y-1 sm:col-span-2">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><MapPin className="h-3 w-3" />Address</div>
         <p className="text-sm text-foreground">{[sp.address, sp.city, sp.state, sp.pincode].filter(Boolean).join(", ") || "—"}</p>

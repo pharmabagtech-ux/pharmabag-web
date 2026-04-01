@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Store, Building2, FileText, CheckCircle2, MapPin, ArrowRight, Loader2, Upload } from "lucide-react";
 import { Button, Input } from "@/components/ui";
-import { useUpdateSellerProfile, useVerifyPanGst, useUploadKycDocument } from "@/hooks/useSeller";
+import { useUpdateSellerProfile, useVerifyPanGst, useUploadDrugLicense } from "@/hooks/useSeller";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSellerAuth } from "@/store";
 import toast from "react-hot-toast";
@@ -17,7 +17,7 @@ export default function SellerOnboardingPage() {
   const queryClient = useQueryClient();
   const updateProfile = useUpdateSellerProfile();
   const verifyPanGst = useVerifyPanGst();
-  const uploadKyc = useUploadKycDocument();
+  const uploadKyc = useUploadDrugLicense();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
@@ -105,6 +105,7 @@ export default function SellerOnboardingPage() {
 
     const payload = {
       ...formData,
+      businessName: formData.companyName,
       gstNumber: formData.gstNumber.toUpperCase(),
       panNumber: formData.panNumber.toUpperCase(),
       drugLicenseNumber: formData.drugLicenseNumber.toUpperCase(),

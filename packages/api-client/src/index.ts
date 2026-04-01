@@ -135,6 +135,7 @@ export {
 export {
   uploadPaymentProofFile,
   uploadKycDocument,
+  uploadDrugLicense,
 } from './modules/storage.api';
 
 // Platform Config

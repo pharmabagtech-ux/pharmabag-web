@@ -26,7 +26,9 @@ function getUserStatus(user: any): string {
   if (rawStatus === "PENDING") {
     const hasBusinessDetails = !!(
       user.businessName || 
+      user.companyName ||
       user.sellerProfile?.businessName || 
+      user.sellerProfile?.companyName ||
       user.sellerProfile?.gstNumber || 
       user.sellerProfile?.panNumber
     );
