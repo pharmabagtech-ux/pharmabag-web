@@ -173,18 +173,23 @@ api.interceptors.response.use(
       const { status, data } = error.response as { status: number; data?: any };
       const serverMsg = data?.message || data?.error;
       const url = (originalRequest?.url || '') as string;
+      const method = (originalRequest?.method || 'GET').toUpperCase();
 
-      // List of read-only endpoints that handle errors gracefully (don't show toast)
-      // These endpoints have fallback logic (mock data, empty arrays, etc)
-      // Note: Only GET requests to /cart are read-only; POST/PATCH/DELETE to /cart/* are write operations
-      const readOnlyEndpoints = ['/products', '/categories', '/manufacturers', '/locations', '/cities', '/discount', '/auth/me', '/config'];
-      const isWriteCartOp = url.startsWith('/cart/add') || url.startsWith('/cart/item/') || (url === '/cart' && originalRequest?.method?.toUpperCase() !== 'GET');
-      const isReadOnlyEndpoint = !isWriteCartOp && readOnlyEndpoints.some(endpoint => url.includes(endpoint));
+      // Endpoints whose errors are handled gracefully by components (fallbacks, empty state, etc)
+      const silentEndpoints = ['/products', '/categories', '/manufacturers', '/locations', '/cities', '/discount', '/auth/me', '/config'];
+      // Endpoints guarded by backend KYC middleware — suppress 403 for GET requests only
+      const kycGuardedEndpoints = ['/cart', '/buyers', '/orders', '/notifications', '/wishlist'];
+      const isWriteCartOp = url.startsWith('/cart/add') || url.startsWith('/cart/item/') || (url === '/cart' && method !== 'GET');
+      const isReadOnlyEndpoint = !isWriteCartOp && silentEndpoints.some(endpoint => url.includes(endpoint));
+      const isKycGuardedGet = method === 'GET' && kycGuardedEndpoints.some(ep => url.includes(ep));
+      // KYC-related 403 messages — let component-level handlers show proper UX instead of a generic toast
+      const isKycRelated = typeof serverMsg === 'string' && (serverMsg.toLowerCase().includes('kyc') || serverMsg.toLowerCase().includes('onboarding'));
 
       if (status === 403) {
-        console.warn(`[API] 403 Forbidden on ${url} | ReadOnly: ${isReadOnlyEndpoint} | Token: ${getAccessToken() ? 'present' : 'missing'}`);
-        // Only emit forbidden error for non-read-only endpoints (write operations, sensitive reads)
-        if (!isReadOnlyEndpoint) {
+        console.warn(`[API] 403 Forbidden on ${method} ${url} | ReadOnly: ${isReadOnlyEndpoint} | KycGet: ${isKycGuardedGet} | Token: ${getAccessToken() ? 'present' : 'missing'}`);
+        // Suppress toast for read-only endpoints, KYC-guarded GETs, and KYC-related messages
+        // Components handle these errors with proper UX (redirect to onboarding, empty states, etc)
+        if (!isReadOnlyEndpoint && !isKycGuardedGet && !isKycRelated) {
           emitApiEvent('error:forbidden', { message: serverMsg || 'You do not have permission to perform this action.', status });
         }
       } else if (status >= 500) {

@@ -24,7 +24,10 @@ export const VerifyOtpResponseSchema = z.object({
     phone: z.string(),
     role: z.string(),
     email: z.string().nullable().optional(),
-  }),
+    status: z.string().optional(),
+    verificationStatus: z.string().optional(),
+    buyerProfile: z.any().optional(),
+  }).passthrough(),
   isNewUser: z.boolean().optional(),
 });
 
@@ -33,12 +36,13 @@ export const UserSchema = z.object({
   phone: z.string(),
   role: z.string(),
   email: z.string().nullable().optional(),
+  name: z.string().optional(),
   status: z.string().optional(),
   verificationStatus: z.string().optional(),
   creditTier: z.string().optional(),
   gstPanResponse: z.any().optional(),
   buyerProfile: z.any().optional(),
-});
+}).passthrough();
 
 // ─── Types ──────────────────────────────────────────
 
@@ -59,7 +63,9 @@ export async function sendOtp(phone: string): Promise<SendOtpResponse> {
 export async function verifyOtp(phone: string, otp: string): Promise<VerifyOtpResponse> {
   const body = VerifyOtpRequestSchema.parse({ phone, otp });
   const { data } = await api.post('/auth/verify-otp', body);
-  const parsed = VerifyOtpResponseSchema.parse(data);
+  // Backend may return response directly or wrapped in { data: { accessToken, ... } }
+  const raw = data?.data ?? data;
+  const parsed = VerifyOtpResponseSchema.parse(raw);
   // Store tokens in persistent storage
   setAccessToken(parsed.accessToken, parsed.refreshToken);
   return parsed;
@@ -78,5 +84,7 @@ export async function logout(): Promise<void> {
 
 export async function getProfile(): Promise<User> {
   const { data } = await api.get('/auth/me');
-  return UserSchema.parse(data);
+  // Backend may return the user directly or wrapped in { data: user }
+  const raw = data?.data ?? data;
+  return UserSchema.parse(raw);
 }

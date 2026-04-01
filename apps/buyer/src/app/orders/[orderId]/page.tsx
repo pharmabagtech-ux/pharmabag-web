@@ -136,10 +136,17 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
                     {orderItems.map((item) => {
                       const itemName = item.product?.name ?? item.productName ?? item.name ?? 'Product';
                       const itemTotal = item.total ?? item.price * item.quantity;
+                      const itemImage = item.product?.images?.[0] || item.image;
                       return (
                         <div key={item.id} className="flex items-center justify-between py-4 border-b border-gray-50 last:border-0">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-[#f1f6ea] rounded-2xl" />
+                            <div className="w-12 h-12 bg-[#f1f6ea] rounded-2xl flex-shrink-0 overflow-hidden flex items-center justify-center">
+                              {itemImage ? (
+                                <img src={itemImage} alt={itemName} className="w-full h-full object-cover" />
+                              ) : (
+                                <Package className="w-5 h-5 text-gray-300" />
+                              )}
+                            </div>
                             <div>
                               <p className="font-bold text-gray-900">{itemName}</p>
                               <p className="text-xs text-gray-400 font-bold">Qty: {item.quantity}</p>

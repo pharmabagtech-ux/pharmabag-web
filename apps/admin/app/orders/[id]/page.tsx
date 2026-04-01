@@ -158,9 +158,18 @@ export default function OrderDetailPage() {
             <div className="divide-y divide-border/30">
               {items.length === 0 ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">No items</div>
-              ) : items.map((item: any, i: number) => (
+              ) : items.map((item: any, i: number) => {
+                const itemImage = item.product?.images?.[0] || item.image;
+                return (
                 <div key={item.id || i} className="px-6 py-4 flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg flex-shrink-0">💊</div>
+                  {itemImage ? (
+                    <div className="h-12 w-12 rounded-xl overflow-hidden border border-border flex-shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={itemImage} alt={item.product?.name ?? item.productName ?? "Product"} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg flex-shrink-0">💊</div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{item.product?.name ?? item.productName ?? "Product"}</p>
                     <p className="text-xs text-muted-foreground">{item.product?.manufacturer ?? item.manufacturer ?? "—"} · Qty: {item.quantity ?? 1}</p>
@@ -173,7 +182,8 @@ export default function OrderDetailPage() {
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
             <div className="p-6 border-t border-border/50 bg-muted/10">
               <div className="flex items-center justify-between">

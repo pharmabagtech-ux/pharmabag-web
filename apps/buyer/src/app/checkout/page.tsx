@@ -22,6 +22,7 @@ import { useToast } from '@/components/shared/Toast';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/shared/AuthGuard';
 import { useAuth } from '@pharmabag/api-client';
 
@@ -29,6 +30,7 @@ type PaymentMethod = 'COD' | 'UPI' | 'BANK_TRANSFER' | 'CREDIT';
 
 export default function CheckoutPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const bp = user?.buyerProfile as any;
   const isApproved = user?.status === 'APPROVED';
   const isBuyerProfileVerified = bp?.verificationStatus === 'VERIFIED';
@@ -115,7 +117,14 @@ export default function CheckoutPage() {
         );
       },
       onError: (error: any) => {
-        toast(error?.message || 'Failed to place order', 'error');
+        const status = error?.response?.status;
+        const backendMsg = error?.response?.data?.message;
+        if (status === 403) {
+          toast(backendMsg || 'Please complete your KYC verification before placing orders.', 'error');
+          router.push('/onboarding');
+        } else {
+          toast(backendMsg || error?.message || 'Failed to place order', 'error');
+        }
       }
     });
   };
@@ -375,17 +384,21 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-6 mb-10 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                {items.map((item: any) => (
-                  <div key={item.id} className="flex gap-4">
-                    <div className="w-16 h-16 bg-[#f1f6ea] rounded-2xl flex-shrink-0 relative overflow-hidden">
-                      <Image src={item.productImage || '/product_placeholder.png'} alt={item.productName} fill className="object-contain p-2" sizes="64px" />
+                {items.map((item: any) => {
+                  const img = item.product?.images?.[0] || item.image || item.productImage || '/product_placeholder.png';
+                  const name = item.product?.name || item.productName || item.name || 'Product';
+                  return (
+                    <div key={item.id} className="flex gap-4">
+                      <div className="w-16 h-16 bg-[#f1f6ea] rounded-2xl flex-shrink-0 relative overflow-hidden">
+                        <Image src={img} alt={name} fill className="object-contain p-2" sizes="64px" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold text-gray-900 leading-tight line-clamp-1">{name}</p>
+                        <p className="text-sm font-medium text-gray-400 mt-1">Qty: {item.quantity} • ₹{item.price}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-900 leading-tight line-clamp-1">{item.productName}</p>
-                      <p className="text-sm font-medium text-gray-400 mt-1">Qty: {item.quantity} • ₹{item.price}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="space-y-4 border-t border-gray-100 pt-8 mb-8">
