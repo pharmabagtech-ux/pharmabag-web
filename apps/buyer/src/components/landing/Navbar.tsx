@@ -31,6 +31,7 @@ interface NavbarProps {
 
 export default function Navbar({ onLoginClick, onFilterClick, showUserActions = false }: NavbarProps) {
   const { isAuthenticated, user, logout } = useAuth();
+  const { data: cartData } = useCart();
   const [isBrandsMenuOpen, setIsBrandsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -162,13 +163,15 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
                       </button>
                     </>
                   )}
-                  <button
-                    onClick={() => setIsCartOpen(true)}
-                    className="p-1.5 text-black hover:text-sky-600 transition-colors relative"
-                  >
-                    <ShoppingCart className="w-5 h-5" />
-                    <CartCountBadge />
-                  </button>
+                  {(isAuthenticated || (cartData?.items?.length ?? 0) > 0) && (
+                    <button
+                      onClick={() => setIsCartOpen(true)}
+                      className="p-1.5 text-black hover:text-sky-600 transition-colors relative"
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                      <CartCountBadge />
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -190,14 +193,16 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
                   </>
                 )}
 
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                  <CartCountBadge />
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Cart</span>
-                </button>
+                {(isAuthenticated || (cartData?.items?.length ?? 0) > 0) && (
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    <CartCountBadge />
+                    <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Cart</span>
+                  </button>
+                )}
 
                 {/* Profile Dropdown — Desktop */}
                 {isAuthenticated && (
@@ -263,8 +268,7 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
                     onClick={handleLoginClick}
                     className="px-3 sm:px-5 py-2 rounded-xl bg-lime-300 hover:bg-lime-400 font-bold text-gray-900 transition-all hover:shadow-[0_8px_16px_rgba(217,255,0,0.3)] shadow-md text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2"
                   >
-                    <span className="hidden xs:inline">Start Now</span>
-                    <span className="xs:hidden">Login</span>
+                    <span>Start Now</span>
                     <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
                 ) : null
