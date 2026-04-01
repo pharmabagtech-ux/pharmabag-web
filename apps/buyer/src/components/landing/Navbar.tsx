@@ -9,6 +9,19 @@ import BrandsMegaMenu from '@/components/landing/BrandsMegaMenu';
 import CartDrawer from '@/components/cart/CartDrawer';
 import SearchBar from '@/components/shared/SearchBar';
 import { useAuth } from '@pharmabag/api-client';
+import { useCart } from '@/hooks/useCart';
+
+function CartCountBadge() {
+  const { data: cartData } = useCart();
+  const count = cartData?.items?.length || 0;
+  if (count === 0) return null;
+  
+  return (
+    <span className="absolute -top-1 -right-1 w-4 h-4 bg-lime-400 text-gray-900 text-[10px] font-black rounded-full flex items-center justify-center border border-white shadow-sm">
+      {count}
+    </span>
+  );
+}
 
 interface NavbarProps {
   onLoginClick?: () => void;
@@ -131,52 +144,63 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
             <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
               {/* Mobile: Cart icon */}
               {/* Mobile: Saved and Filter icon */}
-              {isMounted && isAuthenticated && showUserActions && (
+              {isMounted && showUserActions && (
                 <div className="lg:hidden flex items-center gap-1 sm:gap-2">
-                  <Link
-                    href="/wishlist"
-                    className="p-1.5 text-black hover:text-sky-600 transition-colors"
-                  >
-                    <Bookmark className="w-5 h-5" />
-                  </Link>
-                  <button
-                    onClick={onFilterClick}
-                    className="p-1.5 text-black hover:text-sky-600 transition-colors"
-                  >
-                    <Filter className="w-5 h-5" />
-                  </button>
+                  {isAuthenticated && (
+                    <>
+                      <Link
+                        href="/wishlist"
+                        className="p-1.5 text-black hover:text-sky-600 transition-colors"
+                      >
+                        <Bookmark className="w-5 h-5" />
+                      </Link>
+                      <button
+                        onClick={onFilterClick}
+                        className="p-1.5 text-black hover:text-sky-600 transition-colors"
+                      >
+                        <Filter className="w-5 h-5" />
+                      </button>
+                    </>
+                  )}
                   <button
                     onClick={() => setIsCartOpen(true)}
-                    className="p-1.5 text-black hover:text-sky-600 transition-colors"
+                    className="p-1.5 text-black hover:text-sky-600 transition-colors relative"
                   >
                     <ShoppingCart className="w-5 h-5" />
+                    <CartCountBadge />
                   </button>
                 </div>
               )}
 
               {/* Desktop Icons */}
-              {isMounted && isAuthenticated && showUserActions && (
+              {isMounted && showUserActions && (
               <div className="hidden md:flex items-center gap-2 lg:gap-3">
-                <Link href="/wishlist" className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group">
-                  <Bookmark className="w-5 h-5" />
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Bookmarks</span>
-                </Link>
+                {isAuthenticated && (
+                  <>
+                    <Link href="/wishlist" className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group">
+                      <Bookmark className="w-5 h-5" />
+                      <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Bookmarks</span>
+                    </Link>
 
-                <Link href="/notifications" className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Notifications</span>
-                </Link>
+                    <Link href="/notifications" className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group">
+                      <Bell className="w-5 h-5" />
+                      <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+                      <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Notifications</span>
+                    </Link>
+                  </>
+                )}
 
                 <button
                   onClick={() => setIsCartOpen(true)}
                   className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group"
                 >
                   <ShoppingCart className="w-5 h-5" />
+                  <CartCountBadge />
                   <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Cart</span>
                 </button>
 
                 {/* Profile Dropdown — Desktop */}
+                {isAuthenticated && (
                 <div
                   className="relative"
                   onMouseEnter={() => {
@@ -228,6 +252,7 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
                     </div>
                   )}
                 </div>
+                )}
               </div>
               )}
 

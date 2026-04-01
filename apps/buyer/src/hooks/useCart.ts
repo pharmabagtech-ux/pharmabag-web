@@ -1,53 +1,62 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from '@pharmabag/api-client';
+import { getCart, addToCart, updateCartItem, removeCartItem, clearCart, useAuth } from '@pharmabag/api-client';
+import { localCart } from '@/lib/local-cart';
+import { useEffect, useState } from 'react';
 
 export function useCart() {
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const handleStorage = () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [queryClient]);
+
   return useQuery({
-    queryKey: ['cart'],
-    queryFn: getCart,
-    staleTime: 15 * 1000, // 15s: keeps data fresh for shorter window, ensures relatively recent cart state
-    gcTime: 60 * 1000,    // 1 minute: keeps data in cache for 1 minute for offline resilience
-    refetchOnMount: true,    // Always refetch when component mounts (new page visit)
-    refetchOnWindowFocus: true, // Refetch when user switches tabs/windows
-    refetchIntervalInBackground: false, // Don't refetch in background (user not viewing)
+    queryKey: ['cart', isAuthenticated],
+    queryFn: async () => {
+      // Always favor local cart for the UI to satisfy "no backend until checkout"
+      const local = localCart.get();
+      if (local.items.length > 0) return local;
+
+      // If local is empty and user is logged in, maybe fetch from backend as fallback?
+      // Or just keep it local. The user said "only backend ... when checkout button clicked".
+      if (isAuthenticated) {
+        try {
+          const backendCart = await getCart();
+          if (backendCart.items.length > 0) {
+            // Optional: sync backend to local if local is empty? 
+            // For now let's just return it.
+            return backendCart;
+          }
+        } catch (e) {
+          console.error("Failed to fetch backend cart", e);
+        }
+      }
+      return local;
+    },
+    staleTime: 15 * 1000,
+    gcTime: 60 * 1000,
   });
 }
 
 export function useAddToCart() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ productId, quantity }: { productId: string; quantity?: number }) => {
-      try {
-        return await addToCart(productId, quantity);
-      } catch (err: any) {
-        const status = err?.response?.status;
-        const errorMsg = err?.response?.data?.message || '';
-
-        // If product already in cart, update quantity via PATCH instead
-        if (status === 400 && errorMsg.toLowerCase().includes('already in cart')) {
-          console.log('[Cart] Product already in cart, updating quantity instead');
-          const freshCart = await getCart();
-          const cartItem = freshCart.items.find((item) => item.productId === productId);
-
-          if (cartItem) {
-            const newQuantity = cartItem.quantity + (quantity || 1);
-            return await updateCartItem(cartItem.id, newQuantity);
-          }
-          // Item exists per backend but we can't find it — just refetch
-          return freshCart;
-        }
-        throw err;
-      }
+    mutationFn: async ({ productId, quantity, ...extra }: { productId: string; quantity?: number; [key: string]: any }) => {
+      return localCart.addItem({ 
+        productId, 
+        quantity: quantity || 1,
+        ...extra 
+      } as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
-    },
-    retry: (failureCount, error: any) => {
-      const status = error?.response?.status ?? error?.status;
-      if (status === 400 || status === 401 || status === 403) return false;
-      return failureCount < 2;
     },
   });
 }
@@ -55,8 +64,9 @@ export function useAddToCart() {
 export function useUpdateCartItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ itemId, quantity }: { itemId: string; quantity: number }) =>
-      updateCartItem(itemId, quantity),
+    mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+      return localCart.updateItem(itemId, quantity);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
@@ -66,7 +76,9 @@ export function useUpdateCartItem() {
 export function useRemoveCartItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (itemId: string) => removeCartItem(itemId),
+    mutationFn: async (itemId: string) => {
+      return localCart.removeItem(itemId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
@@ -76,9 +88,41 @@ export function useRemoveCartItem() {
 export function useClearCart() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: clearCart,
+    mutationFn: async () => {
+      return localCart.clear();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
+  });
+}
+
+export function useSyncCart() {
+  const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!isAuthenticated) return null;
+      const local = localCart.get();
+      if (local.items.length === 0) return null;
+
+      // Sync local items to backend
+      for (const item of local.items) {
+        try {
+          await addToCart(item.productId, item.quantity);
+        } catch (e) {
+          console.error(`Failed to sync item ${item.productId}`, e);
+        }
+      }
+      
+      // After sync, we might want to clear local or keep them.
+      // Usually clear so backend is now source of truth.
+      // But user said "only backend ... checkout button clicked".
+      return getCart();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    }
   });
 }

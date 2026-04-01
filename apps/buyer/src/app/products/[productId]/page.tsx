@@ -62,7 +62,14 @@ export default function ProductDetailPage({ params }: { params: { productId: str
   const handleAddToCart = () => {
     if (!product) return;
     addToCart.mutate(
-      { productId: product.id, quantity },
+      { 
+        productId: product.id, 
+        quantity,
+        productName: product.name,
+        price: sellingPrice,
+        mrp: product.mrp,
+        imageUrl: product.images?.[0]
+      },
       {
         onSuccess: () => {
           setAdded(true);

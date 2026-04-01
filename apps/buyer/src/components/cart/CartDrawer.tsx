@@ -3,11 +3,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Plus, Minus, Trash2, Loader2, ShoppingBag } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
-import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/hooks/useCart';
+import { useCart, useUpdateCartItem, useRemoveCartItem, useSyncCart } from '@/hooks/useCart';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -15,14 +14,15 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
   const { data: config } = usePlatformConfig();
   const updateItem = useUpdateCartItem();
   const removeItem = useRemoveCartItem();
+  const syncCart = useSyncCart();
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
   const gstRate = (config?.gst_rate ?? 12) / 100;
   const items = cart?.items ?? [];
-  const subtotal = items.reduce((acc, item) => {
-    const price = item.product?.price ?? item.price;
+  const subtotal = items.reduce((acc, item: any) => {
+    const price = item.product?.price ?? item.price ?? 0;
     return acc + price * item.quantity;
   }, 0);
   const gst = Math.round(subtotal * gstRate);
@@ -64,10 +64,12 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
 
             {/* Items */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
-              {isLoading ? (
+              {isLoading || syncCart.isPending ? (
                 <div className="flex flex-col items-center justify-center h-full gap-4">
                   <Loader2 className="w-8 h-8 text-gray-300 animate-spin" />
-                  <p className="text-sm font-medium text-gray-400">Loading cart...</p>
+                  <p className="text-sm font-medium text-gray-400">
+                    {syncCart.isPending ? 'Syncing with backend...' : 'Loading cart...'}
+                  </p>
                 </div>
               ) : isError ? (
                 <div className="flex flex-col items-center justify-center h-full gap-4">
@@ -82,9 +84,11 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                   actionHref="/"
                 />
               ) : (
-                items.map((item) => {
+                items.map((item: any) => {
                   const itemName = item.product?.name ?? item.productName ?? item.name ?? 'Product';
-                  const itemPrice = item.product?.price ?? item.price;
+                  const itemPrice = item.product?.price ?? item.price ?? 0;
+                  const itemImage = item.product?.images?.[0] || item.imageUrl || '/product_placeholder.png';
+                  
                   return (
                     <motion.div
                       key={item.id}
@@ -94,7 +98,13 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                       exit={{ opacity: 0, x: -50 }}
                       className="flex gap-4"
                     >
-                      <div className="w-20 h-20 bg-[#f1f6ea] rounded-2xl flex-shrink-0" />
+                      <div className="w-20 h-20 bg-[#f1f6ea] rounded-2xl flex-shrink-0 relative overflow-hidden">
+                        <img 
+                          src={itemImage} 
+                          alt={itemName} 
+                          className="w-full h-full object-contain p-2" 
+                        />
+                      </div>
                       <div className="flex-1 flex flex-col justify-between">
                         <div className="flex justify-between">
                           <h3 className="font-bold text-gray-900 leading-tight">{itemName}</h3>
@@ -102,7 +112,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                             onClick={() => removeItem.mutate(item.id, {
                               onSuccess: () => toast('Item removed from cart', 'info'),
                             })}
-                            disabled={removeItem.isPending}
+                            disabled={removeItem.isPending || syncCart.isPending}
                             className="text-gray-300 hover:text-red-500 transition-colors disabled:opacity-50"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -112,7 +122,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                           <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-3 py-1">
                             <button
                               onClick={() => updateItem.mutate({ itemId: item.id, quantity: Math.max(1, item.quantity - 1) })}
-                              disabled={updateItem.isPending || item.quantity <= 1}
+                              disabled={updateItem.isPending || item.quantity <= 1 || syncCart.isPending}
                               className="text-gray-400 hover:text-gray-900 disabled:opacity-30"
                             >
                               <Minus className="w-3 h-3" />
@@ -120,13 +130,13 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                             <span className="text-sm font-bold text-gray-900 min-w-[20px] text-center">{item.quantity}</span>
                             <button
                               onClick={() => updateItem.mutate({ itemId: item.id, quantity: item.quantity + 1 })}
-                              disabled={updateItem.isPending}
+                              disabled={updateItem.isPending || syncCart.isPending}
                               className="text-gray-400 hover:text-gray-900 disabled:opacity-30"
                             >
                               <Plus className="w-3 h-3" />
                             </button>
                           </div>
-                          <p className="font-bold text-gray-900 tracking-tight">₹{itemPrice * item.quantity}</p>
+                          <p className="font-bold text-gray-900 tracking-tight">₹{(itemPrice * item.quantity).toLocaleString('en-IN')}</p>
                         </div>
                       </div>
                     </motion.div>
@@ -153,17 +163,23 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                   </div>
                 </div>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (isAuthenticated) {
-                      onClose();
-                      router.push('/checkout');
+                      try {
+                        await syncCart.mutateAsync();
+                        onClose();
+                        router.push('/checkout');
+                      } catch (e) {
+                        toast('Failed to sync cart with backend', 'error');
+                      }
                     } else {
                       window.dispatchEvent(new CustomEvent('open-login'));
                     }
                   }}
-                  className="w-full py-4 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-2xl font-bold shadow-lg shadow-lime-200 transition-all block text-center"
+                  disabled={syncCart.isPending}
+                  className="w-full py-4 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-2xl font-bold shadow-lg shadow-lime-200 transition-all block text-center disabled:opacity-50"
                 >
-                  Checkout Now
+                  {syncCart.isPending ? 'Processing...' : 'Checkout Now'}
                 </button>
               </div>
             )}

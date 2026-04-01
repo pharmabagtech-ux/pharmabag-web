@@ -483,7 +483,14 @@ function ProductsPageContent() {
                       } else {
                         // Product not in cart, add it
                         addToCart.mutate(
-                          { productId: product.id, quantity },
+                          { 
+                            productId: product.id, 
+                            quantity,
+                            productName: product.name,
+                            price: computedSellingPrice,
+                            mrp: product.mrp,
+                            imageUrl: image
+                          },
                           {
                             onSuccess: () => {
                               toast(`${product.name} added to cart!`, 'success');
