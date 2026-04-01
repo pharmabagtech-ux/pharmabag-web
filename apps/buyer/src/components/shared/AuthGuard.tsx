@@ -22,27 +22,28 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     if (!isLoading && isAuthenticated && user) {
-      // Strict Verification Guard (Legacy Parity)
-      const isVerified = user.gstPanResponse?.status && 
-                        user.verificationStatus === 'VERIFIED' && 
-                        !!user.creditTier;
+      // Check if buyer is verified: admin sets user.status = 'APPROVED'
+      const isApproved = user.status === 'APPROVED';
+      const isLegacyVerified = user.verificationStatus === 'VERIFIED';
+      const isVerified = isApproved || isLegacyVerified;
 
-      const allowedPaths = ['/onboarding', '/cart', '/checkout', '/profile'];
+      const allowedPaths = ['/onboarding', '/cart', '/checkout', '/profile', '/products', '/blogs', '/support', '/notifications', '/wishlist'];
       if (!isVerified && !allowedPaths.some(p => pathname.startsWith(p))) {
         router.push('/onboarding');
       }
     }
   }, [isLoading, isAuthenticated, user, router, pathname]);
 
-  // Status Polling (Every 10s post-verify)
+  // Status Polling — poll every 10s while buyer is pending so approval reflects automatically
   useEffect(() => {
-    if (user?.verificationStatus === 'PENDING') {
-      const interval = setInterval(() => {
-        refresh();
-      }, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [user?.verificationStatus, refresh]);
+    const isPending = user?.status === 'PENDING' || user?.verificationStatus === 'PENDING';
+    if (!isPending) return;
+
+    const interval = setInterval(() => {
+      refresh();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [user?.status, user?.verificationStatus, refresh]);
 
   if (isLoading) {
     return (

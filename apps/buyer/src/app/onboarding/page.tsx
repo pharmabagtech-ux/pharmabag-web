@@ -9,11 +9,12 @@ import {
 import Navbar from '@/components/landing/Navbar';
 import LoginModal from '@/components/landing/LoginModal';
 import AuthGuard from '@/components/shared/AuthGuard';
-import { useCreateBuyerProfile, useUpdateBuyerProfile, useVerifyPanGst } from '@/hooks/useBuyerProfile';
+import { useCreateBuyerProfile, useUpdateBuyerProfile, useVerifyPanGst, useBuyerProfile } from '@/hooks/useBuyerProfile';
 import { useUploadKycDocument } from '@/hooks/useStorage';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type Step = 1 | 2 | 3;
 
@@ -27,12 +28,13 @@ const INDIAN_STATES = [
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const { toast } = useToast();
   const createProfile = useCreateBuyerProfile();
   const updateProfile = useUpdateBuyerProfile();
   const verifyPanGst = useVerifyPanGst();
   const uploadKyc = useUploadKycDocument();
+  const { data: existingProfile, isLoading: isProfileLoading } = useBuyerProfile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
@@ -195,6 +197,45 @@ export default function OnboardingPage() {
     { num: 2, label: 'Address', icon: MapPin },
     { num: 3, label: 'Review & Submit', icon: Shield },
   ];
+
+  // Check if buyer is already approved — redirect to products
+  const isApproved = user?.status === 'APPROVED' || user?.verificationStatus === 'VERIFIED';
+  if (isApproved) {
+    router.replace('/products');
+    return null;
+  }
+
+  // Check if buyer profile already exists (form was already submitted) — show pending state
+  const profileExists = !isProfileLoading && (existingProfile?.id || user?.buyerProfile);
+  const isRejected = user?.status === 'REJECTED' || user?.verificationStatus === 'REJECTED';
+
+  if (profileExists && !isRejected) {
+    return (
+      <AuthGuard>
+        <main className="min-h-screen bg-[#f2fcf6] relative overflow-hidden">
+          <Navbar showUserActions onLoginClick={() => setIsLoginOpen(true)} />
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center" style={{ minHeight: 'calc(100vh - 80px)', paddingTop: '120px' }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-2xl p-8 shadow-xl">
+              <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mb-6">
+                <Shield className="w-8 h-8 text-yellow-600" />
+              </div>
+              <h1 className="text-2xl font-black text-gray-900 mb-4">Application Under Review</h1>
+              <p className="text-gray-600 font-medium mb-6">
+                Your business profile has been submitted and is currently being reviewed by our team. You will receive a notification once your account is verified.
+              </p>
+              <p className="text-sm text-gray-400 mb-8">
+                Verification typically takes 24–48 hours.
+              </p>
+              <Link href="/products" className="inline-flex items-center justify-center w-full h-14 bg-gray-900 text-white rounded-xl font-bold transition-all hover:bg-gray-800">
+                Continue Browsing
+              </Link>
+            </motion.div>
+          </div>
+          <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+        </main>
+      </AuthGuard>
+    );
+  }
 
   return (
     <AuthGuard>

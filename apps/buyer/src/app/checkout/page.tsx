@@ -29,11 +29,11 @@ type PaymentMethod = 'COD' | 'UPI' | 'BANK_TRANSFER' | 'CREDIT';
 
 export default function CheckoutPage() {
   const { user } = useAuth();
-  const isVerified = user?.gstPanResponse?.status && 
-                     user?.verificationStatus === 'VERIFIED' && 
-                     !!user?.creditTier;
-  const isPending = user?.verificationStatus === 'PENDING';
-  const isRejected = user?.verificationStatus === 'REJECTED';
+  const isApproved = user?.status === 'APPROVED';
+  const isLegacyVerified = user?.verificationStatus === 'VERIFIED';
+  const isVerified = isApproved || isLegacyVerified;
+  const isPending = !isVerified && (user?.status === 'PENDING' || user?.verificationStatus === 'PENDING' || !!user?.buyerProfile);
+  const isRejected = user?.status === 'REJECTED' || user?.verificationStatus === 'REJECTED';
 
   const { data: cartData, isLoading: isCartLoading } = useCart();
   const { data: profileData } = useBuyerProfile();

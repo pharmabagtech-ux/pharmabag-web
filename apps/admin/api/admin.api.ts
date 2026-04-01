@@ -389,6 +389,17 @@ export async function broadcastNotification(payload: { target: string; message: 
   return data.data;
 }
 
+export async function sendUserNotification(userId: string, payload: { title: string; message: string; type?: string }) {
+  try {
+    const { data } = await apiClient.post<{ data: any }>(`/admin/notifications/user/${userId}`, payload);
+    return data.data;
+  } catch {
+    // Notification send is best-effort — don't block approval if this endpoint doesn't exist
+    console.warn('[Admin] Failed to send user notification — endpoint may not exist');
+    return null;
+  }
+}
+
 export async function getNotificationHistory(params: { page?: number; limit?: number } = {}) {
   const qs = new URLSearchParams();
   if (params.page) qs.set("page", String(params.page));

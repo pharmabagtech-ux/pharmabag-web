@@ -7,7 +7,7 @@ export const NotificationSchema = z.object({
   id: z.string(),
   title: z.string(),
   message: z.string(),
-  type: z.enum(['order', 'payment', 'system', 'promotion']).optional(),
+  type: z.enum(['order', 'payment', 'system', 'promotion', 'verification']).optional(),
   isRead: z.boolean(),
   createdAt: z.string(),
 });

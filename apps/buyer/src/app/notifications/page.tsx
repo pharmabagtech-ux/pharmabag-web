@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Bell, CheckCircle2, AlertCircle, Info, ChevronRight, Inbox } from 'lucide-react';
+import { Bell, CheckCircle2, AlertCircle, Info, ChevronRight, Inbox, ShieldCheck } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
 import Navbar from '@/components/landing/Navbar';
 import { SkeletonList } from '@/components/shared/LoaderSkeleton';
@@ -30,6 +30,7 @@ const typeConfig: Record<string, { bg: string; icon: React.ReactNode }> = {
   order: { bg: 'bg-orange-50', icon: <AlertCircle className="w-5 h-5 text-orange-600" /> },
   system: { bg: 'bg-blue-50', icon: <Info className="w-5 h-5 text-blue-600" /> },
   promotion: { bg: 'bg-purple-50', icon: <Info className="w-5 h-5 text-purple-600" /> },
+  verification: { bg: 'bg-emerald-50', icon: <ShieldCheck className="w-5 h-5 text-emerald-600" /> },
 };
 
 export default function NotificationsPage() {
@@ -42,6 +43,7 @@ export default function NotificationsPage() {
     order: '/orders',
     payment: '/payments',
     promotion: '/products',
+    verification: '/profile',
   };
 
   const notifications = data?.data ?? [];

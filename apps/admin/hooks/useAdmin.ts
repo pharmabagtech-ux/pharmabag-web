@@ -15,7 +15,7 @@ import {
   getSuggestions, createSuggestion, updateSuggestion, deleteSuggestion, importSuggestionsCsv,
   getBanners, createBanner, updateBanner, deleteBanner,
   getReferralCodes, createReferralCode, deleteReferralCode,
-  broadcastNotification, getNotificationHistory,
+  broadcastNotification, getNotificationHistory, sendUserNotification,
   getPlatformSettings, updatePlatformSettings,
   getRevenueChart, getOrdersChart, getTopProducts, getTopSellers,
 } from "@/api/admin.api";
@@ -54,11 +54,23 @@ export function useUserById(userId: string) { return useQuery({ queryKey: ["admi
 export function useAffirmUserStatus() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, action }: { userId: string; action: "approve" | "reject" | "block" | "unblock" }) => {
-      if (action === "approve") return approveUser(userId);
-      if (action === "reject") return rejectUser(userId);
-      if (action === "block") return blockUser(userId);
-      return unblockUser(userId);
+    mutationFn: async ({ userId, action }: { userId: string; action: "approve" | "reject" | "block" | "unblock" }) => {
+      let result;
+      if (action === "approve") result = await approveUser(userId);
+      else if (action === "reject") result = await rejectUser(userId);
+      else if (action === "block") result = await blockUser(userId);
+      else result = await unblockUser(userId);
+
+      // Send verification notification to user on approve
+      if (action === "approve") {
+        void sendUserNotification(userId, {
+          title: "Account Verified!",
+          message: "Your business profile has been verified. You can now place orders on PharmaBag.",
+          type: "verification",
+        });
+      }
+
+      return result;
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "users"] }),
   });

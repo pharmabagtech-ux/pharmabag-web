@@ -33,9 +33,11 @@ export const UserSchema = z.object({
   phone: z.string(),
   role: z.string(),
   email: z.string().nullable().optional(),
+  status: z.string().optional(),
   verificationStatus: z.string().optional(),
   creditTier: z.string().optional(),
   gstPanResponse: z.any().optional(),
+  buyerProfile: z.any().optional(),
 });
 
 // ─── Types ──────────────────────────────────────────
