@@ -9,19 +9,17 @@ import Testimonials from '@/components/landing/Testimonials';
 
 export default function HomePage() {
   return (
-    <main className="w-full">
+    <main className="w-full bg-gradient-to-br from-[#8deaffe] via-[#e0ffc7e6] to-[#f4ffede6] min-h-screen relative">
       <Navbar showUserActions={true} />
-      <section className="h-screen overflow-hidden flex flex-col bg-transparent">
-        <div className="h-[30%] lg:h-[50%] overflow-hidden bg-transparent">
+      <section className="flex-1 overflow-hidden flex flex-col bg-transparent pt-24 lg:pt-28">
+        <div className="w-full flex-shrink-0 bg-transparent flex flex-col mb-6 lg:mb-8">
           <HeroSection />
         </div>
-        <div className="h-[10%] lg:h-[15%] overflow-hidden bg-transparent">
-          <BrandsStrip />
-        </div>
-        <div className="h-[40%] lg:h-[35%] overflow-hidden bg-transparent">
+        <div className="flex-1 min-h-[300px] overflow-hidden bg-transparent">
           <ProductCarousel />
         </div>
       </section>
+
       <TrustSection />
       <Testimonials />
     </main>

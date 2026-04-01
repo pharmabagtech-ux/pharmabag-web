@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Search, Filter, SlidersHorizontal, ChevronRight, LayoutGrid, List, Truck, ShieldCheck, ArrowUpDown, Check } from 'lucide-react';
@@ -174,31 +175,19 @@ function ProductsPageContent() {
 
       <Navbar showUserActions={true} onLoginClick={() => setIsLoginOpen(true)} onFilterClick={() => setShowMobileFilters(true)} />
 
-      <div className="pt-10 sm:pt-16 pb-6 sm:pb-20 px-[4vw] w-full mx-auto relative z-10">
-        {/* Mobile Header (Only visible on tablet/mobile) */}
-        <div className="lg:hidden flex items-center gap-1.5 text-xs font-medium text-gray-400 flex-wrap mb-4">
-          <span className="cursor-pointer hover:text-black transition-colors" onClick={() => { setSelectedCategory(null); setPage(1); }}>Home</span>
-          <ChevronRight className="w-3.5 h-3.5 opacity-20" />
-          <span className="cursor-pointer hover:text-black transition-colors" onClick={() => { setSelectedCategory(null); setSelectedManufacturer(null); setPage(1); }}>Products</span>
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 border-l border-gray-200 pl-2">
-            {totalProducts} Products
-          </span>
+      {/* Mobile Breadcrumb Bar - Products Page Only */}
+      <div className="lg:hidden fixed bottom-20 left-0 right-0 z-40 flex justify-start px-2 sm:px-4 py-2">
+        <div className="w-[92vw] mx-auto ml-0 flex items-center justify-start text-[11px] font-semibold text-gray-400 gap-3">
+          <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">Home</Link>
+          <span className="text-gray-300">&gt;</span>
+          <span className="text-gray-400">Products</span>
         </div>
+      </div>
 
+      <div className="pt-24 lg:pt-[108px] pb-6 sm:pb-20 w-[96vw] sm:w-[92vw] max-w-[1400px] mx-auto relative z-10">
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-[260px] flex-shrink-0 space-y-6">
-            {/* Desktop Breadcrumbs (Top of Sidebar) */}
-            <div className="flex flex-row items-center justify-between gap-1.5 px-1 mb-2 mt-4">
-              <div className="flex items-center gap-1.5 text-[13px] font-medium text-gray-400 flex-wrap">
-                <span className="cursor-pointer hover:text-black transition-colors" onClick={() => { setSelectedCategory(null); setPage(1); }}>Home</span>
-                <ChevronRight className="w-3.5 h-3.5 opacity-20" />
-                <span className="cursor-pointer hover:text-black transition-colors" onClick={() => { setSelectedCategory(null); setSelectedManufacturer(null); setPage(1); }}>Products</span>
-              </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em] border-l border-gray-200 pl-2">
-                {totalProducts} PRODUCTS
-              </p>
-            </div>
             {/* Sort Filter - Integrated into Sidebar */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Sort By</h3>
@@ -287,8 +276,35 @@ function ProductsPageContent() {
           </aside>
 
           {/* Product Grid Container */}
-          <div className="flex-1 w-full relative pt-2 lg:pt-4">
-            {/* Top Bar removed from here as per user request */}
+          <div className="flex-1 w-full relative top-0 sm:-top-1 lg:-top-2">
+            
+            {/* Top Navigation Bar: Breadcrumbs & Search */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 lg:mb-3 w-full pl-1">
+              {/* Dynamic Breadcrumbs */}
+              <div className="flex items-center gap-2 text-[13px] font-bold text-gray-800 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">Home</Link>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" strokeWidth={3} />
+                <span className="text-gray-400 capitalize truncate max-w-[120px]">
+                  {selectedCategory ? selectedCategory.replace(/-/g, ' ') : 'Furniture'}
+                </span>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" strokeWidth={3} />
+                <span className="text-gray-900 uppercase truncate max-w-[150px]">
+                  {searchTerm ? searchTerm : 'NORDIC SHELF'}
+                </span>
+              </div>
+
+              {/* Minimal Search Bar */}
+              <div className="relative w-full sm:max-w-[260px]">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+                  placeholder="Search products..."
+                  className="w-full bg-white/70 backdrop-blur-md border border-white/60 rounded-full py-2.5 pl-10 pr-4 text-[13px] font-medium text-gray-800 placeholder-gray-400 outline-none focus:ring-1 focus:ring-emerald-400 shadow-sm transition-all hover:bg-white"
+                />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              </div>
+            </div>
 
             <AnimatePresence mode="wait" initial={false}>
               {isLoading ? (

@@ -11,14 +11,14 @@ interface Product {
 }
 
 const FEATURED_PRODUCTS: Product[] = [
-  { id: 1, name: 'Manforce 100mg', price: '₹545', image: '/products/pharma_bottle.png' },
-  { id: 2, name: 'Saridon Tablet', price: '₹120', image: '/products/pharma_bottle.png' },
-  { id: 3, name: 'Calpol 500', price: '₹35', image: '/products/pharma_bottle.png' },
-  { id: 4, name: 'Hylogel Eye Drops', price: '₹280', image: '/products/pharma_bottle.png' },
-  { id: 5, name: 'Ozempic Pen', price: '₹14,500', image: '/products/pharma_bottle.png' },
-  { id: 6, name: 'Gollhrny Syrup', price: '₹155', image: '/products/pharma_bottle.png' },
-  { id: 7, name: 'Foilyer Cap', price: '₹89', image: '/products/pharma_bottle.png' },
-  { id: 8, name: 'Fhtture Injection', price: '₹1,200', image: '/products/pharma_bottle.png' },
+  { id: 1, name: 'manforce', price: '₹545', image: '/products/pharma_bottle.png' },
+  { id: 2, name: 'saridon', price: '₹545', image: '/products/pharma_bottle.png' },
+  { id: 3, name: 'calpos 50', price: '₹545', image: '/products/pharma_bottle.png' },
+  { id: 4, name: 'hylogen', price: '₹545', image: '/products/pharma_bottle.png' },
+  { id: 5, name: 'ozempic', price: '₹545', image: '/products/pharma_bottle.png' },
+  { id: 6, name: 'gollhrny', price: '₹545', image: '/products/pharma_bottle.png' },
+  { id: 7, name: 'Foliyer', price: '₹545', image: '/products/pharma_bottle.png' },
+  { id: 8, name: 'Fhtture', price: '₹545', image: '/products/pharma_bottle.png' },
 ];
 
 const PRODUCTS_VISIBLE = 8;
@@ -27,7 +27,7 @@ export default function ProductCarousel({ reverse = false }: { reverse?: boolean
   const scrollProducts = [...FEATURED_PRODUCTS, ...FEATURED_PRODUCTS, ...FEATURED_PRODUCTS];
 
   return (
-    <div className="w-full h-full overflow-hidden bg-transparent mx-auto pl-[4vw] lg:pl-4 pr-[4vw] flex flex-col justify-center items-center pt-0 lg:pt-4">
+    <div className="w-full h-full mb-4 sm:mb-6 lg:mb-8 overflow-hidden bg-transparent mx-auto pl-[4vw] lg:pl-4 pr-[4vw] flex flex-col justify-center items-center pt-0 lg:pt-2">
       <div className="relative w-full flex items-center bg-transparent">
         <motion.div
           animate={{ x: reverse ? ['-33.33%', 0] : [0, '-33.33%'] }}
@@ -39,13 +39,13 @@ export default function ProductCarousel({ reverse = false }: { reverse?: boolean
               ease: "linear",
             }
           }}
-          className="flex w-max"
+          className="flex w-max gap-4 sm:gap-6"
         >
           {/* We duplicated FEATURED_PRODUCTS 3 times, so one set is 33.33% of the total width */}
           {scrollProducts.map((product, index) => (
             <div
               key={`${product.id}-${index}`}
-              className="flex-shrink-0 px-2 sm:px-3 w-[120px] sm:w-[140px] md:w-[160px]"
+              className="flex-shrink-0 w-[120px] sm:w-[130px] md:w-[150px]"
             >
               <ProductCard
                 name={product.name}
