@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { X, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@pharmabag/api-client';
 import { useToast } from '@/components/shared/Toast';
 import ProductCarousel from '@/components/landing/ProductCarousel';
@@ -46,6 +47,7 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
   const { toast } = useToast();
   const { sendOtp, verifyOtp } = useAuth();
 
@@ -104,14 +106,14 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
       await verifyOtp(cleanPhone, otp);
       toast('Login successful!', 'success');
       handleCloseCleanup();
-      window.location.href = '/products';
+      router.push('/products');
     } catch (e: any) { toast('Invalid OTP', 'error'); } finally { setIsLoading(false); }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div role="dialog" className="fixed inset-0 z-[1000] h-screen w-screen overflow-hidden flex flex-col items-center justify-center p-0 select-none">
+    <div role="dialog" className="fixed  inset-0 z-[1000] h-screen w-screen overflow-hidden flex flex-col items-center justify-center p-0 select-none">
       {/* Backgrounds */}
       <div className="fixed inset-0 bg-gradient-to-b from-[#E0F7FA] to-[#B2EBF2] z-0 md:hidden" />
       <div className="fixed inset-0 z-0 hidden md:block" style={{ backgroundImage: "url('/Pharma_ui.png')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }} />
@@ -122,22 +124,22 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
       </button>
 
       {/* Main UI Container */}
-      <div className="relative z-10 w-full h-full flex flex-col items-center justify-start md:justify-center pt-6 pb-2 md:pt-16 md:pb-12 overflow-hidden">
+      <div className="relative mb-10 z-10 w-full h-full flex flex-col items-center justify-start md:justify-center pt-2 pb-2 md:pt-16 md:pb-12 overflow-hidden">
 
         {/* TOP: Badges - Mobile Only */}
-        <div className="w-full flex md:hidden justify-center px-0 mb-3">
+        <div className="w-full flex md:hidden justify-center  px-0  mb-1">
           <div className="flex flex-row gap-3 w-full max-w-xs justify-center">
             <Image src="/app_store_badge.png" alt="App Store" width={112} height={34} className="w-auto h-auto opacity-90" />
             <Image src="/google_play_badge.png" alt="Google Play" width={112} height={34} className="w-auto h-auto opacity-90" />
           </div>
         </div>
 
-        <div className="container max-w-7xl mx-auto flex flex-col items-center justify-center w-full px-0">
+        <div className="container max-w-7xl mx-auto flex flex-col items-center mb-6 justify-center w-full px-0">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-2 lg:gap-16 xl:gap-24 w-full h-fit">
 
             {/* FORM SECTION (Desktop Right, Mobile Top) */}
             <motion.div initial={{ opacity: 0, y: 15, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="w-full lg:w-[45%] flex flex-col items-center justify-center order-1 lg:order-2 px-0 lg:px-0">
-              <div className="w-full md:max-w-lg md:bg-white/60 md:backdrop-blur-3xl md:border md:border-white/60 md:rounded-[48px] p-0 sm:p-4 md:p-10 xl:p-12 md:shadow-2xl md:shadow-lime-900/10 transition-all flex flex-col items-center">
+              <div className="w-full  md:max-w-lg md:bg-white/60 md:backdrop-blur-3xl md:border md:border-white/60 md:rounded-[48px] p-0 sm:p-4 md:p-10 xl:p-12 md:shadow-2xl md:shadow-lime-900/10 transition-all flex flex-col items-center">
 
                 {/* Titles - Mobile: mb-3, Desktop: mb-10 */}
                 <div className="text-center mb-3 md:mb-10 w-full">

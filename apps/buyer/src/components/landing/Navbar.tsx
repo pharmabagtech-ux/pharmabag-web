@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, User, ShoppingCart, LogOut, ClipboardList, CreditCard, HelpCircle, ArrowRight, Heart, Bookmark, Menu, X, SlidersHorizontal, Filter, LifeBuoy } from 'lucide-react';
+import { Bell, User, ShoppingCart, ShoppingBag, LogOut, ClipboardList, CreditCard, HelpCircle, ArrowRight, Heart, Bookmark, Menu, X, SlidersHorizontal, Filter, LifeBuoy } from 'lucide-react';
 import BrandsMegaMenu from '@/components/landing/BrandsMegaMenu';
 import CartDrawer from '@/components/cart/CartDrawer';
 import SearchBar from '@/components/shared/SearchBar';
@@ -81,7 +81,7 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
   };
 
   const mobileMenuLinks = [
-    { href: '/products', label: 'All Products', icon: ShoppingCart },
+    { href: '/products', label: 'All Products', icon: ShoppingBag },
     { href: '/orders', label: 'My Orders', icon: ClipboardList },
     { href: '/wishlist', label: 'Wishlist', icon: Heart },
     { href: '/payments', label: 'Payments', icon: CreditCard },
@@ -175,7 +175,7 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
                       onClick={() => setIsCartOpen(true)}
                       className="p-1.5 text-black hover:text-sky-600 transition-colors relative"
                     >
-                      <ShoppingCart className="w-5 h-5" />
+                      <ShoppingBag className="w-5 h-5" />
                       <CartCountBadge />
                     </button>
                   )}
@@ -205,9 +205,9 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
                       onClick={() => setIsCartOpen(true)}
                       className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group"
                     >
-                      <ShoppingCart className="w-5 h-5" />
+                      <ShoppingBag className="w-5 h-5" />
                       <CartCountBadge />
-                      <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Cart</span>
+                      <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"> Bag</span>
                     </button>
                   )}
 

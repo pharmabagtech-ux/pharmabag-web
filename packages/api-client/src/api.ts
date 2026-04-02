@@ -26,6 +26,12 @@ function emitApiEvent(event: ApiEventType, detail?: { message?: string; status?:
 let accessToken: string | null = typeof window !== 'undefined' ? localStorage.getItem('pb_access_token') : null;
 let refreshTokenStored: string | null = typeof window !== 'undefined' ? localStorage.getItem('pb_refresh_token') : null;
 
+// Safe init to strip literal undefined strings saved by mistake
+if (refreshTokenStored === 'undefined' || refreshTokenStored === 'null') {
+  refreshTokenStored = null;
+  if (typeof window !== 'undefined') localStorage.removeItem('pb_refresh_token');
+}
+
 export function setAccessToken(token: string | null, refreshToken?: string | null) {
   accessToken = token;
   if (typeof window !== 'undefined') {
@@ -35,9 +41,10 @@ export function setAccessToken(token: string | null, refreshToken?: string | nul
       localStorage.removeItem('pb_access_token');
     }
     
+    // Explicitly handle truthy checks to prevent stringified null/undefined
     if (refreshToken !== undefined) {
       refreshTokenStored = refreshToken;
-      if (refreshToken) {
+      if (refreshToken && refreshToken !== 'undefined' && refreshToken !== 'null') {
         localStorage.setItem('pb_refresh_token', refreshToken);
       } else {
         localStorage.removeItem('pb_refresh_token');
