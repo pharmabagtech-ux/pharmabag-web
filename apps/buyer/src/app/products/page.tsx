@@ -15,6 +15,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import { useProducts, useCategories, useManufacturers, useCities } from '@/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useAddToCart, useCart, useRemoveCartItem, useUpdateCartItem } from '@/hooks/useCart';
+import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useToast } from '@/components/shared/Toast';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent } from '@pharmabag/utils';
 import { useSearchParams } from 'next/navigation';
@@ -72,14 +73,28 @@ function ProductsPageContent() {
   const { toast } = useToast();
   const { data: cartData } = useCart();
 
+  const addToWishlist = useAddToWishlist();
+  const removeFromWishlist = useRemoveFromWishlist();
+  const { data: wishlistData } = useWishlist();
+
   const debouncedSearch = useDebounce(searchTerm, 500);
 
   // Create a map of productId to cart quantity for quick lookup
   const cartQuantityMap = new Map<string, number>();
   if (cartData?.items) {
-    cartData.items.forEach(item => {
+    cartData.items.forEach((item: any) => {
       if (item.productId) {
         cartQuantityMap.set(item.productId, item.quantity);
+      }
+    });
+  }
+
+  // Create a set of wishlist productIds for quick lookup
+  const wishlistSet = new Set<string>();
+  if (wishlistData?.items) {
+    wishlistData.items.forEach((item: any) => {
+      if (item.productId) {
+        wishlistSet.add(item.productId);
       }
     });
   }
@@ -146,16 +161,20 @@ function ProductsPageContent() {
 
       <Navbar showUserActions={true} onLoginClick={() => setIsLoginOpen(true)} onFilterClick={() => setShowMobileFilters(true)} />
 
+
+
       {/* Mobile Breadcrumb Bar - Products Page Only */}
-      <div className="lg:hidden fixed bottom-20 left-0 right-0 z-40 flex justify-start px-2 sm:px-4 py-2">
-        <div className="w-[92vw] mx-auto ml-0 flex items-center justify-start text-[11px] font-semibold text-gray-400 gap-3">
-          <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">Home</Link>
+      <div className="lg:hidden fixed bottom-12 left-0 right-0 z-40 flex justify-start px-2 sm:px-4 py-2">
+        <div className="w-[92vw] mx-auto ml-0 flex items-center justify-start text-[11px] font-semibold text-gray-400 gap-3 bg-white/80 backdrop-blur-md px-3 py-2 rounded-full border border-gray-100/50 shadow-sm">
+          <Link href="/" className="text-gray-500 hover:text-gray-700 transition-colors">Home</Link>
           <span className="text-gray-300">&gt;</span>
-          <span className="text-gray-400">Products</span>
+          <span className="text-gray-600 capitalize">
+            {selectedCategory ? selectedCategory.replace(/-/g, ' ') : 'All Products'}
+          </span>
         </div>
       </div>
 
-      <div className="pt-24 lg:pt-[108px] pb-6 sm:pb-20 w-[96vw] sm:w-[92vw] max-w-[1400px] mx-auto relative z-10">
+      <div className="pt-8 lg:pt-[108px] pb-6 sm:pb-20 w-[96vw] sm:w-[92vw] max-w-[1400px] mx-auto relative z-10">
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-[260px] flex-shrink-0 space-y-6">
@@ -248,9 +267,9 @@ function ProductsPageContent() {
 
           {/* Product Grid Container */}
           <div className="flex-1 w-full relative top-0 sm:-top-1 lg:-top-2">
-            
+
             {/* Top Navigation Bar: Breadcrumbs & Search */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 lg:mb-3 w-full pl-1">
+            <div className="hidden sm:flex sm:flex-row sm:items-center justify-between gap-4 mb-2 lg:mb-3 w-full pl-1">
               {/* Dynamic Breadcrumbs */}
               <div className="flex items-center gap-2 text-[13px] font-bold text-gray-800 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
                 <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">Home</Link>
@@ -262,6 +281,14 @@ function ProductsPageContent() {
                 <span className="text-gray-900 uppercase truncate max-w-[150px]">
                   {searchTerm ? searchTerm : 'NORDIC SHELF'}
                 </span>
+                {searchTerm && (
+                  <>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" strokeWidth={3} />
+                    <span className="text-gray-900 uppercase truncate max-w-[150px]">
+                      {searchTerm}
+                    </span>
+                  </>
+                )}
               </div>
 
               {/* Minimal Search Bar */}
@@ -430,7 +457,7 @@ function ProductsPageContent() {
                         if (cartItemObj) {
                           removeCartItem.mutate(cartItemObj.id, {
                             onSuccess: () => {
-                              toast(`${product.name} removed from cart`, 'success');
+                              toast(`${product.name} removed from bag`, 'success');
                             },
                             onError: () => {
                               toast('Failed to remove item', 'error');
@@ -471,8 +498,8 @@ function ProductsPageContent() {
                       } else {
                         // Product not in cart, add it
                         addToCart.mutate(
-                          { 
-                            productId: product.id, 
+                          {
+                            productId: product.id,
                             quantity,
                             productName: product.name,
                             price: computedSellingPrice,
@@ -481,22 +508,22 @@ function ProductsPageContent() {
                           },
                           {
                             onSuccess: () => {
-                              toast(`${product.name} added to cart!`, 'success');
+                              toast(`${product.name} added to bag!`, 'success');
                               cleanupPending();
                             },
                             onError: (err: any) => {
                               const status = err?.response?.status || err?.status;
                               const message = err?.response?.data?.message || err?.message || '';
-                              let errorMsg = 'Failed to add to cart';
+                              let errorMsg = 'Failed to add to bag';
                               let isSuccess = false;
 
                               if (status === 401 || status === 403) {
-                                errorMsg = 'Please log in to add items to cart';
+                                errorMsg = 'Please log in to add items to bag';
                               } else if (status === 429) {
                                 errorMsg = 'Too many requests. Please try again in a moment';
                               } else if (status === 400) {
-                                if (message.includes('already in cart')) {
-                                  errorMsg = 'Product quantity has been updated in cart';
+                                if (message.includes('already in bag')) {
+                                  errorMsg = 'Product quantity has been updated in bag';
                                   isSuccess = true;
                                 } else if (message.includes('Minimum order quantity')) {
                                   const match = message.match(/(\d+)/);
@@ -517,6 +544,31 @@ function ProductsPageContent() {
                       }
                     };
 
+                    const handleBookmark = (bookmarked: boolean) => {
+                      if (bookmarked) {
+                        addToWishlist.mutate(product.id, {
+                          onSuccess: () => toast(`${product.name} added to wishlist!`, 'success'),
+                          onError: (err: any) => {
+                            const status = err?.response?.status || err?.status;
+                            const message = err?.response?.data?.message || err?.message || 'Unknown error';
+                            if (status === 401 || status === 403) {
+                              toast('Please log in to add to wishlist', 'error');
+                            } else {
+                              toast(message, 'error');
+                            }
+                          }
+                        });
+                      } else {
+                        removeFromWishlist.mutate(product.id, {
+                          onSuccess: () => toast(`${product.name} removed from wishlist`, 'success'),
+                          onError: (err: any) => {
+                            const message = err?.response?.data?.message || err?.message || 'Unknown error';
+                            toast(message, 'error');
+                          }
+                        });
+                      }
+                    };
+
                     return (
                       <div key={product.id}>
                         <PremiumProductCard
@@ -533,6 +585,8 @@ function ProductsPageContent() {
                           rateLabel={computedPtr ? 'PTR' : (product.rateLabel || 'N. RATE')}
                           infoIcon={product.infoIcon}
                           productId={product.id}
+                          isBookmarked={wishlistSet.has(product.id)}
+                          onBookmark={handleBookmark}
                           isLoadingCart={pendingCartProducts.has(product.id)}
                           onQuickView={() => {
                             setQuickViewProduct(product);

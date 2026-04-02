@@ -71,7 +71,7 @@ export function StockBasedButton({
           ${iconColorMap[status]}
           ${disabled || isLoading ? 'opacity-50 cursor-not-allowed' : ''}
         `}
-        title={status === 'out-of-stock' ? 'Notify when back in stock' : `Add ${moq} to cart`}
+        title={status === 'out-of-stock' ? 'Notify when back in stock' : 'Add to bag'}
       >
         {isLoading ? (
           <Loader2 className="w-6 h-6 animate-spin" />

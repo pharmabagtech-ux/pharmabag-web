@@ -38,8 +38,8 @@ export default function CartPage() {
 
   const handleClearCart = () => {
     clearCart.mutate(undefined, {
-      onSuccess: () => toast('Cart cleared', 'info'),
-      onError: () => toast('Failed to clear cart', 'error'),
+      onSuccess: () => toast('Bag cleared', 'info'),
+      onError: () => toast('Failed to clear bag', 'error'),
     });
   };
 
@@ -55,7 +55,7 @@ export default function CartPage() {
           {/* Header */}
           <div className="flex items-center justify-between mb-6 sm:mb-8">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Shopping Cart</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Shopping Bag</h1>
               <p className="text-gray-500 mt-1">{items.length} item{items.length !== 1 ? 's' : ''}</p>
             </div>
             {items.length > 0 && (
@@ -75,14 +75,14 @@ export default function CartPage() {
             </div>
           ) : isError ? (
             <EmptyState
-              icon={ShoppingCart}
-              title="Unable to load cart"
+              icon={ShoppingBag}
+              title="Unable to load bag"
               description="Please try again later"
             />
           ) : items.length === 0 ? (
             <EmptyState
               icon={ShoppingBag}
-              title="Your cart is empty"
+              title="Your bag is empty"
               description="Browse products and add items to get started"
               actionLabel="Browse Products"
               actionHref="/products"

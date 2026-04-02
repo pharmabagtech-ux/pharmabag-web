@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Share2, Loader2, Bookmark, Truck, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/shared/Toast';
@@ -52,16 +53,16 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
       { productId: product.id, quantity: orderQty },
       {
         onSuccess: () => {
-          toast(`${product.name} added to cart!`, 'success');
+          toast(`${product.name} added to bag!`, 'success');
           // Don't close modal - let user continue shopping
         },
         onError: (err: any) => {
           const status = err?.response?.status || err?.status;
           const message = err?.response?.data?.message || err?.message || '';
-          let errorMsg = 'Failed to add to cart';
+          let errorMsg = 'Failed to add to bag';
           
           if (status === 401 || status === 403) {
-            errorMsg = 'Please log in to add items to cart';
+            errorMsg = 'Please log in to add items to bag';
           } else if (status === 400 && message.includes('already in cart')) {
             errorMsg = 'Product quantity has been updated in cart';
           } else if (status === 400 && message.includes('Minimum order quantity')) {
@@ -217,7 +218,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                     <div className="flex items-center justify-between"><span className="font-[900] text-black tracking-wide">Country:</span> <span className="text-gray-700 font-medium whitespace-nowrap">{(product as any).country || 'India'}</span></div>
                   </div>
 
-                  {/* Add to Cart Custom GUI */}
+                  {/* Add to Bag Custom GUI */}
                   <div className="flex items-center gap-4 mb-4">
                     {/* Qty Controller */}
                     <div className="flex items-center border border-gray-200 rounded-md overflow-hidden h-[42px] bg-[#f9fafb]">
@@ -319,12 +320,12 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                   </div>
 
                   {/* View Product Page Link */}
-                  <div className="flex items-center gap-4 mt-auto cursor-pointer group w-max" onClick={handleViewProduct}>
+                  <Link href={`/products/${product.id}`} onClick={onClose} className="flex items-center gap-4 mt-auto cursor-pointer group w-max">
                     <span className="text-[15px] text-gray-900 font-[800]">View Product Page</span>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 text-gray-500 transition-all group-hover:border-gray-900 group-hover:text-black shadow-sm">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 text-gray-500 transition-all group-hover:border-gray-900 group-hover:text-black shadow-sm pointer-events-none">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </button>
-                  </div>
+                    </div>
+                  </Link>
 
                 </div>
               </div>

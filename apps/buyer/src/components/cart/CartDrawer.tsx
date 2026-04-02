@@ -49,8 +49,8 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 md:p-8 border-b border-gray-100">
               <div className="flex items-center gap-3">
-                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900" />
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Your Cart</h2>
+                <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900" />
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Your Bag</h2>
                 {items.length > 0 && (
                   <span className="text-xs font-bold bg-lime-300 text-gray-900 px-2 py-0.5 rounded-full">
                     {items.length}
@@ -68,17 +68,17 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                 <div className="flex flex-col items-center justify-center h-full gap-4">
                   <Loader2 className="w-8 h-8 text-gray-300 animate-spin" />
                   <p className="text-sm font-medium text-gray-400">
-                    {syncCart.isPending ? 'Syncing with backend...' : 'Loading cart...'}
+                    {syncCart.isPending ? 'Syncing with backend...' : 'Loading bag...'}
                   </p>
                 </div>
               ) : isError ? (
                 <div className="flex flex-col items-center justify-center h-full gap-4">
-                  <p className="text-sm font-medium text-red-400">Failed to load cart</p>
+                  <p className="text-sm font-medium text-red-400">Failed to load bag</p>
                 </div>
               ) : items.length === 0 ? (
                 <EmptyState
                   icon={ShoppingBag}
-                  title="Your cart is empty"
+                  title="Your bag is empty"
                   description="Browse products and add items to get started."
                   actionLabel="Browse Products"
                   actionHref="/"
@@ -110,7 +110,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                           <h3 className="font-bold text-gray-900 leading-tight">{itemName}</h3>
                           <button
                             onClick={() => removeItem.mutate(item.id, {
-                              onSuccess: () => toast('Item removed from cart', 'info'),
+                              onSuccess: () => toast('Item removed from bag', 'info'),
                             })}
                             disabled={removeItem.isPending || syncCart.isPending}
                             className="text-gray-300 hover:text-red-500 transition-colors disabled:opacity-50"
@@ -170,7 +170,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                         onClose();
                         router.push('/checkout');
                       } catch (e) {
-                        toast('Failed to sync cart with backend', 'error');
+                        toast('Failed to sync bag with backend', 'error');
                       }
                     } else {
                       window.dispatchEvent(new CustomEvent('open-login'));

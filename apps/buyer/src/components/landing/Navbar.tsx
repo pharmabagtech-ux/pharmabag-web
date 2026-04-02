@@ -4,14 +4,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, User, ShoppingCart, LogOut, ClipboardList, CreditCard, HelpCircle, ArrowRight, Heart, Bookmark, Menu, X, SlidersHorizontal, Filter, LifeBuoy } from 'lucide-react';
+import { Bell, User, ShoppingCart, ShoppingBag, LogOut, ClipboardList, CreditCard, HelpCircle, ArrowRight, Heart, Bookmark, Menu, X, SlidersHorizontal, Filter, LifeBuoy } from 'lucide-react';
 import CategoryMegaMenu from '@/components/landing/CategoryMegaMenu';
 import CartDrawer from '@/components/cart/CartDrawer';
 import SearchBar from '@/components/shared/SearchBar';
 import { useAuth, type Category } from '@pharmabag/api-client';
 import { useCart } from '@/hooks/useCart';
 import { useCategories } from '@/hooks/useProducts';
-import { ChevronDown } from 'lucide-react';
+
 
 function CartCountBadge() {
   const { data: cartData } = useCart();
@@ -82,7 +82,7 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
   };
 
   const mobileMenuLinks = [
-    { href: '/products', label: 'All Products', icon: ShoppingCart },
+    { href: '/products', label: 'All Products', icon: ShoppingBag },
     { href: '/orders', label: 'My Orders', icon: ClipboardList },
     { href: '/wishlist', label: 'Wishlist', icon: Heart },
     { href: '/payments', label: 'Payments', icon: CreditCard },
@@ -94,9 +94,9 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
     <>
       <nav className="fixed bottom-0 lg:bottom-auto lg:top-4 left-0 right-0 z-40 flex justify-center pb-2 lg:pb-0 px-2 sm:px-[4vw]">
         <div className="relative w-[96vw] sm:w-[92vw] max-w-[1400px] mx-auto px-4 lg:px-8 py-2.5 lg:py-3.5 rounded-2xl bg-white shadow-xl flex items-center justify-between border border-gray-100/50">
-            <div className="flex items-center justify-between gap-3 xl:gap-6 w-full px-2 lg:px-4">
-              {/* Left Side: Logo */}
-              <div className="flex items-center">
+          <div className="flex items-center justify-between gap-3 xl:gap-6 w-full px-2 lg:px-4">
+            {/* Left Side: Logo */}
+            <div className="flex items-center">
               <Link href="/" className="flex-shrink-0 flex items-center z-10 mr-4">
                 <Image
                   src="/pharmabag_logo.png"
@@ -168,7 +168,7 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
                       onClick={() => setIsCartOpen(true)}
                       className="p-1.5 text-gray-700 hover:text-sky-600 transition-colors relative"
                     >
-                      <ShoppingCart className="w-5 h-5" />
+                      <ShoppingBag className="w-5 h-5" />
                       <CartCountBadge />
                     </button>
                   )}

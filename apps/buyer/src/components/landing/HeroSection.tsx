@@ -40,11 +40,11 @@ export default function HeroSection() {
   return (
     <div className="w-full flex-1 flex flex-col justify-start items-center bg-transparent mt-4 sm:mt-6 lg:mt-8">
       {/* Main Heading */}
-      <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-[72px] text-gray-900 mb-0 sm:mb-1 lg:mb-2 tracking-tight font-medium">
+      <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-[72px] text-gray-900 mb-0 sm:mb-1 lg:mb-2 tracking-tight font-medium">
         <span className="text-gray-800">India&apos;s Only </span>
         <span className="text-black font-extrabold">Trusted</span>
       </h1>
-      <h2 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-[72px] text-black mb-1 sm:mb-2 lg:mb-4 tracking-tight font-extrabold pb-2">
+      <h2 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-[72px] text-black mb-1 sm:mb-2 lg:mb-4 tracking-tight font-extrabold pb-2">
         B2B Pharma Platform
       </h2>
 
@@ -56,14 +56,14 @@ export default function HeroSection() {
 
       {/* Search Bar */}
       <div className="max-w-[850px] mx-auto px-4 sm:px-6 w-full mb-4 sm:mb-6 lg:mb-8">
-        <div className="relative rounded-full bg-[#f8fcf8]/60 backdrop-blur-md border border-[#ffffff]/80 px-6 py-4 sm:py-4 flex items-center gap-3 hover:bg-[#ffffff]/70 transition-all duration-300">
+        <div className="relative rounded-full bg-[#f8fcf8]/60 backdrop-blur-md border border-[#ffffff]/80 px-4 py-3 sm:px-6 sm:py-4 flex items-center gap-2 sm:gap-3 hover:bg-[#ffffff]/70 transition-all duration-300">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleSearch}
-            placeholder="Search for Brands , Products or manufacturers"
-            className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder-gray-400 font-medium text-[14px] sm:text-[15px] min-w-0"
+            placeholder="Search for Brands, Products or manufacturers"
+            className="flex-1 bg-transparent border-none outline-none text-gray-800 placeholder-gray-400 font-medium text-[12px] xs:text-[13px] sm:text-[15px] min-w-0"
           />
           <button
             onClick={handleSearchClick}

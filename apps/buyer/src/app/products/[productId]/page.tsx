@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Package, ShoppingCart, Star, Loader2, AlertCircle, Minus, Plus, Check, Send, User, Heart } from 'lucide-react';
+import { ChevronLeft, Package, ShoppingBag, Star, Loader2, AlertCircle, Minus, Plus, Check, Send, User, Heart } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 
 import { useProductById } from '@/hooks/useProducts';
@@ -73,10 +73,10 @@ export default function ProductDetailPage({ params }: { params: { productId: str
       {
         onSuccess: () => {
           setAdded(true);
-          toast(`${product.name} added to cart!`, 'success');
+          toast(`${product.name} added to bag!`, 'success');
           setTimeout(() => setAdded(false), 2000);
         },
-        onError: () => toast('Failed to add to cart', 'error'),
+        onError: () => toast('Failed to add to bag', 'error'),
       }
     );
   };
@@ -278,7 +278,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                 </motion.button>
               </div>
 
-              {/* Quantity + Add to Cart */}
+              {/* Quantity + Add to Bag */}
               {inStock && (
                 <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 sm:gap-4 md:gap-6">
                   <div className="flex items-center bg-white/60 rounded-2xl border border-gray-200 overflow-hidden">
@@ -311,7 +311,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                     {added ? (
                       <>
                         <Check className="w-5 h-5" />
-                        Added to Cart
+                        Added to Bag
                       </>
                     ) : addToCart.isPending ? (
                       <>
@@ -320,8 +320,8 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                       </>
                     ) : (
                       <>
-                        <ShoppingCart className="w-5 h-5" />
-                        Add to Cart
+                        <ShoppingBag className="w-5 h-5" />
+                        Add to Bag
                       </>
                     )}
                   </motion.button>

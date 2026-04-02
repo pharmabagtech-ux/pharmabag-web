@@ -161,7 +161,7 @@ export default function PremiumProductCard({
       {/* Discount Tag - overlapping the top-left corner */}
       {discountTag && (
         <div
-          className={`absolute -top-[16px] left-[4px] sm:left-[8px] bg-white border border-gray-400 font-normal text-gray-900 rounded-full z-20 whitespace-nowrap shadow-none w-[95px] h-[22px] flex items-center justify-center ${discountTag.length > 12 ? 'text-[9.5px]' : 'text-[11px] sm:text-[11.5px]'
+          className={`absolute -top-[16px] left-[4px] sm:left-[8px] bg-white border border-gray-400 font-normal text-gray-900 rounded-full z-20 whitespace-nowrap shadow-none w-fit px-2 h-[20px] sm:h-[22px] flex items-center justify-center ${discountTag.length > 12 ? 'text-[8px] xs:text-[9px] sm:text-[9.5px]' : 'text-[9px] xs:text-[10px] sm:text-[11.5px]'
             }`}
         >
           {discountTag}
@@ -195,17 +195,17 @@ export default function PremiumProductCard({
             >
               <RotateCw className="w-4 h-4 text-gray-800" strokeWidth={2.5} />
             </button>
-            <div className="flex items-center gap-1 bg-black rounded-[8px] sm:rounded-[10px] pl-1 pr-1 py-1 shadow-md animate-in fade-in zoom-in-90 duration-200">
+            <div className="flex items-center gap-0.5 xs:gap-1 bg-black rounded-[8px] sm:rounded-[10px] pl-0.5 pr-0.5 py-0.5 sm:pl-1 sm:pr-1 sm:py-1 shadow-md animate-in fade-in zoom-in-90 duration-200">
               <button
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={count === 1 ? removeFromCart : decrement}
-                className="w-6 h-6 rounded flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-all"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-all"
               >
                 {count === 1 ? (
-                  <Trash2 className="w-3.5 h-3.5 text-red-400" strokeWidth={2.5} />
+                  <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-400" strokeWidth={2.5} />
                 ) : (
-                  <Minus className="w-3.5 h-3.5" strokeWidth={3} />
+                  <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" strokeWidth={3} />
                 )}
               </button>
 
@@ -248,7 +248,7 @@ export default function PremiumProductCard({
                     setIsEditingQty(true);
                     setTimeout(() => inputRef.current?.select(), 0);
                   }}
-                  className="text-white text-[13px] font-bold min-w-[26px] text-center tabular-nums select-none cursor-text hover:opacity-80 transition-opacity"
+                  className="text-white text-[11px] sm:text-[13px] font-bold min-w-[20px] sm:min-w-[26px] text-center tabular-nums select-none cursor-text hover:opacity-80 transition-opacity"
                 >
                   {count}
                 </button>
@@ -258,9 +258,9 @@ export default function PremiumProductCard({
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={increment}
-                className="w-6 h-6 rounded flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-all"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-all"
               >
-                <Plus className="w-3.5 h-3.5" strokeWidth={3} />
+                <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" strokeWidth={3} />
               </button>
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function PremiumProductCard({
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={toggleBookmark}
-        className="absolute right-[-1px] top-[38%] -translate-y-1/2 z-20 outline-none w-[30px] sm:w-[34px] h-[30px] flex items-center justify-end hover:scale-105 transition-transform group/ribbon"
+        className="absolute right-[-1px] top-[38%] -translate-y-1/2 z-20 outline-none w-[26px] sm:w-[34px] h-[26px] sm:h-[30px] flex items-center justify-end hover:scale-105 transition-transform group/ribbon"
       >
         <svg viewBox="0 0 24 36" preserveAspectRatio="none" className="w-[80%] h-[70%] drop-shadow-sm transition-colors" fill={bookmarked ? "#1bd1d4" : "white"} stroke={bookmarked ? "#1bd1d4" : "#cbd5e1"} strokeWidth="1.5">
           <path d="M24 0 H0 L8 18 L0 36 H24 Z" strokeLinejoin="round" />
@@ -314,7 +314,7 @@ export default function PremiumProductCard({
       <div className="mt-auto flex flex-col z-10 w-full pb-1">
         {/* Product Name & Arrow Button */}
         <div className="flex items-center justify-between mb-2 pl-1 pr-0">
-          <h3 className="font-medium text-gray-900 text-[16px] sm:text-[17px] leading-snug line-clamp-1 truncate tracking-tight flex-1">
+          <h3 className="font-medium text-gray-900 text-[14px] xs:text-[15px] sm:text-[17px] leading-snug line-clamp-1 truncate tracking-tight flex-1">
             {name}
           </h3>
           <button
@@ -338,17 +338,17 @@ export default function PremiumProductCard({
         <div className="flex flex-col gap-0.5 px-1 w-full relative">
 
           {/* Top Header Row */}
-          <div className="flex justify-between items-center w-full min-w-0 mb-0.5">
-            <span className="text-[11px] sm:text-[12px] font-medium text-gray-600 uppercase tracking-wide min-w-[30%] text-left">MRP</span>
-            <span className="text-[11px] sm:text-[12px] font-medium text-gray-600 uppercase tracking-wide text-center flex-1">MOQ {moq}</span>
-            <span className="text-[11px] sm:text-[12px] font-medium text-gray-600 uppercase tracking-wide min-w-[30%] text-right whitespace-nowrap">{rateLabel}</span>
+          <div className="flex justify-between items-center w-full min-w-0 mb-0.5 gap-1">
+            <span className="text-[9px] xs:text-[10px] sm:text-[12px] font-medium text-gray-600 uppercase tracking-wide flex-1 text-left">MRP</span>
+            <span className="text-[9px] xs:text-[10px] sm:text-[12px] font-medium text-gray-600 uppercase tracking-wide text-center flex-1">MOQ {moq}</span>
+            <span className="text-[9px] xs:text-[10px] sm:text-[12px] font-medium text-gray-600 uppercase tracking-wide flex-1 text-right whitespace-nowrap">{rateLabel}</span>
           </div>
 
           {/* Values Row */}
-          <div className="flex justify-between items-center w-full min-w-0">
-            <span className="text-[13px] sm:text-[14px] font-medium text-gray-800 truncate min-w-[30%] text-left">₹{mrp || price}</span>
-            <span className="text-[13px] sm:text-[14px] text-transparent text-center flex-1 select-none pointer-events-none">-</span>
-            <span className="text-[13px] sm:text-[14px] font-medium text-gray-800 truncate min-w-[30%] text-right">₹{ptr || price}</span>
+          <div className="flex justify-between items-center w-full min-w-0 gap-1">
+            <span className="text-[11px] xs:text-[12px] sm:text-[14px] font-medium text-gray-800 truncate flex-1 text-left">₹{mrp || price}</span>
+            <span className="text-[11px] xs:text-[12px] sm:text-[14px] text-transparent text-center flex-1 select-none pointer-events-none">-</span>
+            <span className="text-[11px] xs:text-[12px] sm:text-[14px] font-medium text-gray-800 truncate flex-1 text-right">₹{ptr || price}</span>
           </div>
 
         </div>
