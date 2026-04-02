@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Package, ShoppingBag, Star, Loader2, AlertCircle, Minus, Plus, Check, Send, User, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Package, ShoppingBag, Star, Loader2, AlertCircle, Minus, Plus, Check, Send, User, Heart } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 
 import { useProductById } from '@/hooks/useProducts';
@@ -190,10 +190,23 @@ export default function ProductDetailPage({ params }: { params: { productId: str
           animate={{ opacity: 1, y: 0 }}
           className="space-y-8"
         >
-          <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors font-bold w-fit">
-            <ChevronLeft className="w-5 h-5" />
-            Back to Products
-          </Link>
+          {/* Breadcrumb Navigation */}
+          <nav className="flex items-center gap-1.5 text-[12px] font-[800] text-gray-400 flex-wrap">
+            <Link href="/" className="hover:text-gray-800 transition-colors">Home</Link>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+            {product.category && (
+              <>
+                <Link 
+                  href={`/products?category=${typeof product.category === 'object' ? (product.category as any).name.toLowerCase() : product.category.toLowerCase()}`} 
+                  className="hover:text-gray-800 transition-colors capitalize"
+                >
+                  {typeof product.category === 'object' ? (product.category as any).name : product.category}
+                </Link>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+              </>
+            )}
+            <span className="text-gray-800 truncate max-w-[200px] sm:max-w-md">{product.name}</span>
+          </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-4 md:gap-5 lg:gap-4">
             {/* Product Image */}

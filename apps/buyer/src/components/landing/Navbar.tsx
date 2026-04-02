@@ -59,7 +59,15 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
     return () => { document.body.style.overflow = ''; };
   }, [isMobileMenuOpen]);
 
-  const navItems = ['Brands', 'Ethical', 'Generic', 'Surgical', 'Ayurvedic', 'OTC'];
+  const navItems = [
+    { label: 'All Products', href: '/products' },
+    { label: 'Brands', href: '#', type: 'menu' },
+    { label: 'Ethical', href: '/products?category=ethical' },
+    { label: 'Generic', href: '/products?category=generic' },
+    { label: 'Surgical', href: '/products?category=surgical' },
+    { label: 'Ayurvedic', href: '/products?category=ayurvedic' },
+    { label: 'OTC', href: '/products?category=otc' },
+  ];
 
   const handleLoginClick = () => {
     if (onLoginClick) {
@@ -113,24 +121,24 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
             {/* Desktop Navigation Items — Centered */}
             <div className="hidden lg:flex items-center gap-6 xl:gap-14 absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
               {navItems.map((item) => (
-                item === 'Brands' ? (
+                item.type === 'menu' ? (
                   <div
-                    key={item}
+                    key={item.label}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                     className="relative py-2"
                   >
                     <button className="text-[15px] font-medium text-gray-700 hover:text-black transition-colors cursor-pointer">
-                      {item}
+                      {item.label}
                     </button>
                   </div>
                 ) : (
                   <Link
-                    key={item}
-                    href={`/products?category=${item.toLowerCase()}`}
+                    key={item.label}
+                    href={item.href}
                     className="text-[15px] font-medium text-gray-700 hover:text-black transition-colors"
                   >
-                    {item}
+                    {item.label}
                   </Link>
                 )
               ))}
@@ -356,12 +364,12 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
                 <div className="flex flex-wrap gap-2">
                   {navItems.map((item) => (
                     <Link
-                      key={item}
-                      href={item === 'Brands' ? '/products' : `/products?category=${item.toLowerCase()}`}
+                      key={item.label}
+                      href={item.type === 'menu' ? '/products' : item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100"
                     >
-                      {item}
+                      {item.label}
                     </Link>
                   ))}
                 </div>

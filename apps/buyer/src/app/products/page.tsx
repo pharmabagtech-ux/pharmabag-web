@@ -227,14 +227,14 @@ function ProductsPageContent() {
               </div>
             </div>
             {/* Filter by Price */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
+            {/* <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Filter By Price</h3>
               <div className="flex flex-col gap-3">
                 <input type="number" placeholder="Min" value={priceRange[0] || ''} onChange={(e) => { setPriceRange([Number(e.target.value) || 0, priceRange[1]]); setPage(1); }} className="w-full bg-gray-50/50 border border-gray-100 rounded-lg p-2 text-center text-xs text-gray-700 font-medium outline-none focus:ring-1 focus:ring-emerald-400" />
                 <input type="number" placeholder="Max" value={priceRange[1] === 10000 ? '' : priceRange[1]} onChange={(e) => { setPriceRange([priceRange[0], Number(e.target.value) || 10000]); setPage(1); }} className="w-full bg-gray-50/50 border border-gray-100 rounded-lg p-2 text-center text-xs text-gray-700 font-medium outline-none focus:ring-1 focus:ring-emerald-400" />
               </div>
-            </div>
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
+            </div> */}
+            {/* <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.15em] mb-6">Filter By</h3>
               <div className="space-y-5">
                 <label onClick={() => { setFilterNewItems(!filterNewItems); setPage(1); }} className="flex items-center gap-3 cursor-pointer group">
@@ -256,7 +256,7 @@ function ProductsPageContent() {
                   <span className={`text-[13px] font-bold transition-colors tracking-tight ${filterDiscountItems ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}>Discount Items</span>
                 </label>
               </div>
-            </div>
+            </div> */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Categories</h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">

@@ -23,6 +23,7 @@ export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const navItems = [
+    { label: 'All Products', href: '/products' },
     { label: 'Brands', href: '#', type: 'menu' },
     { label: 'Ethical', href: '/products?category=ethical' },
     { label: 'Generic', href: '/products?category=generic' },
