@@ -31,8 +31,9 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
-  // The user requested a master admin with all powers
-  const isMasterAdmin = user?.phone === "9155277350";
+  // Super admin check or we use their permissions
+  // To reach here they must have role ADMIN and status APPROVED because the backend handles that during login
+  const isMasterAdmin = user?.role === "ADMIN";
   const permissions = isMasterAdmin ? "x" : (user as any)?.permissions as string | undefined;
 
   useEffect(() => {
