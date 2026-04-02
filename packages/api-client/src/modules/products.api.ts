@@ -60,14 +60,25 @@ export type CreateProductInput = z.infer<typeof CreateProductSchema>;
 
 // ─── Category Schema ────────────────────────────────
 
-export const CategorySchema = z.object({
+export const SubCategorySchema = z.object({
   id: z.string(),
   name: z.string(),
   slug: z.string().optional(),
-  description: z.string().optional(),
+  categoryId: z.string(),
   productCount: z.number().optional(),
 });
 
+export const CategorySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  label: z.string().optional(),
+  slug: z.string().optional(),
+  description: z.string().optional(),
+  productCount: z.number().optional(),
+  subCategories: z.array(SubCategorySchema).optional(),
+});
+
+export type SubCategory = z.infer<typeof SubCategorySchema>;
 export type Category = z.infer<typeof CategorySchema>;
 
 // ─── API Functions ──────────────────────────────────
@@ -122,8 +133,11 @@ export async function getProductById(id: string): Promise<Product> {
 export async function getCategories(): Promise<Category[]> {
   try {
     const { data } = await api.get('/products/categories');
-    const payload = data?.data ?? data;
-    return Array.isArray(payload) ? payload : (Array.isArray(payload?.categories) ? payload.categories : []);
+    
+    // Most robust way to find the array:
+    const payload = data?.data ?? (Array.isArray(data) ? data : data?.categories);
+    
+    return Array.isArray(payload) ? payload : [];
   } catch (err) {
     console.warn('[Categories] Failed to fetch categories:', (err as any)?.response?.status, (err as any)?.message);
     return [];

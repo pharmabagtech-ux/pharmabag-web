@@ -5,11 +5,13 @@ import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, User, ShoppingCart, LogOut, ClipboardList, CreditCard, HelpCircle, ArrowRight, Heart, Bookmark, Menu, X, SlidersHorizontal, Filter, LifeBuoy } from 'lucide-react';
-import BrandsMegaMenu from '@/components/landing/BrandsMegaMenu';
+import CategoryMegaMenu from '@/components/landing/CategoryMegaMenu';
 import CartDrawer from '@/components/cart/CartDrawer';
 import SearchBar from '@/components/shared/SearchBar';
-import { useAuth } from '@pharmabag/api-client';
+import { useAuth, type Category } from '@pharmabag/api-client';
 import { useCart } from '@/hooks/useCart';
+import { useCategories } from '@/hooks/useProducts';
+import { ChevronDown } from 'lucide-react';
 
 function CartCountBadge() {
   const { data: cartData } = useCart();
@@ -32,12 +34,13 @@ interface NavbarProps {
 export default function Navbar({ onLoginClick, onFilterClick, showUserActions = false }: NavbarProps) {
   const { isAuthenticated, user, logout } = useAuth();
   const { data: cartData } = useCart();
-  const [isBrandsMenuOpen, setIsBrandsMenuOpen] = useState(false);
+  const { data: categories = [] } = useCategories();
+  const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const categoryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const profileTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -59,8 +62,6 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
     return () => { document.body.style.overflow = ''; };
   }, [isMobileMenuOpen]);
 
-  const navItems = ['Brands', 'Ethical', 'Generic', 'Surgical', 'Ayurvedic', 'OTC'];
-
   const handleLoginClick = () => {
     if (onLoginClick) {
       onLoginClick();
@@ -69,14 +70,14 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
     }
   };
 
-  const handleMouseEnter = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setIsBrandsMenuOpen(true);
+  const handleCategoryMouseEnter = (category: Category) => {
+    if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current);
+    setActiveCategory(category);
   };
 
-  const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => {
-      setIsBrandsMenuOpen(false);
+  const handleCategoryMouseLeave = () => {
+    categoryTimeoutRef.current = setTimeout(() => {
+      setActiveCategory(null);
     }, 150);
   };
 
@@ -93,87 +94,79 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
     <>
       <nav className="fixed bottom-0 lg:bottom-auto lg:top-4 left-0 right-0 z-40 flex justify-center pb-2 lg:pb-0 px-2 sm:px-[4vw]">
         <div className="relative w-[96vw] sm:w-[92vw] max-w-[1400px] mx-auto px-4 lg:px-8 py-2.5 lg:py-3.5 rounded-2xl bg-white shadow-xl flex items-center justify-between border border-gray-100/50">
-          <div className="flex items-center justify-between w-full">
-            {/* Logo — Far Left */}
-            <Link href="/" className="flex-shrink-0 flex items-center gap-2 z-10">
-              <Image
-                src="/pharmabag_logo.png"
-                alt="PharmaBag Logo"
-                width={100}
-                height={28}
-                className="h-5 sm:h-7 w-auto"
-              />
-            </Link>
+            <div className="flex items-center justify-between gap-3 xl:gap-6 w-full px-2 lg:px-4">
+              {/* Left Side: Logo */}
+              <div className="flex items-center">
+              <Link href="/" className="flex-shrink-0 flex items-center z-10 mr-4">
+                <Image
+                  src="/pharmabag_logo.png"
+                  alt="PharmaBag Logo"
+                  width={100}
+                  height={28}
+                  className="h-5 sm:h-7 w-auto"
+                />
+              </Link>
 
-            {/* Mobile/Tablet Search Bar — Next to Logo */}
-            <div className="lg:hidden flex-1 min-w-0 max-w-[120px] xs:max-w-none">
-              <SearchBar />
+              {/* Mobile/Tablet Search Bar */}
+              <div className="lg:hidden flex-1 min-w-0 max-w-[120px] xs:max-w-none">
+                <SearchBar />
+              </div>
             </div>
 
-            {/* Desktop Navigation Items — Centered */}
-            <div className="hidden lg:flex items-center gap-6 xl:gap-14 absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
-              {navItems.map((item) => (
-                item === 'Brands' ? (
-                  <div
-                    key={item}
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    className="relative py-2"
-                  >
-                    <button className="text-[15px] font-medium text-gray-700 hover:text-black transition-colors cursor-pointer">
-                      {item}
-                    </button>
-                  </div>
-                ) : (
+            <div className="hidden lg:flex max-w-[700px] xl:max-w-[900px] min-w-0 relative group/nav h-full items-center">
+              {/* Left Blur Mask */}
+              <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent z-[5] pointer-events-none opacity-100 transition-opacity duration-300" />
+
+              <div className="w-full overflow-x-auto scroll-thin-hover flex h-full">
+                <div className="flex items-center gap-3 xl:gap-5 whitespace-nowrap px-10">
                   <Link
-                    key={item}
-                    href={`/products?category=${item.toLowerCase()}`}
-                    className="text-[15px] font-medium text-gray-700 hover:text-black transition-colors"
+                    href="/products"
+                    className="text-[14px] font-medium text-gray-700 hover:text-black transition-colors py-2"
                   >
-                    {item}
+                    All Products
                   </Link>
-                )
-              ))}
+
+                  {categories.map((category) => (
+                    <div
+                      key={category.id}
+                      onMouseEnter={() => handleCategoryMouseEnter(category)}
+                      onMouseLeave={handleCategoryMouseLeave}
+                      className="relative py-2 group/item"
+                    >
+                      <Link
+                        href={`/products?categoryId=${category.id}`}
+                        className="text-[14px] font-medium text-gray-700 hover:text-black transition-colors"
+                      >
+                        {category.name}
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Blur Mask */}
+              <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent z-[5] pointer-events-none opacity-100 transition-opacity duration-300" />
             </div>
 
-            {/* Right Side Actions — Login Button and Menu Button */}
-            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 z-10">
-              {/* Mobile: Cart icon */}
-              {/* Mobile: Saved and Filter icon */}
+            {/* Right Side Actions — flex-1 and justify-end to push center items */}
+            <div className="flex-1 flex items-center justify-end gap-2 sm:gap-4 z-10 min-w-[100px]">
+              {/* ... existing actions ... */}
               {isMounted && showUserActions && (
-                <div className="lg:hidden flex items-center gap-1 sm:gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                   {isAuthenticated && (
-                    <>
-                      <Link
-                        href="/orders"
-                        className="p-1.5 text-black hover:text-sky-600 transition-colors"
-                      >
-                        <ClipboardList className="w-5 h-5" />
-                      </Link>
-                      <Link
-                        href="/payments"
-                        className="p-1.5 text-black hover:text-sky-600 transition-colors"
-                      >
-                        <CreditCard className="w-5 h-5" />
-                      </Link>
-                      <Link
-                        href="/wishlist"
-                        className="p-1.5 text-black hover:text-sky-600 transition-colors"
-                      >
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <Link href="/wishlist" className="p-1.5 text-gray-700 hover:text-sky-600 transition-colors hidden md:block">
                         <Bookmark className="w-5 h-5" />
                       </Link>
-                      <button
-                        onClick={onFilterClick}
-                        className="p-1.5 text-black hover:text-sky-600 transition-colors"
-                      >
-                        <Filter className="w-5 h-5" />
-                      </button>
-                    </>
+                      <Link href="/notifications" className="p-1.5 text-gray-700 hover:text-sky-600 transition-colors hidden lg:block">
+                        <Bell className="w-5 h-5" />
+                      </Link>
+                    </div>
                   )}
                   {(isAuthenticated || (cartData?.items?.length ?? 0) > 0) && (
                     <button
                       onClick={() => setIsCartOpen(true)}
-                      className="p-1.5 text-black hover:text-sky-600 transition-colors relative"
+                      className="p-1.5 text-gray-700 hover:text-sky-600 transition-colors relative"
                     >
                       <ShoppingCart className="w-5 h-5" />
                       <CartCountBadge />
@@ -182,111 +175,70 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
                 </div>
               )}
 
-              {/* Desktop Icons */}
-              {isMounted && showUserActions && (
-                <div className="hidden md:flex items-center gap-2 lg:gap-3">
-                  {isAuthenticated && (
-                    <>
-                      <Link href="/wishlist" className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group">
-                        <Bookmark className="w-5 h-5" />
-                        <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Bookmarks</span>
+              {/* Profile Dropdown or Login Button */}
+              {isMounted && isAuthenticated ? (
+                <div
+                  className="relative"
+                  onMouseEnter={() => {
+                    if (profileTimeoutRef.current) clearTimeout(profileTimeoutRef.current);
+                    setIsProfileMenuOpen(true);
+                  }}
+                  onMouseLeave={() => {
+                    profileTimeoutRef.current = setTimeout(() => setIsProfileMenuOpen(false), 200);
+                  }}
+                >
+                  <button className="p-2 text-gray-700 hover:text-sky-600 transition-colors">
+                    <User className="w-5 h-5" />
+                  </button>
+                  {isProfileMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 py-2 z-50">
+                      <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                        <User className="w-4 h-4" />
+                        <span>View Profile</span>
                       </Link>
-
-                      <Link href="/notifications" className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group">
-                        <Bell className="w-5 h-5" />
-                        <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
-                        <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Notifications</span>
+                      <Link href="/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                        <ClipboardList className="w-4 h-4" />
+                        <span>Order History</span>
                       </Link>
-                    </>
-                  )}
-
-                  {(isAuthenticated || (cartData?.items?.length ?? 0) > 0) && (
-                    <button
-                      onClick={() => setIsCartOpen(true)}
-                      className="p-2 text-gray-700 hover:text-sky-600 transition-colors relative group"
-                    >
-                      <ShoppingCart className="w-5 h-5" />
-                      <CartCountBadge />
-                      <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Cart</span>
-                    </button>
-                  )}
-
-                  {/* Profile Dropdown — Desktop */}
-                  {isAuthenticated && (
-                    <div
-                      className="relative"
-                      onMouseEnter={() => {
-                        if (profileTimeoutRef.current) clearTimeout(profileTimeoutRef.current);
-                        setIsProfileMenuOpen(true);
-                      }}
-                      onMouseLeave={() => {
-                        profileTimeoutRef.current = setTimeout(() => setIsProfileMenuOpen(false), 200);
-                      }}
-                    >
-                      <button className="p-2 text-gray-700 hover:text-sky-600 transition-colors">
-                        <User className="w-5 h-5" />
+                      <Link href="/payments" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                        <CreditCard className="w-4 h-4" />
+                        <span>Payment History</span>
+                      </Link>
+                      <Link href="/wishlist" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                        <Heart className="w-4 h-4" />
+                        <span>Wishlist</span>
+                      </Link>
+                      <Link href="/credit" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                        <CreditCard className="w-4 h-4" />
+                        <span>Credit & EMI</span>
+                      </Link>
+                      <Link href="/support" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                        <HelpCircle className="w-4 h-4" />
+                        <span>Support</span>
+                      </Link>
+                      <div className="border-t border-gray-100 my-1"></div>
+                      <button onClick={() => logout()} className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left">
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
                       </button>
-
-                      {isProfileMenuOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 py-2 z-50">
-                          <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                            <User className="w-4 h-4" />
-                            <span>View Profile</span>
-                          </Link>
-                          <Link href="/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                            <ClipboardList className="w-4 h-4" />
-                            <span>Order History</span>
-                          </Link>
-                          <Link href="/payments" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                            <CreditCard className="w-4 h-4" />
-                            <span>Payment History</span>
-                          </Link>
-                          <Link href="/wishlist" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                            <Heart className="w-4 h-4" />
-                            <span>Wishlist</span>
-                          </Link>
-                          <Link href="/credit" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                            <CreditCard className="w-4 h-4" />
-                            <span>Credit & EMI</span>
-                          </Link>
-                          <Link href="/support" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                            <HelpCircle className="w-4 h-4" />
-                            <span>Support</span>
-                          </Link>
-                          <div className="border-t border-gray-100 my-1"></div>
-                          <button
-                            onClick={() => logout()}
-                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
-                          >
-                            <LogOut className="w-4 h-4" />
-                            <span>Logout</span>
-                          </button>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
-              )}
-
-              {/* Login Button */}
-              {isMounted ? (
-                !isAuthenticated ? (
+              ) : (
+                isMounted && (
                   <button
                     onClick={handleLoginClick}
-                    className="px-6 sm:px-8 py-2 lg:py-2.5 rounded-full bg-[#ddff85] hover:bg-[#c9f260] font-medium text-gray-900 transition-all text-sm sm:text-[15px] flex items-center"
+                    className="px-6 sm:px-8 py-2 lg:py-2.5 rounded-full bg-[#ddff85] hover:bg-[#c9f260] font-medium text-gray-900 transition-all text-sm sm:text-[14px] flex items-center"
                   >
                     Login
                   </button>
-                ) : null
-              ) : (
-                <div className="px-4 py-2 rounded-full bg-gray-200 text-gray-400 font-bold text-sm">Loading...</div>
+                )
               )}
 
-              {/* Hamburger Menu (Mobile) — Moved to Far Right */}
+              {/* Hamburger Menu (Mobile) */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="lg:hidden p-1.5 text-gray-700 hover:text-gray-900 transition-colors"
-                aria-label="Toggle menu"
               >
                 {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -354,15 +306,37 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
               <div className="p-4 border-t border-gray-100 bg-white">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Categories</p>
                 <div className="flex flex-wrap gap-2">
-                  {navItems.map((item) => (
-                    <Link
-                      key={item}
-                      href={item === 'Brands' ? '/products' : `/products?category=${item.toLowerCase()}`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100"
-                    >
-                      {item}
-                    </Link>
+                  <Link
+                    href="/products"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100"
+                  >
+                    All Products
+                  </Link>
+                  {categories.map((category) => (
+                    <div key={category.id} className="flex flex-col gap-1 w-full">
+                      <Link
+                        href={`/products?categoryId=${category.id}`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100"
+                      >
+                        {category.name}
+                      </Link>
+                      {category.subCategories && category.subCategories.length > 0 && (
+                        <div className="flex flex-wrap gap-1 ml-4 mt-1">
+                          {category.subCategories.map((sub) => (
+                            <Link
+                              key={sub.id}
+                              href={`/products?categoryId=${category.id}&subCategoryId=${sub.id}`}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              className="px-2 py-1 text-[12px] text-gray-500 hover:text-black transition-colors"
+                            >
+                              - {sub.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -383,11 +357,16 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
         )}
       </AnimatePresence>
 
-      <BrandsMegaMenu
-        isOpen={isBrandsMenuOpen}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      />
+      {activeCategory && (
+        <CategoryMegaMenu
+          category={activeCategory}
+          isOpen={!!activeCategory}
+          onMouseEnter={() => {
+            if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current);
+          }}
+          onMouseLeave={handleCategoryMouseLeave}
+        />
+      )}
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>

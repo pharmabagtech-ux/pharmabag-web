@@ -93,12 +93,35 @@
 }
 
 /* ─── Scrollbar Hide ─── */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.scrollbar-hide, .no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+.scrollbar-hide::-webkit-scrollbar, .no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* ─── Thin Scrollbar on Hover ─── */
+.scroll-thin-hover {
+  scrollbar-width: none; /* Firefox */
+  scrollbar-color: transparent transparent;
+}
+.scroll-thin-hover::-webkit-scrollbar {
+  height: 4px; /* Thin scrollbar */
+}
+.scroll-thin-hover::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-thin-hover::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 20px;
+}
+.scroll-thin-hover:hover {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(148, 163, 184, 0.2) transparent; /* Slate-400 equivalent */
+}
+.scroll-thin-hover:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.2); /* Slate-400/20 */
 }
 
 /* ─── Touch-Friendly Inputs on Mobile ─── */

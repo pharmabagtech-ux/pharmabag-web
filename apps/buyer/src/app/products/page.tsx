@@ -22,11 +22,13 @@ import { useSearchParams } from 'next/navigation';
 function ProductsPageContent() {
   const searchParams = useSearchParams();
   const querySearch = searchParams.get('search');
-  const queryCategory = searchParams.get('category');
+  const queryCategory = searchParams.get('category') || searchParams.get('categoryId');
+  const querySubCategory = searchParams.get('subCategoryId');
   const queryManufacturer = searchParams.get('manufacturer');
 
   const [searchTerm, setSearchTerm] = useState(querySearch || '');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(queryCategory);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(querySubCategory);
   const [selectedManufacturer, setSelectedManufacturer] = useState<string | null>(queryManufacturer);
   const [selectedCity, setSelectedCity] = useState<string | null>(searchParams.get('city'));
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
@@ -52,12 +54,14 @@ function ProductsPageContent() {
   // Sync state with URL params
   useEffect(() => {
     const search = searchParams.get('search');
-    const category = searchParams.get('category');
+    const category = searchParams.get('category') || searchParams.get('categoryId');
+    const subCategory = searchParams.get('subCategoryId');
     const manufacturer = searchParams.get('manufacturer');
     const city = searchParams.get('city');
 
     if (search !== null) setSearchTerm(search);
     if (category !== undefined) setSelectedCategory(category);
+    if (subCategory !== undefined) setSelectedSubCategory(subCategory);
     if (manufacturer !== undefined) setSelectedManufacturer(manufacturer);
     if (city !== undefined) setSelectedCity(city);
   }, [searchParams]);
@@ -106,6 +110,7 @@ function ProductsPageContent() {
     limit: 24,
     search: debouncedSearch || undefined,
     categoryId: effectiveCategoryId ?? undefined,
+    subCategoryId: selectedSubCategory ?? undefined,
     manufacturer: selectedManufacturer ?? undefined,
     minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
     maxPrice: priceRange[1] < 10000 ? priceRange[1] : undefined,
@@ -131,40 +136,6 @@ function ProductsPageContent() {
     products = products.filter((p: any) => p.discountType === 'PTR_DISCOUNT' || p.discountType === 'PTR_PLUS_SAME_PRODUCT_BONUS' || p.discountType === 'PTR_PLUS_DIFFERENT_PRODUCT_BONUS');
   }
 
-  // DEV TESTING: Add a dummy product on page 1
-  if (page === 1) {
-    const dummyProduct = {
-      id: 'dev-dummy-test-001',
-      name: 'DEV TEST: Dummy Premium Product',
-      mrp: 5000,
-      price: 3499,
-      manufacturer: 'DevTest Labs',
-      stock: 15, // Low stock for testing
-      moq: 2,
-      minimumOrderQuantity: 2,
-      images: ['/products/pharma_bottle.png'],
-      imageUrl: '/products/pharma_bottle.png',
-      category: 'Test Category',
-      description: 'This is a dummy product for development testing only. It will help you test cart functionality, pricing, and UI elements.',
-      seller: {
-        id: 'dev-seller-001',
-        companyName: 'Dev Test Seller',
-        rating: 4.5,
-        city: 'Test City',
-        state: 'Test State',
-      },
-      pricing: {
-        buy: 2,
-        get: 1,
-        discountPercent: 30,
-      },
-      ptr: 2800,
-      rateLabel: 'PTR',
-      isBookmarked: false,
-      cartQuantity: null,
-    };
-    products = [dummyProduct, ...products];
-  }
 
   return (
     <main className="min-h-screen bg-[#f2fcf6] relative overflow-hidden">
@@ -241,8 +212,8 @@ function ProductsPageContent() {
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Categories</h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                <button onClick={() => { setSelectedCategory(null); setPage(1); }} className={`w-full text-left text-sm font-medium px-2 py-1.5 rounded transition-colors ${!selectedCategory ? 'text-gray-900 bg-gray-100/50' : 'text-gray-600 hover:text-gray-900'}`}>All Products</button>
-                {categories.map((cat: any) => (<button key={cat.id} onClick={() => { setSelectedCategory(cat.slug); setPage(1); }} className={`w-full text-left text-sm font-medium px-2 py-1.5 rounded transition-colors ${selectedCategory === cat.slug ? 'text-gray-900 bg-gray-100/50' : 'text-gray-600 hover:text-gray-900'}`}>{cat.name}</button>))}
+                <button onClick={() => { setSelectedCategory(null); setSelectedSubCategory(null); setPage(1); }} className={`w-full text-left text-sm font-medium px-2 py-1.5 rounded transition-colors ${!selectedCategory ? 'text-gray-900 bg-gray-100/50' : 'text-gray-600 hover:text-gray-900'}`}>All Products</button>
+                {categories.map((cat: any) => (<button key={cat.id} onClick={() => { setSelectedCategory(cat.slug || cat.id); setSelectedSubCategory(null); setPage(1); }} className={`w-full text-left text-sm font-medium px-2 py-1.5 rounded transition-colors ${(selectedCategory === cat.slug || selectedCategory === cat.id) ? 'text-gray-900 bg-gray-100/50' : 'text-gray-600 hover:text-gray-900'}`}>{cat.name}</button>))}
               </div>
             </div>
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
@@ -285,7 +256,7 @@ function ProductsPageContent() {
                 <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">Home</Link>
                 <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" strokeWidth={3} />
                 <span className="text-gray-400 capitalize truncate max-w-[120px]">
-                  {selectedCategory ? selectedCategory.replace(/-/g, ' ') : 'Furniture'}
+                  {selectedCategory ? (categoryObject?.name || 'Category') : 'All'}
                 </span>
                 <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" strokeWidth={3} />
                 <span className="text-gray-900 uppercase truncate max-w-[150px]">
@@ -347,6 +318,7 @@ function ProductsPageContent() {
                     onAction={() => {
                       setSearchTerm('');
                       setSelectedCategory(null);
+                      setSelectedSubCategory(null);
                       setSelectedManufacturer(null);
                       setSelectedCity(null);
                       setPriceRange([0, 10000]);

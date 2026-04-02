@@ -5,9 +5,10 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Menu } from 'lucide-react';
 import PremiumBrandsMegaMenu from '@/components/shared/PremiumBrandsMegaMenu';
+import PremiumCategoriesMegaMenu from '@/components/shared/PremiumCategoriesMegaMenu';
 import CartDrawer from '@/components/cart/CartDrawer';
 
-import { useAuth } from '@pharmabag/api-client';
+import { useAuth, getCategories, Category } from '@pharmabag/api-client';
 
 interface PremiumNavbarProps {
   onLoginClick?: () => void;
@@ -16,25 +17,43 @@ interface PremiumNavbarProps {
 export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const [isBrandsMenuOpen, setIsBrandsMenuOpen] = useState(false);
+  const [isCategoriesMenuOpen, setIsCategoriesMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  const navItems = [
+  const defaultCategories = [
+    { label: 'Ethical', href: '/products?category=ethical', type: 'link' },
+    { label: 'Generic', href: '/products?category=generic', type: 'link' },
+    { label: 'Surgical', href: '/products?category=surgical', type: 'link' },
+    { label: 'Ayurvedic', href: '/products?category=ayurvedic', type: 'link' },
+    { label: 'OTC', href: '/products?category=otc', type: 'link' },
+  ];
+
+  const navItems: { label: string; href: string; type?: string }[] = [
     { label: 'Brands', href: '#', type: 'menu' },
-    { label: 'Ethical', href: '/products?category=ethical' },
-    { label: 'Generic', href: '/products?category=generic' },
-    { label: 'Surgical', href: '/products?category=surgical' },
-    { label: 'Ayurvedic', href: '/products?category=ayurvedic' },
-    { label: 'OTC', href: '/products?category=otc' },
+    { label: 'Categories', href: '#', type: 'category' },
+    ...(categories.length > 0 
+      ? categories.map(c => ({
+          label: c.label || c.name,
+          href: `/products?category=${c.id}`,
+          type: 'link',
+        }))
+      : defaultCategories
+    ),
   ];
 
   useEffect(() => {
     setIsMounted(true);
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
+    
+    // Fetch categories
+    getCategories().then(setCategories).catch(err => console.error('Failed to fetch categories:', err));
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -57,14 +76,21 @@ export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = (type: 'brands' | 'categories') => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setIsBrandsMenuOpen(true);
+    if (type === 'brands') {
+      setIsBrandsMenuOpen(true);
+      setIsCategoriesMenuOpen(false);
+    } else {
+      setIsCategoriesMenuOpen(true);
+      setIsBrandsMenuOpen(false);
+    }
   };
 
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setIsBrandsMenuOpen(false);
+      setIsCategoriesMenuOpen(false);
     }, 150);
   };
 
@@ -87,7 +113,16 @@ export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
                 item.type === 'menu' ? (
                   <div
                     key={item.label}
-                    onMouseEnter={handleMouseEnter}
+                    onMouseEnter={() => handleMouseEnter('brands')}
+                    onMouseLeave={handleMouseLeave}
+                    className="relative cursor-pointer py-2"
+                  >
+                    <span className="text-[14px] font-semibold text-gray-800 hover:text-black transition-colors">{item.label}</span>
+                  </div>
+                ) : item.type === 'category' ? (
+                  <div
+                    key={item.label}
+                    onMouseEnter={() => handleMouseEnter('categories')}
                     onMouseLeave={handleMouseLeave}
                     className="relative cursor-pointer py-2"
                   >
@@ -190,7 +225,7 @@ export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
                 {navItems.map((item) => (
                   <Link
                     key={item.label}
-                    href={item.type === 'menu' ? '/products' : item.href}
+                    href={item.type === 'menu' || item.type === 'category' ? '/products' : item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="block px-4 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50 rounded-xl transition-colors"
                   >
@@ -227,8 +262,15 @@ export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
 
       <PremiumBrandsMegaMenu
         isOpen={isBrandsMenuOpen}
-        onMouseEnter={handleMouseEnter}
+        onMouseEnter={() => handleMouseEnter('brands')}
         onMouseLeave={handleMouseLeave}
+      />
+
+      <PremiumCategoriesMegaMenu
+        isOpen={isCategoriesMenuOpen}
+        onMouseEnter={() => handleMouseEnter('categories')}
+        onMouseLeave={handleMouseLeave}
+        categories={categories}
       />
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
