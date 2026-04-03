@@ -64,12 +64,12 @@ export default function CheckoutPage() {
     const profile = (profileData as any)?.data || profileData;
     if (profile) {
       setAddress({
-        name: profile.name || '',
+        name: profile.legalName || profile.name || '',
         phone: profile.phone || '',
-        address: profile.address || '',
-        city: profile.city || '',
-        state: profile.state || '',
-        pincode: profile.pincode || '',
+        address: profile.address?.street1 || (typeof profile.address === 'string' ? profile.address : ''),
+        city: profile.address?.city || profile.city || '',
+        state: profile.address?.state || profile.state || '',
+        pincode: profile.address?.pincode || profile.pincode || '',
       });
     }
   }, [profileData]);
@@ -385,7 +385,7 @@ export default function CheckoutPage() {
 
               <div className="space-y-6 mb-10 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 {items.map((item: any) => {
-                  const img = item.product?.images?.[0] || item.image || item.productImage || '/product_placeholder.png';
+                  const img = item.product?.images?.[0] || item.imageUrl || item.image || item.productImage || '/product_placeholder.png';
                   const name = item.product?.name || item.productName || item.name || 'Product';
                   return (
                     <div key={item.id} className="flex gap-4">

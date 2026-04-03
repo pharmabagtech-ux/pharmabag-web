@@ -50,7 +50,14 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
     if (!product) return;
 
     addToCart.mutate(
-      { productId: product.id, quantity: orderQty },
+      { 
+        productId: product.id, 
+        quantity: orderQty,
+        productName: product.name,
+        price: sellingPrice,
+        mrp: product.mrp,
+        imageUrl: typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as any)?.url
+      },
       {
         onSuccess: () => {
           toast(`${product.name} added to bag!`, 'success');

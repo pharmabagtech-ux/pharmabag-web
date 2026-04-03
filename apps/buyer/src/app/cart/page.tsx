@@ -120,7 +120,7 @@ export default function CartPage() {
                     const itemName = item.product?.name ?? item.productName ?? item.name ?? 'Product';
                     const itemPrice = item.product?.price ?? item.price;
                     const itemMrp = item.product?.mrp;
-                    const itemImage = item.product?.images?.[0] ?? item.image;
+                    const itemImage = item.product?.images?.[0] ?? item.imageUrl ?? item.image;
 
                     return (
                       <motion.div

@@ -87,7 +87,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                 items.map((item: any) => {
                   const itemName = item.product?.name ?? item.productName ?? item.name ?? 'Product';
                   const itemPrice = item.product?.price ?? item.price ?? 0;
-                  const itemImage = item.product?.images?.[0] || item.imageUrl || '/product_placeholder.png';
+                  const itemImage = item.product?.images?.[0] || item.imageUrl || item.image || '/product_placeholder.png';
                   
                   return (
                     <motion.div
