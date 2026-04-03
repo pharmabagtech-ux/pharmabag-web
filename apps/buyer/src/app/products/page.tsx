@@ -367,7 +367,7 @@ function ProductsPageContent() {
                     const image = product.image
                       || (product.images && product.images.length > 0
                         ? (typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url)
-                        : '/product_placeholder.png');
+                        : '/products/pharma_bottle.png');
 
                     // Compute pricing from discount details if available
                     const backendTypeMap: Record<string, string> = {

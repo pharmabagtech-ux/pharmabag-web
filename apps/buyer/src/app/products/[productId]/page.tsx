@@ -216,10 +216,10 @@ export default function ProductDetailPage({ params }: { params: { productId: str
             >
               {product.images && product.images.length > 0 ? (
                 <Image
-                  src={product.images[0]}
+                  src={(typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as any)?.url) || '/products/pharma_bottle.png'}
                   alt={product.name}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                   sizes="(max-width: 768px) 100vw, 50vw"
                   priority
                 />

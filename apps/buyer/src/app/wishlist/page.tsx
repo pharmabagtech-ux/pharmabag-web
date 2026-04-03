@@ -95,10 +95,10 @@ export default function WishlistPage() {
                       <Link href={`/products/${item.productId}`} className="block relative h-48 bg-gray-50 overflow-hidden">
                         {product?.images?.[0] ? (
                           <Image
-                            src={product.images[0]}
+                            src={(typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as any)?.url) || '/products/pharma_bottle.png'}
                             alt={product.name}
                             fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="object-contain group-hover:scale-105 transition-transform duration-300"
                             sizes="(max-width: 768px) 50vw, 25vw"
                           />
                         ) : (

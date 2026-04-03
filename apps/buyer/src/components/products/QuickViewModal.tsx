@@ -149,7 +149,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                   <ShareButton
                     productName={product.name}
                     productPrice={sellingPrice}
-                    productImage={product.images?.[0]}
+                    productImage={typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as any)?.url || '/products/pharma_bottle.png'}
                     productId={product.id}
                     discount={discount}
                     className="p-1 transition-all hover:scale-105 rounded-full"
@@ -198,7 +198,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                   {/* Product Image */}
                   <div className="relative w-full aspect-[4/3.5] min-h-[440px] mt-6 flex items-center justify-center">
                     <Image
-                      src={product.images?.[0] || '/product_placeholder.png'}
+                      src={(typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as any)?.url) || '/products/pharma_bottle.png'}
                       alt={product.name}
                       fill
                       className="object-contain"
