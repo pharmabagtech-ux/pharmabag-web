@@ -274,12 +274,8 @@ function ProductsPageContent() {
               <div className="flex items-center gap-2 text-[13px] font-bold text-gray-800 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
                 <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">Home</Link>
                 <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" strokeWidth={3} />
-                <span className="text-gray-400 capitalize truncate max-w-[120px]">
-                  {selectedCategory ? (categoryObject?.name || 'Category') : 'All'}
-                </span>
-                <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" strokeWidth={3} />
-                <span className="text-gray-900 uppercase truncate max-w-[150px]">
-                  {searchTerm ? searchTerm : 'NORDIC SHELF'}
+                <span className={`${searchTerm ? 'text-gray-400' : 'text-gray-900'} capitalize truncate max-w-[120px]`}>
+                  {selectedCategory ? (categoryObject?.name || 'Category') : 'All Products'}
                 </span>
                 {searchTerm && (
                   <>

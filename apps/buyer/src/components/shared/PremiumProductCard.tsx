@@ -98,11 +98,7 @@ export default function PremiumProductCard({
       actionClicked.current = false;
       return;
     }
-    if (onQuickView) {
-      onQuickView();
-    } else {
-      onClick?.();
-    }
+    onClick?.();
   };
 
   const handleAddToCart = () => {
