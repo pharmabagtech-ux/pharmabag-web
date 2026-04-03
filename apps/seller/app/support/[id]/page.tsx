@@ -29,8 +29,8 @@ export default function SellerTicketDetailPage() {
       await reply.mutateAsync({ ticketId, message: replyMessage });
       setReplyMessage("");
       toast.success("Message sent");
-    } catch {
-      toast.error("Failed to send message");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message || "Failed to send message");
     }
   };
 
@@ -43,10 +43,14 @@ export default function SellerTicketDetailPage() {
   }
 
   if (!ticket) {
+    if (ticketId === "undefined") {
+      router.push("/support");
+      return null;
+    }
     return (
       <div className="text-center py-20">
         <LifeBuoy className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-50" />
-        <p className="text-muted-foreground mb-4">Ticket not found</p>
+        <p className="text-muted-foreground mb-4">Ticket not found (ID: {ticketId})</p>
         <button onClick={() => router.push("/support")} className="text-sm text-primary underline">Back to Support</button>
       </div>
     );
@@ -73,12 +77,17 @@ export default function SellerTicketDetailPage() {
                   <span className={cn("px-3 py-1 rounded-full text-xs font-medium", STATUS_COLOR[ticket.status] ?? STATUS_COLOR.OPEN)}>
                     {ticket.status?.replace("_", " ") ?? "OPEN"}
                   </span>
-                  <span className="text-xs font-mono text-muted-foreground">ID: {ticket.id?.slice(0, 8)}…</span>
+                  <span className="text-xs font-mono text-muted-foreground">ID: {String(ticket.id || ticket._id || ticket.ticketId || ticket.ticket_id)?.slice(0, 8)}…</span>
                 </div>
                 <h1 className="text-xl font-bold text-foreground">{ticket.subject}</h1>
                 <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}</span>
                 </div>
+                {ticket?.description && (
+                  <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <p className="text-sm text-foreground/80 leading-relaxed font-medium whitespace-pre-wrap">{ticket.description}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -86,11 +95,26 @@ export default function SellerTicketDetailPage() {
           {/* Messages */}
           <div className="glass rounded-2xl border border-white/10 flex flex-col" style={{ height: "calc(100vh - 340px)", minHeight: "400px" }}>
             <div className="flex-1 overflow-y-auto p-6 space-y-4 no-sb">
-              {(!ticket.messages || ticket.messages.length === 0) ? (
-                <div className="text-center text-muted-foreground py-10">No messages yet.</div>
-              ) : (
-                ticket.messages.map((msg: any, i: number) => {
-                  const isAdmin = msg.sender?.role === "ADMIN";
+              {(() => {
+                let messages = ticket.messages ?? [];
+                if (ticket.description && !messages.find((m: any) => m.id === 'desc-msg')) {
+                  messages = [
+                    {
+                      id: 'desc-msg',
+                      message: ticket.description,
+                      sender: 'user',
+                      createdAt: ticket.createdAt,
+                    },
+                    ...messages,
+                  ];
+                }
+                
+                if (messages.length === 0) {
+                  return <div className="text-center text-muted-foreground py-10">No messages yet.</div>;
+                }
+                
+                return messages.map((msg: any, i: number) => {
+                  const isAdmin = msg.sender?.role === "ADMIN" || msg.sender === "admin" || msg.sender === "ADMIN" || msg.sender === "SUPPORT";
                   return (
                     <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
                       className={cn("flex w-full", isAdmin ? "justify-start" : "justify-end")}>
@@ -109,8 +133,8 @@ export default function SellerTicketDetailPage() {
                       </div>
                     </motion.div>
                   );
-                })
-              )}
+                });
+              })()}
               <div ref={messagesEndRef} />
             </div>
 

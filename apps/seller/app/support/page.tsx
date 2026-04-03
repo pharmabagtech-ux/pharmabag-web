@@ -34,7 +34,8 @@ export default function SupportPage() {
   const { data: ticketsRaw, isLoading } = useSellerTickets();
   const { mutate: createTicket, isPending } = useCreateSellerTicket();
 
-  const tickets: any[] = Array.isArray(ticketsRaw) ? ticketsRaw : (ticketsRaw?.data ?? []);
+  const tickets: any[] = Array.isArray(ticketsRaw) ? ticketsRaw : (ticketsRaw?.data?.tickets ?? ticketsRaw?.tickets ?? ticketsRaw?.data ?? []);
+  console.dir({ DEBUG_TICKETS: tickets }, { depth: null });
 
   const wordCount = message.trim().split(/\s+/).filter(Boolean).length;
 
@@ -212,7 +213,7 @@ export default function SupportPage() {
             ) : (
               <div className="space-y-3">
                 {tickets.map((t: any, i: number) => (
-                  <Link key={t.id} href={`/support/${t.id}`}>
+                  <Link key={t.id || t._id || t.ticketId || t.ticket_id} href={`/support/${t.id || t._id || t.ticketId || t.ticket_id}`}>
                     <motion.div
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}

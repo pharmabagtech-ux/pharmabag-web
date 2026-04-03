@@ -54,20 +54,20 @@ export async function getTickets(params?: {
 
 export async function getTicketById(id: string): Promise<Ticket> {
   const { data } = await api.get(`/tickets/${id}`);
-  return data;
+  return data.data?.ticket ?? data.ticket ?? data.data ?? data;
 }
 
 export async function createTicket(input: CreateTicketInput): Promise<Ticket> {
   const { data } = await api.post('/tickets', input);
-  return data;
+  return data.data?.ticket ?? data.ticket ?? data.data ?? data;
 }
 
 export async function addTicketMessage(ticketId: string, message: string): Promise<TicketMessage> {
   const { data } = await api.post(`/tickets/${ticketId}/messages`, { message });
-  return data;
+  return data.data?.ticket ?? data.ticket ?? data.data ?? data;
 }
 
 export async function closeTicket(ticketId: string): Promise<Ticket> {
   const { data } = await api.patch(`/tickets/${ticketId}/close`);
-  return data;
+  return data.data?.ticket ?? data.ticket ?? data.data ?? data;
 }

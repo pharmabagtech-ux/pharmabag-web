@@ -105,10 +105,23 @@ export default function AdminTicketDetailPage() {
         <div className="glass-card rounded-2xl flex flex-col" style={{ height: "calc(100vh - 280px)", minHeight: "500px" }}>
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6 no-sb">
-            {ticket.messages?.length === 0 ? (
-              <div className="text-center text-muted-foreground py-10">No messages yet.</div>
-            ) : (
-              ticket.messages?.map((msg: any, i: number) => {
+            {(() => {
+              let messages = ticket.messages ?? [];
+              if (ticket.description && !messages.find((m: any) => m.id === 'desc-msg')) {
+                messages = [
+                  {
+                    id: 'desc-msg',
+                    message: ticket.description,
+                    sender: 'user', // user sender
+                    createdAt: ticket.createdAt,
+                  },
+                  ...messages,
+                ];
+              }
+              if (messages.length === 0) {
+                return <div className="text-center text-muted-foreground py-10">No messages yet.</div>;
+              }
+              return messages.map((msg: any, i: number) => {
                 const isAdmin = msg.senderId === adminId || msg.sender?.role === "ADMIN";
                 return (
                   <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -123,8 +136,8 @@ export default function AdminTicketDetailPage() {
                     </div>
                   </motion.div>
                 );
-              })
-            )}
+              });
+            })()}
             <div ref={messagesEndRef} />
           </div>
 

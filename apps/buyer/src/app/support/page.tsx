@@ -18,7 +18,7 @@ export default function SupportPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ subject: '', message: '' });
 
-  const tickets = data?.data ?? [];
+  const tickets = Array.isArray(data) ? data : ((data as any)?.data?.tickets ?? (data as any)?.tickets ?? (data as any)?.data ?? []);
 
   const handleCreateTicket = () => {
     if (!form.subject.trim() || !form.message.trim()) return;
@@ -168,14 +168,14 @@ export default function SupportPage() {
                />
              ) : (
                tickets.map((tkt: any) => (
-                 <Link key={tkt.id} href={`/support/${tkt.id}`}>
+                 <Link key={tkt.id || tkt._id || tkt.ticketId || tkt.ticket_id} href={`/support/${tkt.id || tkt._id || tkt.ticketId || tkt.ticket_id}`}>
                    <motion.div
                      whileHover={{ y: -5 }}
                      className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl flex items-center justify-between cursor-pointer"
                    >
                      <div className="flex flex-col">
                        <div className="flex items-center gap-3 mb-2">
-                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{tkt.id.slice(-8)}</span>
+                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{String(tkt.id || tkt._id || tkt.ticketId || tkt.ticket_id).slice(-8)}</span>
                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${statusColor(tkt.status)}`}>
                             {tkt.status}
                          </span>

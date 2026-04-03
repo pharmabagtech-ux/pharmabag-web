@@ -25,7 +25,19 @@ export default function TicketDetailPage() {
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const messages = ticket?.messages ?? [];
+  let messages = ticket?.messages ?? [];
+  // Ensure the description / initial message shows up as the first chat bubble
+  if (ticket?.description && !messages.find((m: any) => m.id === 'desc-msg')) {
+    messages = [
+      {
+        id: 'desc-msg',
+        message: ticket.description,
+        sender: 'user',
+        createdAt: ticket.createdAt,
+      },
+      ...messages,
+    ];
+  }
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -38,7 +50,11 @@ export default function TicketDetailPage() {
     if (!newMessage.trim() || addMessage.isPending) return;
 
     addMessage.mutate({ ticketId, message: newMessage.trim() }, {
-      onSuccess: () => setNewMessage('')
+      onSuccess: () => setNewMessage(''),
+      onError: (error: any) => {
+        const msg = error?.response?.data?.message || 'Failed to send message';
+        alert(msg); // minimal invasive error without triggering toast imports
+      }
     });
   };
 
@@ -53,6 +69,23 @@ export default function TicketDetailPage() {
       </div>
     );
   }
+
+  // Handle broken urls safely
+  if (ticketId === 'undefined') {
+    if (typeof window !== "undefined") window.location.href = "/support";
+    return null;
+  }
+
+  if (!ticket) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fbfa] gap-4">
+        <p className="text-gray-500 font-medium">Ticket not found (ID: {ticketId})</p>
+        <Link href="/support" className="px-6 py-2 bg-lime-300 text-gray-900 font-bold rounded-xl">Back to Support</Link>
+      </div>
+    );
+  }
+
+
 
   return (
     <AuthGuard>
@@ -95,6 +128,11 @@ export default function TicketDetailPage() {
                 {ticket?.subject}
               </h1>
               <p className="text-gray-500 font-medium mt-2">{ticket?.category}</p>
+              {ticket?.description && (
+                <div className="mt-6 p-4 sm:p-5 bg-white/60 rounded-xl border border-gray-100 shadow-sm">
+                  <p className="text-sm sm:text-base font-medium text-gray-800 leading-relaxed whitespace-pre-wrap">{ticket.description}</p>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
@@ -113,7 +151,7 @@ export default function TicketDetailPage() {
               </div>
             ) : (
               messages.map((msg: any, idx: number) => {
-                const isSystem = msg.sender === 'SUPPORT';
+                const isSystem = msg.sender === 'SUPPORT' || msg.sender === 'ADMIN' || msg.sender === 'admin' || msg.sender?.role === 'ADMIN';
                 return (
                   <motion.div 
                     key={msg.id || idx}

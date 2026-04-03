@@ -284,17 +284,17 @@ export async function getSellerTickets() {
 
 export async function getSellerTicketById(ticketId: string) {
   const { data } = await apiClient.get<any>(`/tickets/${ticketId}`);
-  return data.data ?? data;
+  return data.data?.ticket ?? data.ticket ?? data.data ?? data;
 }
 
 export async function createSellerTicket(payload: { subject: string; message: string }) {
   const { data } = await apiClient.post<any>("/tickets", payload);
-  return data.data ?? data;
+  return data.data?.ticket ?? data.ticket ?? data.data ?? data;
 }
 
 export async function addTicketMessage(ticketId: string, message: string) {
   const { data } = await apiClient.post<any>(`/tickets/${ticketId}/messages`, { message });
-  return data.data ?? data;
+  return data.data?.ticket ?? data.ticket ?? data.data ?? data;
 }
 // ─── Buyer Onboarding (Seller Portal) ─────────────────
 /**
