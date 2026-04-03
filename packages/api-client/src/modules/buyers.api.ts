@@ -75,17 +75,17 @@ export type UpdateBuyerProfileInput = z.infer<typeof UpdateBuyerProfileSchema>;
 
 export async function getBuyerProfile(): Promise<BuyerProfile> {
   const { data } = await api.get('/buyers/profile');
-  return data;
+  return data.data || data;
 }
 
 export async function createBuyerProfile(input: CreateBuyerProfileInput): Promise<BuyerProfile> {
   const { data } = await api.post('/buyers/profile', input);
-  return data;
+  return data.data || data;
 }
 
 export async function updateBuyerProfile(input: UpdateBuyerProfileInput): Promise<BuyerProfile> {
   const { data } = await api.patch('/buyers/profile', input);
-  return data;
+  return data.data || data;
 }
 
 // ─── Extended Buyer APIs ────────────────────────────
@@ -95,7 +95,7 @@ export async function verifyPanGst(params: {
   value: string;
 }): Promise<{ status: boolean; legalName: string; address: string; message: string }> {
   const { data } = await api.post('/verification/pangst', params);
-  return data;
+  return data.data || data;
 }
 
 export async function getBuyerCreditDetails(): Promise<{
@@ -112,7 +112,7 @@ export async function getBuyerCreditDetails(): Promise<{
   }>;
 }> {
   const { data } = await api.get('/buyers/credit');
-  return data;
+  return data.data || data;
 }
 
 export async function getBuyerInvoices(params?: {
@@ -120,5 +120,5 @@ export async function getBuyerInvoices(params?: {
   limit?: number;
 }): Promise<{ data: Array<{ id: string; orderId: string; amount: number; url: string; createdAt: string }>; total: number }> {
   const { data } = await api.get('/buyers/invoices', { params });
-  return data;
+  return data.data || data;
 }

@@ -215,11 +215,10 @@ export default function OnboardingPage() {
   const hasCompletedOnboarding = !isProfileLoading && (
     (profile?.legalName && profile.legalName.trim() !== '') ||
     (bp?.legalName && bp.legalName.trim() !== '') ||
-    profile?.verificationStatus === 'PENDING' ||
-    profile?.verificationStatus === 'VERIFIED' ||
-    bp?.verificationStatus === 'PENDING' ||
-    bp?.verificationStatus === 'VERIFIED' ||
-    user?.status === 'PENDING'
+    (profile?.verificationStatus === 'PENDING' && profile?.legalName) ||
+    (profile?.verificationStatus === 'VERIFIED') ||
+    (bp?.verificationStatus === 'PENDING' && bp?.legalName) ||
+    (bp?.verificationStatus === 'VERIFIED')
   );
   const isRejected = user?.status === 'REJECTED' || user?.verificationStatus === 'REJECTED' || profile?.verificationStatus === 'REJECTED';
 

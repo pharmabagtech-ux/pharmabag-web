@@ -34,7 +34,7 @@ export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
         href: `/products?category=${c.id}`,
         type: 'link',
       }))
-      : defaultCategories
+      : []
     ),
   ];
 

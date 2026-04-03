@@ -20,16 +20,19 @@ export default function ProfilePage() {
   const [form, setForm] = useState<Record<string, string>>({});
 
   const startEditing = () => {
+    const addr = typeof profile?.address === 'object' ? profile.address : null;
     setForm({
-      name: profile?.name ?? '',
+      name: profile?.name ?? profile?.legalName ?? '',
+      legalName: profile?.legalName ?? '',
       email: profile?.email ?? '',
       phone: profile?.phone ?? '',
       gstNumber: profile?.gstNumber ?? '',
+      panNumber: profile?.panNumber ?? '',
       drugLicenseNumber: profile?.drugLicenseNumber ?? '',
-      address: profile?.address ?? '',
-      city: profile?.city ?? '',
-      state: profile?.state ?? '',
-      pincode: profile?.pincode ?? '',
+      address: (profile?.address as any)?.street1 ?? (typeof profile?.address === 'string' ? profile.address : ''),
+      city: profile?.city ?? (addr as any)?.city ?? '',
+      state: profile?.state ?? (addr as any)?.state ?? '',
+      pincode: profile?.pincode ?? (addr as any)?.pincode ?? '',
     });
     setIsEditing(true);
   };
@@ -158,7 +161,13 @@ export default function ProfilePage() {
     );
   }
 
-  const fullAddress = [profile.address, profile.city, profile.state, profile.pincode].filter(Boolean).join(', ');
+  const addr = typeof profile.address === 'object' ? profile.address : null;
+  const street = (addr as any)?.street1 ?? (typeof profile.address === 'string' ? profile.address : '');
+  const city = profile.city ?? (addr as any)?.city ?? '';
+  const state = profile.state ?? (addr as any)?.state ?? '';
+  const pincode = profile.pincode ?? (addr as any)?.pincode ?? '';
+  
+  const fullAddress = [street, city, state, pincode].filter(Boolean).join(', ');
 
   return (
     <AuthGuard>
@@ -179,7 +188,9 @@ export default function ProfilePage() {
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">{profile.name}</h1>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">
+                    {profile.name || profile.legalName || 'User'}
+                  </h1>
                   {profile.isVerified && (
                     <CheckCircle2 className="w-6 h-6 text-green-500" />
                   )}
@@ -271,8 +282,16 @@ export default function ProfilePage() {
                   
                   <div className="space-y-6">
                     <div>
+                      <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Legal Name</label>
+                      <p className="text-lg font-bold text-gray-800">{profile.legalName || '—'}</p>
+                    </div>
+                    <div>
                       <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-1">GST Number</label>
                       <p className="text-lg font-bold text-gray-800">{profile.gstNumber || '—'}</p>
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-1">PAN Number</label>
+                      <p className="text-lg font-bold text-gray-800">{profile.panNumber || '—'}</p>
                     </div>
                     <div>
                       <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Drug License</label>
