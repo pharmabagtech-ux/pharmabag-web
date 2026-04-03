@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+console.log('[NextConfig] API URL:', process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'NOT FOUND');
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   transpilePackages: ['@pharmabag/ui', '@pharmabag/api-client', '@pharmabag/utils', 'framer-motion'],

@@ -63,14 +63,25 @@ export function getRefreshToken(): string | null {
 
 // Determine base URL dynamically
 function getBaseURL(): string {
-  if (typeof window !== 'undefined') {
-    // Client-side: Always use relative /api to leverage Next.js rewrites/proxies
-    return '/api';
-  }
   const env = (typeof process !== 'undefined' ? process.env : {}) as any;
   const url = env.NEXT_PUBLIC_API_BASE_URL || env.NEXT_PUBLIC_API_URL;
+
+  if (typeof window !== 'undefined') {
+    // If we have an explicit URL in env, use it (Client-side)
+    if (url) return url;
+    // Otherwise use relative /api to leverage Next.js rewrites
+    return '/api';
+  }
+
   // Server-side: fallback to the environment variable or localhost
   return url || 'http://localhost:3000/api';
+}
+
+export function setBaseURL(url: string) {
+  if (url) {
+    (api.defaults as any).baseURL = url;
+    console.log(`[API] Base URL updated to: ${url}`);
+  }
 }
 
 // Create the Axios instance

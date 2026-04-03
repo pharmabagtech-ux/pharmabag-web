@@ -14,7 +14,7 @@ function ApiEventBridge({ children }: { children: React.ReactNode }) {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ReactQueryProvider>
-      <AuthProvider>
+      <AuthProvider baseURL={process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL}>
         <ToastProvider>
           <ApiEventBridge>{children}</ApiEventBridge>
           <LoginModal />

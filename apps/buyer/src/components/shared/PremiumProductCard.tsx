@@ -91,7 +91,7 @@ export default function PremiumProductCard({
   const lastChar = cleanName.length > 1 ? cleanName.charAt(cleanName.length - 1).toUpperCase() : '';
   const initials = `${firstChar}${lastChar}`;
 
-  const hasValidImage = image && image !== '/product_placeholder.png' && !imageError;
+  const hasValidImage = image && image !== '/products/pharma_bottle.png' && !imageError;
 
   const handleCardClick = () => {
     if (actionClicked.current) {

@@ -1,5 +1,5 @@
 // Core API client
-export { api, setAccessToken, getAccessToken, onApiEvent } from './api';
+export { api, setAccessToken, getAccessToken, onApiEvent, setBaseURL } from './api';
 
 // Auth
 export {

@@ -14,7 +14,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import { useCart } from '@/hooks/useCart';
+import { useCart, useSyncCart } from '@/hooks/useCart';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { useCreatePayment } from '@/hooks/usePayments';
 import { useBuyerProfile, useBuyerCreditDetails } from '@/hooks/useBuyerProfile';
@@ -46,6 +46,7 @@ export default function CheckoutPage() {
   const createOrder = useCreateOrder();
   const createPaymentMut = useCreatePayment();
   const { data: platformConfig } = usePlatformConfig();
+  const syncCart = useSyncCart();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
 
   const credit = (creditData as any)?.data || creditData;
@@ -98,33 +99,42 @@ export default function CheckoutPage() {
       }
     }
 
-    createOrder.mutate(address, {
-      onSuccess: (data: any) => {
-        const orderId = data?.data?.id || data?.id;
-        // Create payment record for the order
-        createPaymentMut.mutate(
-          { orderId, amount: total, method: paymentMethod },
-          {
-            onSuccess: () => {
-              window.location.href = `/orders/${orderId}?success=true`;
-            },
-            onError: () => {
-              // Payment record failed but order was created — redirect without success flag
-              toast('Order placed but payment recording failed. Please contact support.', 'error');
-              window.location.href = `/orders/${orderId}`;
-            },
+    // Ensure cart is synced before placing order
+    syncCart.mutate(undefined, {
+      onSuccess: () => {
+        createOrder.mutate(address, {
+          onSuccess: (data: any) => {
+            const orderId = data?.data?.id || data?.id;
+            // Create payment record for the order
+            createPaymentMut.mutate(
+              { orderId, amount: total, method: paymentMethod },
+              {
+                onSuccess: () => {
+                  window.location.href = `/orders/${orderId}?success=true`;
+                },
+                onError: () => {
+                  // Payment record failed but order was created — redirect without success flag
+                  toast('Order placed but payment recording failed. Please contact support.', 'error');
+                  window.location.href = `/orders/${orderId}`;
+                },
+              }
+            );
+          },
+          onError: (error: any) => {
+            const status = error?.response?.status;
+            const backendMsg = error?.response?.data?.message;
+            if (status === 403) {
+              toast(backendMsg || 'Please complete your KYC verification before placing orders.', 'error');
+              router.push('/onboarding');
+            } else {
+              toast(backendMsg || error?.message || 'Failed to place order', 'error');
+            }
           }
-        );
+        });
       },
       onError: (error: any) => {
-        const status = error?.response?.status;
-        const backendMsg = error?.response?.data?.message;
-        if (status === 403) {
-          toast(backendMsg || 'Please complete your KYC verification before placing orders.', 'error');
-          router.push('/onboarding');
-        } else {
-          toast(backendMsg || error?.message || 'Failed to place order', 'error');
-        }
+        console.error("Failed to sync cart", error);
+        toast('Failed to synchronize your bag. Please try again.', 'error');
       }
     });
   };
@@ -385,7 +395,7 @@ export default function CheckoutPage() {
 
               <div className="space-y-6 mb-10 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 {items.map((item: any) => {
-                  const img = item.product?.images?.[0] || item.imageUrl || item.image || item.productImage || '/product_placeholder.png';
+                  const img = item.product?.images?.[0] || item.imageUrl || item.image || item.productImage || '/products/pharma_bottle.png';
                   const name = item.product?.name || item.productName || item.name || 'Product';
                   return (
                     <div key={item.id} className="flex gap-4">

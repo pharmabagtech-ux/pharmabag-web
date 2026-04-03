@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { sendOtp, verifyOtp, logout as apiLogout, getProfile, type User } from '../modules/auth.api';
-import { getAccessToken, setAccessToken } from '../api';
+import { getAccessToken, setAccessToken, setBaseURL } from '../api';
 
 interface AuthContextValue {
   user: User | null;
@@ -23,13 +23,18 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children, baseURL }: { children: ReactNode; baseURL?: string }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // On mount, check if we have a token and fetch the user profile
   useEffect(() => {
     async function initAuth() {
+      // Initialize API base URL if provided
+      if (baseURL) {
+        setBaseURL(baseURL);
+      }
+
       // Check localStorage directly for token
       const storedToken = typeof window !== 'undefined' ? localStorage.getItem('pb_access_token') : null;
       const storedRT = typeof window !== 'undefined' ? localStorage.getItem('pb_refresh_token') : null;
