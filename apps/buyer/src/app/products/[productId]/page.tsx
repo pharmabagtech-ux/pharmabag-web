@@ -47,12 +47,12 @@ export default function ProductDetailPage({ params }: { params: { productId: str
 
   const handleToggleWishlist = () => {
     if (isWishlisted && wishlistEntry) {
-      removeFromWishlist.mutate(wishlistEntry.id, {
+      removeFromWishlist.mutate(wishlistEntry.productId || params.productId, {
         onSuccess: () => toast('Removed from wishlist', 'success'),
         onError: () => toast('Failed to update wishlist', 'error'),
       });
     } else {
-      addToWishlist.mutate(params.productId, {
+      addToWishlist.mutate(product, {
         onSuccess: () => toast('Added to wishlist!', 'success'),
         onError: () => toast('Failed to update wishlist', 'error'),
       });

@@ -1,0 +1,23 @@
+
+> buyer@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.0
+  - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./src/components/shared/PremiumNavbar.tsx:37:9
+Type error: Cannot find name 'defaultCategories'. Did you mean 'setCategories'?
+
+[0m [90m 35 |[39m         type[33m:[39m [32m'link'[39m[33m,[39m[0m
+[0m [90m 36 |[39m       }))[0m
+[0m[31m[1m>[22m[39m[90m 37 |[39m       [33m:[39m defaultCategories[0m
+[0m [90m    |[39m         [31m[1m^[22m[39m[0m
+[0m [90m 38 |[39m     )[33m,[39m[0m
+[0m [90m 39 |[39m   ][33m;[39m[0m
+[0m [90m 40 |[39m[0m

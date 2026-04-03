@@ -113,7 +113,7 @@ export default function Navbar({ onLoginClick, onFilterClick, showUserActions = 
               </div>
             </div>
 
-            <div className="hidden lg:flex max-w-[700px] xl:max-w-none xl:flex-1 xl:justify-end min-w-0 relative group/nav h-full items-center">
+            <div className="hidden lg:flex max-w-[700px] xl:max-w-none xl:flex-1 xl:justify-start min-w-0 relative group/nav h-full items-center">
               {/* Left Blur Mask */}
               <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent z-[5] pointer-events-none opacity-100 transition-opacity duration-300" />
 

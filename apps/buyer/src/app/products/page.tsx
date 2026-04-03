@@ -542,7 +542,7 @@ function ProductsPageContent() {
 
                     const handleBookmark = (bookmarked: boolean) => {
                       if (bookmarked) {
-                        addToWishlist.mutate(product.id, {
+                        addToWishlist.mutate(product, {
                           onSuccess: () => toast(`${product.name} added to wishlist!`, 'success'),
                           onError: (err: any) => {
                             const status = err?.response?.status || err?.status;
