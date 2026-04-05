@@ -8,9 +8,9 @@ export default function Footer() {
     { label: 'Privacy Policy', href: '#' },
     { label: 'Terms of Service', href: '#' },
     { label: 'Shipping Policy', href: '#' },
-    { label: 'Shop', href: '#' },
+    // { label: 'Shop', href: '#' },
     { label: 'Contact', href: '#' },
-    { label: 'Support', href: '#' },
+    // { label: 'Support', href: '#' },
     { label: 'About', href: '#' },
     { label: 'Blog', href: '/blogs' },
   ];
@@ -21,7 +21,7 @@ export default function Footer() {
         <div className="flex flex-wrap justify-center items-center gap-x-2 md:gap-x-3 gap-y-4 text-sm md:text-base text-gray-600 font-medium tracking-wide">
           {footerLinks.map((link, index) => (
             <div key={link.label} className="flex items-center">
-              <Link 
+              <Link
                 href={link.href}
                 className="hover:text-black hover:underline transition-all px-1"
               >

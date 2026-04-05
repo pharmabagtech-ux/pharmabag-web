@@ -34,7 +34,7 @@ function IconCountBadge({ count }: { count: number }) {
   const label = count > 99 ? '99+' : String(count);
   return (
     <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#1bd1d4] text-gray-900 text-[10px] font-black rounded-full flex items-center justify-center border border-white shadow-sm">
-      {label}  
+      {label}
     </span>
   );
 }
@@ -224,18 +224,18 @@ export default function Navbar({ onLoginClick, showUserActions = false, onFilter
                         <ClipboardList className="w-4 h-4" />
                         <span>Order History</span>
                       </Link>
-                      <Link href="/payments" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                      {/* <Link href="/payments" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
                         <CreditCard className="w-4 h-4" />
                         <span>Payment History</span>
-                      </Link>
+                      </Link> */}
                       <Link href="/wishlist" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
                         <Bookmark className="w-4 h-4" />
                         <span>Wishlist</span>
                       </Link>
-                      <Link href="/credit" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                      {/* <Link href="/credit" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
                         <CreditCard className="w-4 h-4" />
                         <span>Credit & EMI</span>
-                      </Link>
+                      </Link> */}
                       <Link href="/support" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
                         <HelpCircle className="w-4 h-4" />
                         <span>Support</span>
