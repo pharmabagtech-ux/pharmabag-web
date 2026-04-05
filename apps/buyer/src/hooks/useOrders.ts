@@ -15,6 +15,7 @@ export function useOrderById(id: string) {
     queryKey: ['order', id],
     queryFn: () => getOrderById(id),
     enabled: !!id,
+    refetchInterval: 10000,
   });
 }
 

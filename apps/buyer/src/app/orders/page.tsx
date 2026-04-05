@@ -23,7 +23,8 @@ export default function OrdersPage() {
     status: statusFilter === 'ALL' ? undefined : statusFilter,
   });
 
-  const orders = data?.data ?? [];
+  const orders = (Array.isArray(data) ? data : data?.data) ?? [];
+  const total = (data as any)?.total ?? (Array.isArray(data) ? data.length : 0);
 
   return (
     <AuthGuard>
@@ -83,10 +84,10 @@ export default function OrdersPage() {
                 actionHref="/"
               />
             ) : (
-              orders.map((order, idx) => {
+              orders.map((order: any, idx: number) => {
                 const orderNumber = order.orderNumber ?? order.id.slice(-8);
-                const totalAmount = order.total ?? order.amount ?? 0;
-                const itemCount = order.items?.length ?? 0;
+                const totalAmount = order.totalAmount ?? order.total ?? order.amount ?? 0;
+                const itemCount = order.items?.length ?? order.orderItems?.length ?? 0;
                 const orderDate = order.createdAt
                   ? new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })
                   : '';
@@ -113,7 +114,7 @@ export default function OrdersPage() {
           </div>
 
           {/* Pagination */}
-          {data && (data.total ?? 0) > 10 && (
+          {total > (data?.limit || 10) && (
             <div className="flex items-center justify-center gap-4 pt-4">
               <motion.button
                 whileTap={{ scale: 0.95 }}

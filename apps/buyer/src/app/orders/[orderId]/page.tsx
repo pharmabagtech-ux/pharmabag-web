@@ -8,29 +8,70 @@ import Timeline from '@/components/shared/Timeline';
 import { useToast } from '@/components/shared/Toast';
 import Link from 'next/link';
 import { useOrderById, useCancelOrder } from '@/hooks/useOrders';
+import { useClearCart } from '@/hooks/useCart';
 import AuthGuard from '@/components/shared/AuthGuard';
 
 const STATUS_ORDER = ['PLACED', 'ACCEPTED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
+function normalizeStatus(s: string | undefined): string {
+  const status = (s || '').toUpperCase();
+  const map: Record<string, string> = {
+    CONFIRMED: 'ACCEPTED',
+    PROCESSING: 'ACCEPTED',
+    TRANSIT: 'SHIPPED',
+    READY_FOR_PICKUP: 'SHIPPED',
+    OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+    COMPLETED: 'DELIVERED',
+  };
+  return map[status] ?? status;
+}
+
+function formatImageUrl(url: any): string | undefined {
+  if (!url) return undefined;
+  
+  // If it's an object with a url property, use that
+  const path = typeof url === 'string' ? url : url.url || url.path || (Array.isArray(url) ? url[0] : undefined);
+  
+  if (!path || typeof path !== 'string') return undefined;
+  if (path.startsWith('http') || path.startsWith('data:')) return path;
+  
+  // Try to get base URL from env
+  const env = (typeof process !== 'undefined' ? process.env : {}) as any;
+  const baseURL = env.NEXT_PUBLIC_API_BASE_URL || env.NEXT_PUBLIC_API_URL || '';
+  
+  // Remove /api if present at the end of baseURL for image paths
+  const cleanBase = baseURL.replace(/\/api\/?$/, '');
+  
+  const separator = path.startsWith('/') ? '' : '/';
+  return `${cleanBase}${separator}${path}`;
+}
+
 function buildTimelineSteps(status: string | undefined) {
+  const normalized = normalizeStatus(status);
   const labels = ['Order Placed', 'Confirmed', 'Shipped', 'Out for Delivery', 'Delivered'];
-  const currentIdx = status ? STATUS_ORDER.indexOf(status.toUpperCase()) : 0;
+  const currentIdx = STATUS_ORDER.indexOf(normalized);
+  
+  // Also handle cases where status might be slightly ahead/behind
+  // or use the first step as fallback if not matched
+  const activeIdx = currentIdx === -1 ? 0 : currentIdx;
+
   return labels.map((label, idx) => ({
     label,
-    description: idx <= currentIdx ? '' : 'Pending',
-    isCompleted: idx < currentIdx,
-    isActive: idx === currentIdx,
+    description: idx <= activeIdx ? '' : 'Pending',
+    isCompleted: idx < activeIdx,
+    isActive: idx === activeIdx,
   }));
 }
 
 function getStatusBadge(status: string | undefined) {
-  const s = (status || '').toUpperCase();
-  if (s === 'DELIVERED') return { label: 'Delivered', cls: 'bg-green-100 text-green-700' };
-  if (s === 'SHIPPED') return { label: 'In Transit', cls: 'bg-blue-100 text-blue-700' };
-  if (s === 'CANCELLED') return { label: 'Cancelled', cls: 'bg-red-100 text-red-700' };
-  if (s === 'ACCEPTED') return { label: 'Confirmed', cls: 'bg-lime-100 text-lime-700' };
-  if (s === 'PLACED') return { label: 'Order Placed', cls: 'bg-yellow-100 text-yellow-700' };
-  return { label: s || 'Unknown', cls: 'bg-gray-100 text-gray-700' };
+  const s = normalizeStatus(status);
+  if (s === 'DELIVERED') return { label: 'Delivered', cls: 'bg-green-100 text-green-700 font-bold' };
+  if (s === 'SHIPPED') return { label: 'In Transit', cls: 'bg-blue-100 text-blue-700 font-bold' };
+  if (s === 'OUT_FOR_DELIVERY') return { label: 'Out for Delivery', cls: 'bg-purple-100 text-purple-700 font-bold' };
+  if (s === 'CANCELLED') return { label: 'Cancelled', cls: 'bg-red-100 text-red-700 font-bold' };
+  if (s === 'ACCEPTED') return { label: 'Confirmed', cls: 'bg-lime-100 text-lime-700 font-bold' };
+  if (s === 'PLACED') return { label: 'Order Placed', cls: 'bg-yellow-100 text-yellow-700 font-bold' };
+  return { label: s || 'Unknown', cls: 'bg-gray-100 text-gray-700 font-bold' };
 }
 
 export default function OrderIdPage({ params }: { params: { orderId: string } }) {
@@ -66,13 +107,28 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
     );
   }
 
-  const badge = getStatusBadge(order.status);
-  const steps = (order.status || '').toUpperCase() !== 'CANCELLED' ? buildTimelineSteps(order.status) : [];
+  const status = order.orderStatus || order.status;
+  const badge = getStatusBadge(status);
+  const steps = (status || '').toUpperCase() !== 'CANCELLED' ? buildTimelineSteps(status) : [];
   const orderItems = order.items ?? [];
   const totalAmount = order.totalAmount ?? order.total ?? order.amount ?? 0;
   const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
-  const shippingAddress = [order.address, order.city, order.state, order.pincode].filter(Boolean).join(', ');
-  const isCancellable = !['DELIVERED', 'CANCELLED', 'SHIPPED'].includes((order.status || '').toUpperCase());
+  const ship = order.shippingAddress || {};
+  const flattenStr = (val: any) => {
+    if (typeof val === 'string') return val;
+    if (!val) return '';
+    return val.street || val.address || val.name || val.city || val.state || val.pincode || '';
+  };
+  
+  const shippingAddress = typeof order.shippingAddress === 'string' 
+    ? order.shippingAddress 
+    : [
+        flattenStr(ship.address || order.address), 
+        flattenStr(ship.city || order.city), 
+        flattenStr(ship.state || order.state), 
+        flattenStr(ship.pincode || order.pincode)
+      ].filter(Boolean).join(', ');
+  const isCancellable = !['DELIVERED', 'CANCELLED', 'SHIPPED'].includes(normalizeStatus(status));
 
   return (
     <AuthGuard>
@@ -133,26 +189,47 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
                 <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl">
                   <h2 className="text-xl font-bold text-gray-900 mb-6">Order Items</h2>
                   <div className="space-y-4">
-                    {orderItems.map((item) => {
+                    {orderItems.map((item: any) => {
                       const itemName = item.product?.name ?? item.productName ?? item.name ?? 'Product';
-                      const itemTotal = item.total ?? item.price * item.quantity;
-                      const itemImage = item.product?.images?.[0] || item.image;
+                      const itemTotal = item.totalPrice ?? item.total ?? (item.price || item.unitPrice || 0) * (item.quantity || 1);
+                      
+                      // Find best candidate for product image
+                      const rawImage = 
+                        item.product?.images?.[0] || 
+                        item.product?.imageList?.[0] || 
+                        item.product?.image_list?.[0] || 
+                        item.productData?.images?.[0] || 
+                        item.productData?.image_list?.[0] || 
+                        item.image || 
+                        item.productImage || 
+                        item.product?.image;
+                      
+                      const itemImage = formatImageUrl(rawImage);
+
                       return (
                         <div key={item.id} className="flex items-center justify-between py-4 border-b border-gray-50 last:border-0">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-[#f1f6ea] rounded-2xl flex-shrink-0 overflow-hidden flex items-center justify-center">
+                            <div className="w-14 h-14 bg-gray-50 rounded-2xl flex-shrink-0 overflow-hidden flex items-center justify-center border border-gray-100">
                               {itemImage ? (
                                 <img src={itemImage} alt={itemName} className="w-full h-full object-cover" />
                               ) : (
-                                <Package className="w-5 h-5 text-gray-300" />
+                                <div className="p-3 bg-lime-50 rounded-xl">
+                                  <Package className="w-6 h-6 text-lime-600" />
+                                </div>
                               )}
                             </div>
                             <div>
-                              <p className="font-bold text-gray-900">{itemName}</p>
-                              <p className="text-xs text-gray-400 font-bold">Qty: {item.quantity}</p>
+                              <p className="font-bold text-gray-900 line-clamp-1">{itemName}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-xs text-gray-400 font-bold">Qty: {item.quantity || 1}</span>
+                                <span className="text-[10px] text-gray-300">•</span>
+                                <span className="text-xs text-gray-400 font-bold">₹{(item.price || item.unitPrice || (itemTotal / (item.quantity || 1))).toLocaleString('en-IN')}/unit</span>
+                              </div>
                             </div>
                           </div>
-                          <p className="font-bold text-gray-900 tracking-tight">₹{itemTotal.toLocaleString('en-IN')}</p>
+                          <div className="text-right">
+                            <p className="font-bold text-gray-900 tracking-tight">₹{itemTotal.toLocaleString('en-IN')}</p>
+                          </div>
                         </div>
                       );
                     })}

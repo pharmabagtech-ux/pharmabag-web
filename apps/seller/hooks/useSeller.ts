@@ -93,7 +93,16 @@ export function useCategories() { return useQuery({ queryKey: ["categories"], qu
 
 export function useSellerOrders() { return useQuery({ queryKey: ["seller", "orders"], queryFn: getSellerOrders, staleTime: 60_000, retry: 1 }); }
 
-export function useUpdateSellerOrderStatus() { const qc = useQueryClient(); return useMutation({ mutationFn: ({ orderId, status }: { orderId: string; status: string }) => updateSellerOrderStatus(orderId, status), onSuccess: () => void qc.invalidateQueries({ queryKey: ["seller", "orders"] }) }); }
+export function useUpdateSellerOrderStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orderId, status }: { orderId: string; status: string }) => updateSellerOrderStatus(orderId, status),
+    onSuccess: (_, { orderId }) => {
+      void qc.invalidateQueries({ queryKey: ["seller", "orders"] });
+      void qc.invalidateQueries({ queryKey: ["seller", "order", orderId] });
+    },
+  });
+}
 
 export function useSellerSettlements() { return useQuery({ queryKey: ["seller", "settlements"], queryFn: getSellerSettlements, staleTime: 60_000, retry: 1 }); }
 
@@ -176,7 +185,7 @@ export function useAddTicketMessage() {
 
 // ─── Order Detail ─────────────────────────────────────
 export function useSellerOrder(orderId: string) {
-  return useQuery({ queryKey: ["seller", "order", orderId], queryFn: () => getSellerOrderById(orderId), enabled: !!orderId, retry: 1 });
+  return useQuery({ queryKey: ["seller", "order", orderId], queryFn: () => getSellerOrderById(orderId), enabled: !!orderId, staleTime: 10_000, refetchInterval: 10000, retry: 1 });
 }
 
 export function useAcceptSellerOrder() {
@@ -261,10 +270,10 @@ export function useSellerTicketById(ticketId: string) {
 }
 
 // ─── Suggestion Search (Autocomplete) ─────────────────
-export function useSuggestionSearch(query: string) {
+export function useSuggestionSearch(query: string, type: 'product' | 'master' = 'product') {
   return useQuery({
-    queryKey: ["suggestions", query],
-    queryFn: () => searchSuggestions(query),
+    queryKey: ["suggestions", query, type],
+    queryFn: () => searchSuggestions(query, type),
     enabled: query.length >= 2,
     staleTime: 30_000,
     retry: 1,

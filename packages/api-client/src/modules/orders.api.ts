@@ -11,6 +11,8 @@ export const OrderItemSchema = z.object({
   price: z.number(),
   quantity: z.number(),
   total: z.number().optional(),
+  unitPrice: z.number().optional(),
+  totalPrice: z.number().optional(),
   image: z.string().optional(),
   product: z.object({
     id: z.string(),
@@ -39,6 +41,9 @@ export const OrderSchema = z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   pincode: z.string().optional(),
+  shippingAddress: z.union([z.string(), z.any()]).optional(),
+  paymentMethod: z.string().optional(),
+  paymentReference: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string().optional(),
 }).transform((data) => ({

@@ -105,6 +105,26 @@ export default function ProductDetailPage({ params }: { params: { productId: str
     );
   }
 
+  function formatImageUrl(url: any): string | undefined {
+    if (!url) return undefined;
+    
+    // If it's an object with a url property, use that
+    const path = typeof url === 'string' ? url : url.url || url.path || (Array.isArray(url) ? url[0] : undefined);
+    
+    if (!path || typeof path !== 'string') return undefined;
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    
+    // Try to get base URL from env
+    const env = (typeof process !== 'undefined' ? process.env : {}) as any;
+    const baseURL = env.NEXT_PUBLIC_API_BASE_URL || env.NEXT_PUBLIC_API_URL || '';
+    
+    // Remove /api if present at the end of baseURL for image paths
+    const cleanBase = baseURL.replace(/\/api\/?$/, '');
+    
+    const separator = path.startsWith('/') ? '' : '/';
+    return `${cleanBase}${separator}${path}`;
+  }
+
   // Compute pricing from discount details if available
   const backendTypeMap: Record<string, string> = {
     "PTR_DISCOUNT": "ptr_discount",
@@ -214,21 +234,31 @@ export default function ProductDetailPage({ params }: { params: { productId: str
               whileHover={{ scale: 1.02 }}
               className="relative bg-white/40 backdrop-blur-xl rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl overflow-hidden flex items-center justify-center aspect-square lg:col-span-1"
             >
-              {product.images && product.images.length > 0 ? (
-                <Image
-                  src={(typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as any)?.url) || '/products/pharma_bottle.png'}
-                  alt={product.name}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  priority
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-4 text-gray-300">
-                  <Package className="w-20 h-20" />
-                  <p className="text-sm font-bold">No image available</p>
-                </div>
-              )}
+              {(() => {
+                const imgs = product.images || (product as any).image_list || (product as any).imageList || (product as any).product_images || [];
+                const rawImg = (imgs && imgs.length > 0) ? (typeof imgs[0] === 'string' ? imgs[0] : imgs[0]?.url) : null;
+                const mainImg = formatImageUrl(rawImg);
+                
+                if (mainImg) {
+                  return (
+                    <Image
+                      src={mainImg}
+                      alt={product.name}
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      priority
+                    />
+                  );
+                }
+                
+                return (
+                  <div className="flex flex-col items-center gap-4 text-gray-300">
+                    <Package className="w-20 h-20" />
+                    <p className="text-sm font-bold">No image available</p>
+                  </div>
+                );
+              })()}
             </motion.div>
 
             {/* Product Info */}

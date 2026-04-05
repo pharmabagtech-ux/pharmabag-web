@@ -100,7 +100,10 @@ export function useUpdateAdminOrderStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ orderId, status }: { orderId: string; status: string }) => updateAdminOrderStatus(orderId, status),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "orders"] }),
+    onSuccess: (_, { orderId }) => {
+      void qc.invalidateQueries({ queryKey: ["admin", "orders"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "order", orderId] });
+    },
   });
 }
 
@@ -287,14 +290,17 @@ export function useAdminOrdersFiltered(params: { page?: number; limit?: number; 
 }
 
 export function useOrderById(orderId: string) {
-  return useQuery({ queryKey: ["admin", "order", orderId], queryFn: () => getOrderById(orderId), enabled: !!orderId, staleTime: 60_000, retry: 1 });
+  return useQuery({ queryKey: ["admin", "order", orderId], queryFn: () => getOrderById(orderId), enabled: !!orderId, staleTime: 60_000, refetchInterval: 10000, retry: 1 });
 }
 
 export function useCancelOrder() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ orderId, reason }: { orderId: string; reason?: string }) => cancelOrder(orderId, reason),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "orders"] }),
+    onSuccess: (_, { orderId }) => {
+      void qc.invalidateQueries({ queryKey: ["admin", "orders"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "order", orderId] });
+    },
   });
 }
 

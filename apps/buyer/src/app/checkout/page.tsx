@@ -14,7 +14,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
-import { useCart, useSyncCart } from '@/hooks/useCart';
+import { useCart, useSyncCart, useClearCart } from '@/hooks/useCart';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { useCreatePayment } from '@/hooks/usePayments';
 import { useBuyerProfile, useBuyerCreditDetails } from '@/hooks/useBuyerProfile';
@@ -26,7 +26,7 @@ import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/shared/AuthGuard';
 import { useAuth } from '@pharmabag/api-client';
 
-type PaymentMethod = 'COD' | 'UPI' | 'BANK_TRANSFER' | 'CREDIT';
+type PaymentMethod = 'CASH_ON_DELIVERY' | 'UPI' | 'BANK_TRANSFER' | 'CREDIT';
 
 export default function CheckoutPage() {
   const { user } = useAuth();
@@ -45,9 +45,10 @@ export default function CheckoutPage() {
   const { toast } = useToast();
   const createOrder = useCreateOrder();
   const createPaymentMut = useCreatePayment();
+  const clearCart = useClearCart();
   const { data: platformConfig } = usePlatformConfig();
   const syncCart = useSyncCart();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH_ON_DELIVERY');
 
   const credit = (creditData as any)?.data || creditData;
   const isCreditEligible = credit?.status === 'active' && (credit?.availableCredit ?? 0) > 0;
@@ -110,11 +111,13 @@ export default function CheckoutPage() {
               { orderId, amount: total, method: paymentMethod },
               {
                 onSuccess: () => {
+                  clearCart.mutate();
                   window.location.href = `/orders/${orderId}?success=true`;
                 },
-                onError: () => {
+                onError: (error: any) => {
                   // Payment record failed but order was created — redirect without success flag
-                  toast('Order placed but payment recording failed. Please contact support.', 'error');
+                  const backendMsg = error?.response?.data?.message || 'Payment recording failed';
+                  toast(`Order placed but ${backendMsg}. Please contact support.`, 'error');
                   window.location.href = `/orders/${orderId}`;
                 },
               }
@@ -312,23 +315,23 @@ export default function CheckoutPage() {
               <div className="grid grid-cols-1 gap-4">
                 {/* Cash on Delivery */}
                 <button
-                  onClick={() => setPaymentMethod('COD')}
+                  onClick={() => setPaymentMethod('CASH_ON_DELIVERY')}
                   className={`flex items-center justify-between p-6 rounded-3xl border-2 text-left transition-all ${
-                    paymentMethod === 'COD'
+                    paymentMethod === 'CASH_ON_DELIVERY'
                       ? 'bg-white border-lime-300 shadow-xl shadow-lime-900/5'
                       : 'bg-white/50 border-gray-100 hover:border-gray-200'
                   }`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${paymentMethod === 'COD' ? 'bg-lime-50' : 'bg-gray-50'}`}>
-                      <ShieldCheck className={`w-5 h-5 ${paymentMethod === 'COD' ? 'text-lime-600' : 'text-gray-400'}`} />
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${paymentMethod === 'CASH_ON_DELIVERY' ? 'bg-lime-50' : 'bg-gray-50'}`}>
+                      <ShieldCheck className={`w-5 h-5 ${paymentMethod === 'CASH_ON_DELIVERY' ? 'text-lime-600' : 'text-gray-400'}`} />
                     </div>
                     <div>
-                      <p className={`font-bold leading-tight ${paymentMethod === 'COD' ? 'text-gray-900' : 'text-gray-600'}`}>Cash on Delivery</p>
+                      <p className={`font-bold leading-tight ${paymentMethod === 'CASH_ON_DELIVERY' ? 'text-gray-900' : 'text-gray-600'}`}>Cash on Delivery</p>
                       <p className="text-xs font-medium text-gray-400 mt-0.5">Pay when you receive</p>
                     </div>
                   </div>
-                  {paymentMethod === 'COD' && <CheckCircle2 className="w-6 h-6 text-lime-500" />}
+                  {paymentMethod === 'CASH_ON_DELIVERY' && <CheckCircle2 className="w-6 h-6 text-lime-500" />}
                 </button>
 
                 {/* Online Payment — disabled until payment gateway integration */}

@@ -158,22 +158,23 @@ export async function getSellerNotifications() {
 // ─── Suggestion / Autocomplete Search ─────────────────
 
 const MOCK_SUGGESTIONS: Suggestion[] = [
-  { id: "sug-1", productName: "Paracetamol 500mg", companyName: "Cipla", chemicalCombination: "Paracetamol", category: "Tablets", gstPercent: 12 },
-  { id: "sug-2", productName: "Amoxicillin 250mg", companyName: "Sun Pharma", chemicalCombination: "Amoxicillin", category: "Capsules", gstPercent: 12 },
-  { id: "sug-3", productName: "Cetirizine 10mg", companyName: "Dr. Reddy's", chemicalCombination: "Cetirizine Hydrochloride", category: "Tablets", gstPercent: 12 },
-  { id: "sug-4", productName: "Azithromycin 500mg", companyName: "Zydus", chemicalCombination: "Azithromycin", category: "Tablets", gstPercent: 12 },
-  { id: "sug-5", productName: "Dolo 650", companyName: "Micro Labs", chemicalCombination: "Paracetamol 650mg", category: "Tablets", gstPercent: 12 },
-  { id: "sug-6", productName: "Pantoprazole 40mg", companyName: "Alkem", chemicalCombination: "Pantoprazole", category: "Tablets", gstPercent: 5 },
-  { id: "sug-7", productName: "Metformin 500mg", companyName: "USV", chemicalCombination: "Metformin Hydrochloride", category: "Tablets", gstPercent: 5 },
-  { id: "sug-8", productName: "Cough Syrup", companyName: "Dabur", chemicalCombination: "Honey, Tulsi, Mulethi", category: "Syrups", gstPercent: 18 },
-  { id: "sug-9", productName: "ORS Powder", companyName: "Electral", chemicalCombination: "Sodium Chloride, Potassium Chloride", category: "Sachets", gstPercent: 0 },
-  { id: "sug-10", productName: "Vitamin D3 60K", companyName: "USV", chemicalCombination: "Cholecalciferol", category: "Capsules", gstPercent: 12 },
+  { id: "sug-1", productName: "Paracetamol 500mg", companyName: "Cipla", chemicalCombination: "Paracetamol", category: "Tablets", categoryId: "cat-1", subCategoryId: "sub-1", mrp: 40, gstPercent: 12 },
+  { id: "sug-2", productName: "Amoxicillin 250mg", companyName: "Sun Pharma", chemicalCombination: "Amoxicillin", category: "Capsules", categoryId: "cat-5", mrp: 120, gstPercent: 12 },
+  { id: "sug-3", productName: "Cetirizine 10mg", companyName: "Dr. Reddy's", chemicalCombination: "Cetirizine Hydrochloride", category: "Tablets", categoryId: "cat-1", subCategoryId: "sub-1", mrp: 25, gstPercent: 12 },
+  { id: "sug-4", productName: "Azithromycin 500mg", companyName: "Zydus", chemicalCombination: "Azithromycin", category: "Tablets", categoryId: "cat-1", subCategoryId: "sub-2", mrp: 150, gstPercent: 12 },
+  { id: "sug-5", productName: "Dolo 650", companyName: "Micro Labs", chemicalCombination: "Paracetamol 650mg", category: "Tablets", categoryId: "cat-1", subCategoryId: "sub-1", mrp: 30, gstPercent: 12 },
+  { id: "sug-6", productName: "Pantoprazole 40mg", companyName: "Alkem", chemicalCombination: "Pantoprazole", category: "Tablets", categoryId: "cat-1", mrp: 110, gstPercent: 5 },
+  { id: "sug-7", productName: "Metformin 500mg", companyName: "USV", chemicalCombination: "Metformin Hydrochloride", category: "Tablets", categoryId: "cat-1", mrp: 60, gstPercent: 5 },
+  { id: "sug-8", productName: "Cough Syrup", companyName: "Dabur", chemicalCombination: "Honey, Tulsi, Mulethi", category: "Syrups", categoryId: "cat-2", subCategoryId: "sub-3", mrp: 95, gstPercent: 18 },
+  { id: "sug-9", productName: "ORS Powder", companyName: "Electral", chemicalCombination: "Sodium Chloride, Potassium Chloride", category: "Sachets", categoryId: "cat-6", mrp: 20, gstPercent: 0 },
+  { id: "sug-10", productName: "Vitamin D3 60K", companyName: "USV", chemicalCombination: "Cholecalciferol", category: "Capsules", categoryId: "cat-5", mrp: 85, gstPercent: 12 },
 ];
 
-export async function searchSuggestions(query: string): Promise<Suggestion[]> {
+
+export async function searchSuggestions(query: string, type: 'product' | 'master' = 'master'): Promise<Suggestion[]> {
   try {
     const { data } = await apiClient.get<{ data: Suggestion[] }>("/products/suggestions", {
-      params: { q: query },
+      params: { search: query, type },
     });
     return data.data ?? [];
   } catch {
