@@ -200,7 +200,6 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         ...(Object.keys(extra_fields).length > 0 && { extraFields: extra_fields }),
         ...(mappedDiscountType && { discountType: mappedDiscountType }),
         ...(Object.keys(discountMeta).length > 0 && { discountMeta }),
-        masterProductId: selectedMasterId || (defaultValues as any)?.masterProductId,
       };
 
       if (isEditing) {
