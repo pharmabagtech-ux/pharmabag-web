@@ -66,6 +66,8 @@ export const CreateOrderSchema = z.object({
   city: z.string().min(1),
   state: z.string().min(1),
   pincode: z.string().min(1),
+  paymentMethod: z.string().optional(),
+  paymentStatus: z.string().optional(),
 });
 
 // ─── Types ──────────────────────────────────────────
