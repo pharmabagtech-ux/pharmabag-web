@@ -24,7 +24,7 @@ export default function BlogsPage() {
   const totalPages = Math.ceil(total / 12);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen pt-10 bg-gray-50">
       <Navbar onLoginClick={() => setIsLoginOpen(true)} />
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
 

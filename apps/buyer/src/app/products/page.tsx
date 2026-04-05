@@ -185,13 +185,17 @@ function ProductsPageContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f2fcf6] relative overflow-hidden">
+    <main className="min-h-screen bg-[#f2fcf6] relative flex flex-col">
       {/* Vibrant Glass Mesh Background Elements */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-cyan-300 rounded-full mix-blend-multiply filter blur-[120px] opacity-60 animate-pulse pointer-events-none" style={{ animationDuration: '8s' }}></div>
-      <div className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-[#e6fa64] rounded-full mix-blend-multiply filter blur-[150px] opacity-50 animate-pulse pointer-events-none" style={{ animationDuration: '10s', animationDelay: '2s' }}></div>
-      <div className="absolute top-[30%] right-[-10%] w-[40vw] h-[40vw] bg-[#9cf1d4] rounded-full mix-blend-multiply filter blur-[130px] opacity-40 scroll-smooth pointer-events-none"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
+        <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-cyan-300 rounded-full mix-blend-multiply filter blur-[120px] opacity-60 animate-pulse pointer-events-none" style={{ animationDuration: '8s' }}></div>
+        <div className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-[#e6fa64] rounded-full mix-blend-multiply filter blur-[150px] opacity-50 animate-pulse pointer-events-none" style={{ animationDuration: '10s', animationDelay: '2s' }}></div>
+        <div className="absolute top-[30%] right-[-10%] w-[40vw] h-[40vw] bg-[#9cf1d4] rounded-full mix-blend-multiply filter blur-[130px] opacity-40 scroll-smooth pointer-events-none"></div>
+      </div>
 
-      <Navbar showUserActions={true} onLoginClick={() => setIsLoginOpen(true)} onFilterClick={() => setShowMobileFilters(true)} />
+      <div className="z-50 relative">
+        <Navbar showUserActions={true} onLoginClick={() => setIsLoginOpen(true)} onFilterClick={() => setShowMobileFilters(true)} />
+      </div>
 
 
 
@@ -209,7 +213,7 @@ function ProductsPageContent() {
       <div className="pt-8 lg:pt-[108px] pb-6 sm:pb-20 w-[96vw] sm:w-[92vw] mx-auto relative z-10">
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-[260px] flex-shrink-0 space-y-6">
+          <aside className="hidden lg:block w-[260px] flex-shrink-0 space-y-6 sticky top-[108px] self-start max-h-[calc(100vh-120px)] overflow-y-auto no-scrollbar pb-4">
             {/* Sort Filter - Integrated into Sidebar */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Sort By</h3>
