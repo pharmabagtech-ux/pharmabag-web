@@ -261,10 +261,10 @@ export function useSellerTicketById(ticketId: string) {
 }
 
 // ─── Suggestion Search (Autocomplete) ─────────────────
-export function useSuggestionSearch(query: string) {
+export function useSuggestionSearch(query: string, type: 'product' | 'master' = 'product') {
   return useQuery({
-    queryKey: ["suggestions", query],
-    queryFn: () => searchSuggestions(query),
+    queryKey: ["suggestions", query, type],
+    queryFn: () => searchSuggestions(query, type),
     enabled: query.length >= 2,
     staleTime: 30_000,
     retry: 1,

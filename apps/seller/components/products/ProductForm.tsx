@@ -30,8 +30,9 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
   // Suggestion autocomplete state
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedMasterId, setSelectedMasterId] = useState<string | null>(null);
   const suggestionRef = useRef<HTMLDivElement>(null);
-  const { data: suggestions = [] } = useSuggestionSearch(searchQuery);
+  const { data: suggestions = [] } = useSuggestionSearch(searchQuery, "master");
 
   const { register, control, handleSubmit, setValue, formState: { errors, isSubmitting, isDirty }, watch } = useForm<FormValues>({
     resolver: zodResolver(productFormSchema) as any,
@@ -82,6 +83,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
   }, [isDirty]);
 
   const handleSuggestionSelect = useCallback((suggestion: Suggestion) => {
+    setSelectedMasterId(suggestion.id);
     setValue("product_name", suggestion.productName, { shouldDirty: true });
     setValue("company_name", suggestion.companyName, { shouldDirty: true });
     if (suggestion.chemicalCombination) {
@@ -90,6 +92,22 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
     if (suggestion.gstPercent !== undefined) {
       setValue("gst_percent", suggestion.gstPercent, { shouldDirty: true });
     }
+    if (suggestion.mrp !== undefined) {
+      setValue("product_price", suggestion.mrp, { shouldDirty: true });
+    }
+    if (suggestion.categoryId) {
+      setValue("categories", [suggestion.categoryId], { shouldDirty: true });
+    }
+    if (suggestion.subCategoryId) {
+      setValue("sub_categories", [suggestion.subCategoryId], { shouldDirty: true });
+    }
+    if (suggestion.description) {
+      // If we had a description field in the form, we'd set it here
+    }
+    if (suggestion.images && Array.isArray(suggestion.images)) {
+      setValue("image_list", suggestion.images.map((img: any) => typeof img === 'string' ? img : img.url), { shouldDirty: true });
+    }
+    
     setShowSuggestions(false);
     setSearchQuery("");
   }, [setValue]);
@@ -182,6 +200,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         ...(Object.keys(extra_fields).length > 0 && { extraFields: extra_fields }),
         ...(mappedDiscountType && { discountType: mappedDiscountType }),
         ...(Object.keys(discountMeta).length > 0 && { discountMeta }),
+        masterProductId: selectedMasterId || (defaultValues as any)?.masterProductId,
       };
 
       if (isEditing) {
@@ -233,16 +252,19 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
                 leftIcon={<Search className="h-4 w-4" />}
               />
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-background border border-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border border-primary/20 rounded-xl shadow-2xl max-h-64 overflow-y-auto backdrop-blur-xl">
                   {suggestions.map((s: Suggestion) => (
                     <button
                       key={s.id}
                       type="button"
-                      className="w-full text-left px-4 py-2.5 hover:bg-accent transition-colors border-b border-border/30 last:border-0"
+                      className="w-full text-left px-4 py-3 hover:bg-primary/10 transition-colors border-b border-border/30 last:border-0 group"
                       onClick={() => handleSuggestionSelect(s)}
                     >
-                      <p className="font-medium text-sm">{s.productName}</p>
-                      <p className="text-xs text-muted-foreground">{s.companyName} {s.chemicalCombination ? `| ${s.chemicalCombination}` : ""} {s.gstPercent !== undefined ? `| GST ${s.gstPercent}%` : ""}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">{s.productName}</p>
+                        {s.mrp && <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">₹{s.mrp}</span>}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{s.companyName} {s.chemicalCombination ? `| ${s.chemicalCombination}` : ""}</p>
                     </button>
                   ))}
                 </div>
@@ -253,43 +275,45 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         )}
 
         {/* Basic Info */}
-        <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className={`glass-card rounded-2xl p-6 space-y-4 transition-opacity duration-300 ${!isEditing && !selectedMasterId ? 'opacity-50 pointer-events-none' : ''}`}>
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Product Name *" error={errors.product_name?.message} {...register("product_name")} />
-            <Input label="Company / Manufacturer *" error={errors.company_name?.message} {...register("company_name")} />
+            <Input label="Product Name *" error={errors.product_name?.message} {...register("product_name")} disabled={!!selectedMasterId} />
+            <Input label="Company / Manufacturer *" error={errors.company_name?.message} {...register("company_name")} disabled={!!selectedMasterId} />
             <div className="md:col-span-2">
-              <Textarea label="Chemical Combination" error={errors.chemical_combination?.message} {...register("chemical_combination")} />
+              <Textarea label="Chemical Combination" error={errors.chemical_combination?.message} {...register("chemical_combination")} disabled={!!selectedMasterId} />
             </div>
           </div>
         </div>
 
         {/* Categories */}
-        <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className={`glass-card rounded-2xl p-6 space-y-4 transition-opacity duration-300 ${!isEditing && !selectedMasterId ? 'opacity-50 pointer-events-none' : ''}`}>
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Categorization</h2>
-          <Controller
-            control={control}
-            name="categories"
-            render={({ field: { value: cats, onChange: setCats } }: any) => (
-              <Controller
-                control={control}
-                name="sub_categories"
-                render={({ field: { value: subcats, onChange: setSubcats } }: any) => (
-                  <CategorySelector
-                    selectedCategoryIds={cats}
-                    onChangeCategories={setCats}
-                    selectedSubcategoryIds={subcats || []}
-                    onChangeSubcategories={setSubcats}
-                    error={errors.categories?.message}
-                  />
-                )}
-              />
-            )}
-          />
+          <div className={selectedMasterId ? "pointer-events-none" : ""}>
+            <Controller
+              control={control}
+              name="categories"
+              render={({ field: { value: cats, onChange: setCats } }: any) => (
+                <Controller
+                  control={control}
+                  name="sub_categories"
+                  render={({ field: { value: subcats, onChange: setSubcats } }: any) => (
+                    <CategorySelector
+                      selectedCategoryIds={cats}
+                      onChangeCategories={setCats}
+                      selectedSubcategoryIds={subcats || []}
+                      onChangeSubcategories={setSubcats}
+                      error={errors.categories?.message}
+                    />
+                  )}
+                />
+              )}
+            />
+          </div>
         </div>
 
         {/* Pricing & Stock */}
-        <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className={`glass-card rounded-2xl p-6 space-y-4 transition-opacity duration-300 ${!isEditing && !selectedMasterId ? 'opacity-50 pointer-events-none' : ''}`}>
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Pricing & Stock</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input label="MRP (₹) *" type="number" step="0.01" error={errors.product_price?.message} {...register("product_price", { valueAsNumber: true })} />
@@ -309,6 +333,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
                   value={String(field.value)}
                   onChange={(e) => field.onChange(Number(e.target.value))}
                   error={errors.gst_percent?.message}
+                  disabled={!!selectedMasterId}
                 />
               )}
             />
@@ -316,7 +341,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         </div>
 
         {/* Discounts & Pricing Engine */}
-        <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className={`glass-card rounded-2xl p-6 space-y-4 transition-opacity duration-300 ${!isEditing && !selectedMasterId ? 'opacity-50 pointer-events-none' : ''}`}>
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Discount & Bonuses</h2>
           <Controller
             control={control}
@@ -334,15 +359,17 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         </div>
 
         {/* Images */}
-        <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className={`glass-card rounded-2xl p-6 space-y-4 transition-opacity duration-300 ${!isEditing && !selectedMasterId ? 'opacity-50 pointer-events-none' : ''}`}>
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Product Images</h2>
-          <Controller
-            control={control}
-            name="image_list"
-            render={({ field }: any) => (
-              <ImageUploader value={field.value} onChange={field.onChange} error={errors.image_list?.message} maxFiles={5} />
-            )}
-          />
+          <div className={selectedMasterId ? "pointer-events-none opacity-80" : ""}>
+            <Controller
+              control={control}
+              name="image_list"
+              render={({ field }: any) => (
+                <ImageUploader value={field.value} onChange={field.onChange} error={errors.image_list?.message} maxFiles={5} />
+              )}
+            />
+          </div>
         </div>
 
         {/* Extra Fields */}

@@ -209,8 +209,14 @@ export interface Suggestion {
   chemicalCombination?: string;
   category?: string;
   subCategory?: string;
+  categoryId?: string;
+  subCategoryId?: string;
   gstPercent?: number;
+  mrp?: number;
+  images?: string[] | { url: string }[];
+  description?: string;
 }
+
 
 /** Category with optional subcategories */
 export interface CategoryItem {
