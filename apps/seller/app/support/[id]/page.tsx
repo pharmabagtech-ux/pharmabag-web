@@ -15,7 +15,7 @@ export default function SellerTicketDetailPage() {
   const [replyMessage, setReplyMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: ticket, isLoading } = useSellerTicketById(ticketId);
+  const { data: ticket, isLoading, isError, error } = useSellerTicketById(ticketId);
   const reply = useAddTicketMessage();
 
   useEffect(() => {
@@ -47,10 +47,17 @@ export default function SellerTicketDetailPage() {
       router.push("/support");
       return null;
     }
+
+    const errorMessage = isError
+      ? (error as any)?.response?.data?.message || (error as any)?.message || "Ticket not found"
+      : "Ticket not found";
+
+    console.error('[Seller Ticket Page] failed to load ticket:', ticketId, error);
+
     return (
       <div className="text-center py-20">
         <LifeBuoy className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-50" />
-        <p className="text-muted-foreground mb-4">Ticket not found (ID: {ticketId})</p>
+        <p className="text-muted-foreground mb-4">{errorMessage} (ID: {ticketId})</p>
         <button onClick={() => router.push("/support")} className="text-sm text-primary underline">Back to Support</button>
       </div>
     );

@@ -277,55 +277,58 @@ export async function getSellerAnalytics() {
 }
 
 // ─── Support Tickets ─────────────────────────────────
+const sellerTicketEndpoints = {
+  list: "/sellers/tickets",
+  listFallback: "/tickets",
+  detail: (id: string) => `/sellers/tickets/${id}`,
+  detailFallback: (id: string) => `/tickets/${id}`,
+  create: "/sellers/tickets",
+  createFallback: "/tickets",
+  addMessage: (id: string) => `/sellers/tickets/${id}/messages`,
+  addMessageFallback: (id: string) => `/tickets/${id}/messages`,
+};
+
+function isFallbackStatus(error: any) {
+  return [404, 405].includes(error?.response?.status);
+}
+
+function normalizeTicket(ticket: any) {
+  if (!ticket || typeof ticket !== 'object') return null;
+  if (!ticket.description && ticket.message) ticket.description = ticket.message;
+  if (!ticket.id && ticket._id) ticket.id = ticket._id;
+  if (!ticket.id && ticket.ticketId) ticket.id = ticket.ticketId;
+  if (!ticket.id && ticket.ticket_id) ticket.id = ticket.ticket_id;
+  if (!ticket.messages) ticket.messages = [];
+  return ticket;
+}
+
+function extractTicket(response: any) {
+  return normalizeTicket(response?.data?.ticket ?? response?.ticket ?? response?.data ?? response ?? null);
+}
+
+function extractTicketList(response: any) {
+  const raw = response?.data ?? response;
+  let tickets: any[] = [];
+
+  if (Array.isArray(raw)) {
+    tickets = raw;
+  } else if (Array.isArray(raw?.tickets)) {
+    tickets = raw.tickets;
+  } else if (Array.isArray(response?.data)) {
+    tickets = response.data;
+  }
+
+  return tickets.map(normalizeTicket).filter(Boolean);
+}
+
 export async function getSellerTickets() {
   try {
-    const { data } = await apiClient.get<any>("/sellers/tickets");
-    let tickets = data.data ?? data;
-    
-    // Ensure we have an array
-    if (!Array.isArray(tickets)) {
-      tickets = Array.isArray(tickets?.data) ? tickets.data : [];
-    }
-    
-    // Normalize each ticket in the response
-    return tickets.map((ticket: any) => {
-      if (ticket && typeof ticket === 'object') {
-        if (!ticket.description && ticket.message) {
-          ticket.description = ticket.message;
-        }
-        if (!ticket.id && ticket._id) {
-          ticket.id = ticket._id;
-        }
-        if (!ticket.messages) {
-          ticket.messages = [];
-        }
-      }
-      return ticket;
-    });
+    const { data } = await apiClient.get<any>(sellerTicketEndpoints.list);
+    return extractTicketList(data);
   } catch (error: any) {
-    // Fallback to generic endpoint
-    if (error?.response?.status === 404 || error?.response?.status === 405) {
-      const { data } = await apiClient.get<any>("/tickets");
-      let tickets = data.data ?? data;
-      
-      if (!Array.isArray(tickets)) {
-        tickets = Array.isArray(tickets?.data) ? tickets.data : [];
-      }
-      
-      return tickets.map((ticket: any) => {
-        if (ticket && typeof ticket === 'object') {
-          if (!ticket.description && ticket.message) {
-            ticket.description = ticket.message;
-          }
-          if (!ticket.id && ticket._id) {
-            ticket.id = ticket._id;
-          }
-          if (!ticket.messages) {
-            ticket.messages = [];
-          }
-        }
-        return ticket;
-      });
+    if (isFallbackStatus(error)) {
+      const { data } = await apiClient.get<any>(sellerTicketEndpoints.listFallback);
+      return extractTicketList(data);
     }
     throw error;
   }
@@ -333,108 +336,47 @@ export async function getSellerTickets() {
 
 export async function getSellerTicketById(ticketId: string) {
   try {
-    const { data } = await apiClient.get<any>(`/sellers/tickets/${ticketId}`);
-    const ticket = data.data?.ticket ?? data.ticket ?? data.data ?? data;
-    // Normalize response: ensure description field exists if message exists
-    if (ticket && typeof ticket === 'object') {
-      if (!ticket.description && ticket.message) {
-        ticket.description = ticket.message;
-      }
-      if (!ticket.id && ticket._id) {
-        ticket.id = ticket._id;
-      }
-      // Ensure messages array exists
-      if (!ticket.messages) {
-        ticket.messages = [];
-      }
-    }
-    return ticket;
+    const { data } = await apiClient.get<any>(sellerTicketEndpoints.detail(ticketId));
+    const ticket = extractTicket(data);
+    if (ticket) return ticket;
   } catch (error: any) {
-    // Fallback to generic endpoint
-    if (error?.response?.status === 404 || error?.response?.status === 405) {
-      const { data } = await apiClient.get<any>(`/tickets/${ticketId}`);
-      const ticket = data.data?.ticket ?? data.ticket ?? data.data ?? data;
-      if (ticket && typeof ticket === 'object') {
-        if (!ticket.description && ticket.message) {
-          ticket.description = ticket.message;
-        }
-        if (!ticket.id && ticket._id) {
-          ticket.id = ticket._id;
-        }
-        if (!ticket.messages) {
-          ticket.messages = [];
-        }
-      }
-      return ticket;
-    }
+    console.error('[Seller Ticket API] getSellerTicketById failed for ticketId:', ticketId, error?.response?.data ?? error?.message ?? error);
+    if (!isFallbackStatus(error)) throw error;
+  }
+
+  try {
+    const { data } = await apiClient.get<any>(sellerTicketEndpoints.detailFallback(ticketId));
+    return extractTicket(data);
+  } catch (error: any) {
+    console.error('[Seller Ticket API] getSellerTicketById fallback failed for ticketId:', ticketId, error?.response?.data ?? error?.message ?? error);
     throw error;
   }
 }
 
 export async function createSellerTicket(payload: { subject: string; message: string }) {
   try {
-    const { data } = await apiClient.post<any>("/sellers/tickets", payload);
-    const ticket = data.data?.ticket ?? data.ticket ?? data.data ?? data;
-    // Normalize response: if 'message' exists but 'description' doesn't, use message as description
-    if (ticket && typeof ticket === 'object') {
-      if (!ticket.description && ticket.message) {
-        ticket.description = ticket.message;
-      }
-      if (!ticket.id && ticket._id) {
-        ticket.id = ticket._id;
-      }
-    }
-    return ticket;
+    const { data } = await apiClient.post<any>(sellerTicketEndpoints.create, payload);
+    const ticket = extractTicket(data);
+    if (ticket) return ticket;
   } catch (error: any) {
-    // Fallback to generic endpoint
-    if (error?.response?.status === 404 || error?.response?.status === 405) {
-      const { data } = await apiClient.post<any>("/tickets", payload);
-      const ticket = data.data?.ticket ?? data.ticket ?? data.data ?? data;
-      if (ticket && typeof ticket === 'object') {
-        if (!ticket.description && ticket.message) {
-          ticket.description = ticket.message;
-        }
-        if (!ticket.id && ticket._id) {
-          ticket.id = ticket._id;
-        }
-      }
-      return ticket;
-    }
-    throw error;
+    if (!isFallbackStatus(error)) throw error;
   }
+
+  const { data } = await apiClient.post<any>(sellerTicketEndpoints.createFallback, payload);
+  return extractTicket(data);
 }
 
 export async function addTicketMessage(ticketId: string, message: string) {
   try {
-    const { data } = await apiClient.post<any>(`/sellers/tickets/${ticketId}/messages`, { message });
-    const ticket = data.data?.ticket ?? data.ticket ?? data.data ?? data;
-    // Normalize response
-    if (ticket && typeof ticket === 'object') {
-      if (!ticket.description && ticket.message) {
-        ticket.description = ticket.message;
-      }
-      if (!ticket.id && ticket._id) {
-        ticket.id = ticket._id;
-      }
-    }
-    return ticket;
+    const { data } = await apiClient.post<any>(sellerTicketEndpoints.addMessage(ticketId), { message });
+    const ticket = extractTicket(data);
+    if (ticket) return ticket;
   } catch (error: any) {
-    // Fallback to generic endpoint
-    if (error?.response?.status === 404 || error?.response?.status === 405) {
-      const { data } = await apiClient.post<any>(`/tickets/${ticketId}/messages`, { message });
-      const ticket = data.data?.ticket ?? data.ticket ?? data.data ?? data;
-      if (ticket && typeof ticket === 'object') {
-        if (!ticket.description && ticket.message) {
-          ticket.description = ticket.message;
-        }
-        if (!ticket.id && ticket._id) {
-          ticket.id = ticket._id;
-        }
-      }
-      return ticket;
-    }
-    throw error;
+    if (!isFallbackStatus(error)) throw error;
   }
+
+  const { data } = await apiClient.post<any>(sellerTicketEndpoints.addMessageFallback(ticketId), { message });
+  return extractTicket(data);
 }
 // ─── Buyer Onboarding (Seller Portal) ─────────────────
 /**

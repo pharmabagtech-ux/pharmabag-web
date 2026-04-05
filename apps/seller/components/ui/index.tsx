@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
@@ -114,11 +115,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({ label, error
 Select.displayName = "Select";
 
 /* Stat Card */
-interface StatProps { title: string; value: string; change?: string; up?: boolean; icon: React.ElementType; iconClass?: string; delay?: number; }
-export function StatCard({ title, value, change, up, icon: Icon, iconClass="bg-primary/10 text-primary", delay=0 }: StatProps) {
-  return (
+interface StatProps { title: string; value: string; change?: string; up?: boolean; icon: React.ElementType; iconClass?: string; delay?: number; href?: string; }
+export function StatCard({ title, value, change, up, icon: Icon, iconClass="bg-primary/10 text-primary", delay=0, href }: StatProps) {
+  const cardContent = (
     <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay, duration:0.4 }}>
-      <div className="glass-card rounded-2xl p-5 h-full">
+      <div className="glass-card rounded-2xl p-5 h-full transition hover:shadow-xl hover:-translate-y-0.5">
         <div className="flex items-start justify-between mb-4">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center", iconClass)}><Icon className="h-4.5 w-4.5" aria-hidden/></div>
@@ -128,4 +129,6 @@ export function StatCard({ title, value, change, up, icon: Icon, iconClass="bg-p
       </div>
     </motion.div>
   );
+
+  return href ? <Link href={href} className="block">{cardContent}</Link> : cardContent;
 }

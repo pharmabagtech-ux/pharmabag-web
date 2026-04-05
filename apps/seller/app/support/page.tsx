@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LifeBuoy, Send, Clock, CheckCircle2, AlertCircle, ChevronDown, MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useSellerTickets, useCreateSellerTicket } from "@/hooks/useSeller";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
@@ -26,12 +27,13 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function SupportPage() {
+  const router = useRouter();
   const [reason, setReason] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const { data: ticketsRaw, isLoading } = useSellerTickets();
+  const { data: ticketsRaw, isLoading } = useSellerTickets() as any;
   const { mutate: createTicket, isPending } = useCreateSellerTicket();
 
   const tickets: any[] = Array.isArray(ticketsRaw) ? ticketsRaw : (ticketsRaw?.data?.tickets ?? ticketsRaw?.tickets ?? ticketsRaw?.data ?? []);
@@ -50,11 +52,13 @@ export default function SupportPage() {
     createTicket(
       { subject: fullSubject, message: message.trim() },
       {
-        onSuccess: () => {
+        onSuccess: (ticket: any) => {
+          const ticketId = ticket?.id || ticket?._id || ticket?.ticketId || ticket?.ticket_id;
           toast.success("Support ticket raised successfully!");
           setReason("");
           setSubject("");
           setMessage("");
+          if (ticketId) router.push(`/support/${ticketId}`);
         },
         onError: (err: any) => {
           toast.error(err?.response?.data?.message || "Failed to raise ticket");

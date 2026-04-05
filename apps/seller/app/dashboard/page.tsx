@@ -73,10 +73,10 @@ export default function SellerDashboard() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard title="Total Revenue" value={formatCurrency(stats.totalRevenue)} change="+0% this month" up icon={TrendingUp} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0}/>
-        <StatCard title="Active Listings" value={`${stats.activeListings}/${stats.totalProducts}`} change="0 pending approval" icon={Package} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0.07}/>
-        <StatCard title="Orders" value={String(stats.totalOrders)} change={`${stats.pendingOrders} pending`} icon={ShoppingBag} iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20" delay={0.14}/>
-        <StatCard title="Pending Payouts" value={formatCurrency(stats.pendingPayouts)} change="Scheduled" up={false} icon={CreditCard} iconClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20" delay={0.21}/>
+        <StatCard title="Total Revenue" value={formatCurrency(stats.totalRevenue)} change="+0% this month" up icon={TrendingUp} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0} href="/payouts" />
+        <StatCard title="Active Listings" value={`${stats.activeListings}/${stats.totalProducts}`} change="0 pending approval" icon={Package} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0.07} href="/products" />
+        <StatCard title="Orders" value={String(stats.totalOrders)} change={`${stats.pendingOrders} pending`} icon={ShoppingBag} iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20" delay={0.14} href="/orders" />
+        <StatCard title="Pending Payouts" value={formatCurrency(stats.pendingPayouts)} change="Scheduled" up={false} icon={CreditCard} iconClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20" delay={0.21} href="/payouts" />
       </div>
 
       {/* Low stock alert */}

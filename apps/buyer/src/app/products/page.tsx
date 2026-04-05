@@ -60,11 +60,12 @@ function ProductsPageContent() {
     const manufacturer = searchParams.get('manufacturer');
     const city = searchParams.get('city');
 
-    if (search !== null) setSearchTerm(search);
-    if (category !== undefined) setSelectedCategory(category);
-    if (subCategory !== undefined) setSelectedSubCategory(subCategory);
-    if (manufacturer !== undefined) setSelectedManufacturer(manufacturer);
-    if (city !== undefined) setSelectedCity(city);
+    setSearchTerm(search || '');
+    setSelectedCategory(category);
+    setSelectedSubCategory(subCategory);
+    setSelectedManufacturer(manufacturer);
+    setSelectedCity(city);
+    setPage(1);
   }, [searchParams]);
 
   const addToCart = useAddToCart();
@@ -228,13 +229,13 @@ function ProductsPageContent() {
                 </label>
               </div>
             </div> */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
+            {/* <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Categories</h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 <button onClick={() => { setSelectedCategory(null); setSelectedSubCategory(null); setPage(1); }} className={`w-full text-left text-sm font-medium px-2 py-1.5 rounded transition-colors ${!selectedCategory ? 'text-gray-900 bg-gray-100/50' : 'text-gray-600 hover:text-gray-900'}`}>All Products</button>
                 {categories.map((cat: any) => (<button key={cat.id} onClick={() => { setSelectedCategory(cat.slug || cat.id); setSelectedSubCategory(null); setPage(1); }} className={`w-full text-left text-sm font-medium px-2 py-1.5 rounded transition-colors ${(selectedCategory === cat.slug || selectedCategory === cat.id) ? 'text-gray-900 bg-gray-100/50' : 'text-gray-600 hover:text-gray-900'}`}>{cat.name}</button>))}
               </div>
-            </div>
+            </div> */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/60">
               <h3 className="text-[11px] font-bold text-gray-800 uppercase tracking-widest mb-4">Manufacturer</h3>
               <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -274,9 +275,11 @@ function ProductsPageContent() {
               <div className="flex items-center gap-2 text-[13px] font-bold text-gray-800 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
                 <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">Home</Link>
                 <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" strokeWidth={3} />
+                <Link href="/products" className="text-gray-400 hover:text-gray-600 transition-colors">
                 <span className={`${searchTerm ? 'text-gray-400' : 'text-gray-900'} capitalize truncate max-w-[120px]`}>
                   {selectedCategory ? (categoryObject?.name || 'Category') : 'All Products'}
                 </span>
+                </Link>
                 {searchTerm && (
                   <>
                     <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" strokeWidth={3} />
