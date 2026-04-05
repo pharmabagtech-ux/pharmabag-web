@@ -108,6 +108,11 @@ export default function LoginPage() {
                       <button type="submit" disabled={isLoading} className="w-full h-[72px] md:h-16 bg-[#C4FF4B] md:bg-lime-300 hover:bg-[#B3F23A] md:hover:bg-lime-400 text-black md:text-gray-900 rounded-full md:rounded-2xl text-[20px] md:text-xl font-black shadow-[0_10px_25px_-5px_rgba(196,255,75,0.4)] md:shadow-xl shadow-lime-300/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-70">
                         {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <span className="tracking-tight uppercase">{step === 'phone' ? 'Send OTP' : 'Continue'}</span>}
                       </button>
+                      {step === 'otp' && (
+                        <button type="button" onClick={() => { setStep('phone'); setOtp(''); }} className="w-full mt-4 text-[13px] md:text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors text-center uppercase tracking-widest">
+                          ← Change Phone Number
+                        </button>
+                      )}
                     </div>
 
                     {/* DESKTOP ONLY BADGES */}
