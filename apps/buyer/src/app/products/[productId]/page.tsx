@@ -28,10 +28,10 @@ export default function ProductDetailPage({ params }: { params: { productId: str
   // Sync quantity with cart when product loads
   useEffect(() => {
     if (!product) return;
-    
+
     // Check if product is already in cart
     const cartItem = cartData?.items?.find(item => item.productId === product.id);
-    
+
     if (cartItem) {
       // Product is in cart, show current cart quantity
       setQuantity(cartItem.quantity);
@@ -62,8 +62,8 @@ export default function ProductDetailPage({ params }: { params: { productId: str
   const handleAddToCart = () => {
     if (!product) return;
     addToCart.mutate(
-      { 
-        productId: product.id, 
+      {
+        productId: product.id,
         quantity,
         productName: product.name,
         price: sellingPrice,
@@ -107,20 +107,20 @@ export default function ProductDetailPage({ params }: { params: { productId: str
 
   function formatImageUrl(url: any): string | undefined {
     if (!url) return undefined;
-    
+
     // If it's an object with a url property, use that
     const path = typeof url === 'string' ? url : url.url || url.path || (Array.isArray(url) ? url[0] : undefined);
-    
+
     if (!path || typeof path !== 'string') return undefined;
     if (path.startsWith('http') || path.startsWith('data:')) return path;
-    
+
     // Try to get base URL from env
     const env = (typeof process !== 'undefined' ? process.env : {}) as any;
     const baseURL = env.NEXT_PUBLIC_API_BASE_URL || env.NEXT_PUBLIC_API_URL || '';
-    
+
     // Remove /api if present at the end of baseURL for image paths
     const cleanBase = baseURL.replace(/\/api\/?$/, '');
-    
+
     const separator = path.startsWith('/') ? '' : '/';
     return `${cleanBase}${separator}${path}`;
   }
@@ -135,7 +135,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
     "SPECIAL_PRICE": "special_price",
   };
   const mappedType = (product as any).discountType ? backendTypeMap[(product as any).discountType] : undefined;
-  
+
   const dd = (product as any).discountDetails || (product as any).discountFormDetails || (mappedType ? {
     type: mappedType,
     ...(product as any).discountMeta
@@ -178,7 +178,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
 
   // Fallback to manual tag if still empty
   if (!discountDisplayTag) {
-     discountDisplayTag = (product as any).discountTag || (product as any).discountMeta?.tag || '';
+    discountDisplayTag = (product as any).discountTag || (product as any).discountMeta?.tag || '';
   }
 
   if (dd?.type && product.mrp && (product as any).gstPercent != null) {
@@ -216,8 +216,8 @@ export default function ProductDetailPage({ params }: { params: { productId: str
             <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
             {product.category && (
               <>
-                <Link 
-                  href={`/products?category=${typeof product.category === 'object' ? (product.category as any).name.toLowerCase() : product.category.toLowerCase()}`} 
+                <Link
+                  href={`/products?category=${typeof product.category === 'object' ? (product.category as any).name.toLowerCase() : product.category.toLowerCase()}`}
                   className="hover:text-gray-800 transition-colors capitalize"
                 >
                   {typeof product.category === 'object' ? (product.category as any).name : product.category}
@@ -238,7 +238,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                 const imgs = product.images || (product as any).image_list || (product as any).imageList || (product as any).product_images || [];
                 const rawImg = (imgs && imgs.length > 0) ? (typeof imgs[0] === 'string' ? imgs[0] : imgs[0]?.url) : null;
                 const mainImg = formatImageUrl(rawImg);
-                
+
                 if (mainImg) {
                   return (
                     <Image
@@ -251,7 +251,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                     />
                   );
                 }
-                
+
                 return (
                   <div className="flex flex-col items-center gap-4 text-gray-300">
                     <Package className="w-20 h-20" />
@@ -345,11 +345,10 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                     whileTap={{ scale: 0.95 }}
                     onClick={handleAddToCart}
                     disabled={addToCart.isPending || added}
-                    className={`flex-1 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl transition-all disabled:opacity-70 ${
-                      added
-                        ? 'bg-green-500 text-white shadow-green-200'
-                        : 'bg-gray-900 text-white hover:bg-black shadow-black/20'
-                    }`}
+                    className={`flex-1 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-xl transition-all disabled:opacity-70 ${added
+                      ? 'bg-green-500 text-white shadow-green-200'
+                      : 'bg-gray-900 text-white hover:bg-black shadow-black/20'
+                      }`}
                   >
                     {added ? (
                       <>
@@ -492,7 +491,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
           </div>
 
           {/* Reviews Section */}
-          <ReviewsSection productId={params.productId} />
+          {/* <ReviewsSection productId={params.productId} /> */}
         </motion.div>
       </div>
 
@@ -502,187 +501,187 @@ export default function ProductDetailPage({ params }: { params: { productId: str
 
 /* ─── Reviews Section Component ─────────────────────── */
 
-function StarRating({ rating, size = 'sm', interactive, onChange }: { rating: number; size?: 'sm' | 'lg'; interactive?: boolean; onChange?: (r: number) => void }) {
-  const starSize = size === 'lg' ? 'w-7 h-7' : 'w-4 h-4';
-  return (
-    <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          disabled={!interactive}
-          onClick={() => onChange?.(star)}
-          className={interactive ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'}
-        >
-          <Star
-            className={`${starSize} ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'fill-none text-gray-300'}`}
-          />
-        </button>
-      ))}
-    </div>
-  );
-}
+// function StarRating({ rating, size = 'sm', interactive, onChange }: { rating: number; size?: 'sm' | 'lg'; interactive?: boolean; onChange?: (r: number) => void }) {
+//   const starSize = size === 'lg' ? 'w-7 h-7' : 'w-4 h-4';
+//   return (
+//     <div className="flex items-center gap-1">
+//       {[1, 2, 3, 4, 5].map((star) => (
+//         <button
+//           key={star}
+//           type="button"
+//           disabled={!interactive}
+//           onClick={() => onChange?.(star)}
+//           className={interactive ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'}
+//         >
+//           <Star
+//             className={`${starSize} ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'fill-none text-gray-300'}`}
+//           />
+//         </button>
+//       ))}
+//     </div>
+//   );
+// }
 
-function ReviewsSection({ productId }: { productId: string }) {
-  const { data: reviewsData, isLoading } = useProductReviews(productId);
-  const createReview = useCreateReview();
-  const { toast } = useToast();
-  const [showForm, setShowForm] = useState(false);
-  const [newRating, setNewRating] = useState(5);
-  const [newComment, setNewComment] = useState('');
+// function ReviewsSection({ productId }: { productId: string }) {
+//   const { data: reviewsData, isLoading } = useProductReviews(productId);
+//   const createReview = useCreateReview();
+//   const { toast } = useToast();
+//   const [showForm, setShowForm] = useState(false);
+//   const [newRating, setNewRating] = useState(5);
+//   const [newComment, setNewComment] = useState('');
 
-  const reviews = reviewsData?.data ?? [];
-  const averageRating = reviewsData?.averageRating ?? 0;
-  const totalReviews = reviewsData?.total ?? reviews.length;
+//   const reviews = reviewsData?.data ?? [];
+//   const averageRating = reviewsData?.averageRating ?? 0;
+//   const totalReviews = reviewsData?.total ?? reviews.length;
 
-  const ratingDistribution = [5, 4, 3, 2, 1].map((star) => ({
-    star,
-    count: reviews.filter((r) => r.rating === star).length,
-    percent: totalReviews > 0 ? (reviews.filter((r) => r.rating === star).length / totalReviews) * 100 : 0,
-  }));
+//   const ratingDistribution = [5, 4, 3, 2, 1].map((star) => ({
+//     star,
+//     count: reviews.filter((r) => r.rating === star).length,
+//     percent: totalReviews > 0 ? (reviews.filter((r) => r.rating === star).length / totalReviews) * 100 : 0,
+//   }));
 
-  const handleSubmit = () => {
-    if (!newComment.trim()) return;
-    createReview.mutate(
-      { productId, rating: newRating, comment: newComment },
-      {
-        onSuccess: () => {
-          setShowForm(false);
-          setNewComment('');
-          setNewRating(5);
-          toast('Review submitted successfully!', 'success');
-        },
-        onError: () => toast('Failed to submit review', 'error'),
-      }
-    );
-  };
+//   const handleSubmit = () => {
+//     if (!newComment.trim()) return;
+//     createReview.mutate(
+//       { productId, rating: newRating, comment: newComment },
+//       {
+//         onSuccess: () => {
+//           setShowForm(false);
+//           setNewComment('');
+//           setNewRating(5);
+//           toast('Review submitted successfully!', 'success');
+//         },
+//         onError: () => toast('Failed to submit review', 'error'),
+//       }
+//     );
+//   };
 
-  return (
-    <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-6 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Reviews</h2>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gray-900 text-white rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 hover:bg-black transition-colors shadow-lg w-full sm:w-auto justify-center"
-        >
-          <Star className="w-4 h-4" />
-          Write a Review
-        </button>
-      </div>
+//   return (
+//     <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl">
+//       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-6 sm:mb-8">
+//         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Reviews</h2>
+//         <button
+//           onClick={() => setShowForm(!showForm)}
+//           className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gray-900 text-white rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 hover:bg-black transition-colors shadow-lg w-full sm:w-auto justify-center"
+//         >
+//           <Star className="w-4 h-4" />
+//           Write a Review
+//         </button>
+//       </div>
 
-      {/* Rating Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8">
-        <div className="flex flex-col items-center justify-center bg-lime-50/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-lime-100">
-          <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900">{averageRating.toFixed(1)}</p>
-          <StarRating rating={Math.round(averageRating)} />
-          <p className="text-sm text-gray-500 font-medium mt-2">{totalReviews} review{totalReviews !== 1 ? 's' : ''}</p>
-        </div>
-        <div className="md:col-span-2 flex flex-col justify-center gap-2">
-          {ratingDistribution.map(({ star, count, percent }) => (
-            <div key={star} className="flex items-center gap-3">
-              <span className="text-sm font-bold text-gray-500 w-4">{star}</span>
-              <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-              <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${percent}%` }}
-                  transition={{ duration: 0.6, delay: star * 0.1 }}
-                  className="h-full bg-yellow-400 rounded-full"
-                />
-              </div>
-              <span className="text-xs font-bold text-gray-400 w-8 text-right">{count}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+//       {/* Rating Summary */}
+//       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8">
+//         <div className="flex flex-col items-center justify-center bg-lime-50/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-lime-100">
+//           <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900">{averageRating.toFixed(1)}</p>
+//           <StarRating rating={Math.round(averageRating)} />
+//           <p className="text-sm text-gray-500 font-medium mt-2">{totalReviews} review{totalReviews !== 1 ? 's' : ''}</p>
+//         </div>
+//         <div className="md:col-span-2 flex flex-col justify-center gap-2">
+//           {ratingDistribution.map(({ star, count, percent }) => (
+//             <div key={star} className="flex items-center gap-3">
+//               <span className="text-sm font-bold text-gray-500 w-4">{star}</span>
+//               <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+//               <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+//                 <motion.div
+//                   initial={{ width: 0 }}
+//                   animate={{ width: `${percent}%` }}
+//                   transition={{ duration: 0.6, delay: star * 0.1 }}
+//                   className="h-full bg-yellow-400 rounded-full"
+//                 />
+//               </div>
+//               <span className="text-xs font-bold text-gray-400 w-8 text-right">{count}</span>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
 
-      {/* Write Review Form */}
-      <AnimatePresence>
-        {showForm && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="bg-white/60 p-6 rounded-3xl border border-gray-100 mb-8 space-y-4">
-              <div>
-                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Your Rating</label>
-                <StarRating rating={newRating} size="lg" interactive onChange={setNewRating} />
-              </div>
-              <div>
-                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Your Review</label>
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  rows={3}
-                  placeholder="Share your experience with this product..."
-                  className="w-full px-5 py-3 bg-white/60 rounded-2xl border border-gray-200 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-lime-300 resize-none"
-                />
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="px-6 py-2.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm text-gray-600 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={createReview.isPending || !newComment.trim()}
-                  className="px-6 py-2.5 bg-lime-300 text-gray-900 rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-lime-400 shadow-lg shadow-lime-200 transition-all disabled:opacity-50"
-                >
-                  <Send className="w-4 h-4" />
-                  {createReview.isPending ? 'Submitting...' : 'Submit Review'}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+//       {/* Write Review Form */}
+//       <AnimatePresence>
+//         {showForm && (
+//           <motion.div
+//             initial={{ opacity: 0, height: 0 }}
+//             animate={{ opacity: 1, height: 'auto' }}
+//             exit={{ opacity: 0, height: 0 }}
+//             className="overflow-hidden"
+//           >
+//             <div className="bg-white/60 p-6 rounded-3xl border border-gray-100 mb-8 space-y-4">
+//               <div>
+//                 <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Your Rating</label>
+//                 <StarRating rating={newRating} size="lg" interactive onChange={setNewRating} />
+//               </div>
+//               <div>
+//                 <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Your Review</label>
+//                 <textarea
+//                   value={newComment}
+//                   onChange={(e) => setNewComment(e.target.value)}
+//                   rows={3}
+//                   placeholder="Share your experience with this product..."
+//                   className="w-full px-5 py-3 bg-white/60 rounded-2xl border border-gray-200 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-lime-300 resize-none"
+//                 />
+//               </div>
+//               <div className="flex justify-end gap-3">
+//                 <button
+//                   onClick={() => setShowForm(false)}
+//                   className="px-6 py-2.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm text-gray-600 hover:bg-gray-50"
+//                 >
+//                   Cancel
+//                 </button>
+//                 <button
+//                   onClick={handleSubmit}
+//                   disabled={createReview.isPending || !newComment.trim()}
+//                   className="px-6 py-2.5 bg-lime-300 text-gray-900 rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-lime-400 shadow-lg shadow-lime-200 transition-all disabled:opacity-50"
+//                 >
+//                   <Send className="w-4 h-4" />
+//                   {createReview.isPending ? 'Submitting...' : 'Submit Review'}
+//                 </button>
+//               </div>
+//             </div>
+//           </motion.div>
+//         )}
+//       </AnimatePresence>
 
-      {/* Review List */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 text-gray-300 animate-spin" />
-        </div>
-      ) : reviews.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 gap-3">
-          <Star className="w-10 h-10 text-gray-200" />
-          <p className="text-lg font-bold text-gray-300">No reviews yet</p>
-          <p className="text-sm text-gray-400">Be the first to review this product!</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {reviews.map((review, idx) => (
-            <motion.div
-              key={review.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              className="p-6 bg-white/40 rounded-3xl border border-white/40 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-gray-400" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900">{review.userName ?? 'Anonymous'}</p>
-                    <p className="text-xs text-gray-400 font-medium">
-                      {new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </p>
-                  </div>
-                </div>
-                <StarRating rating={review.rating} />
-              </div>
-              {review.comment && (
-                <p className="text-gray-600 font-medium leading-relaxed ml-[52px]">{review.comment}</p>
-              )}
-            </motion.div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+//       {/* Review List */}
+//       {isLoading ? (
+//         <div className="flex items-center justify-center py-12">
+//           <Loader2 className="w-6 h-6 text-gray-300 animate-spin" />
+//         </div>
+//       ) : reviews.length === 0 ? (
+//         <div className="flex flex-col items-center justify-center py-12 gap-3">
+//           <Star className="w-10 h-10 text-gray-200" />
+//           <p className="text-lg font-bold text-gray-300">No reviews yet</p>
+//           <p className="text-sm text-gray-400">Be the first to review this product!</p>
+//         </div>
+//       ) : (
+//         <div className="space-y-4">
+//           {reviews.map((review, idx) => (
+//             <motion.div
+//               key={review.id}
+//               initial={{ opacity: 0, y: 10 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               transition={{ delay: idx * 0.05 }}
+//               className="p-6 bg-white/40 rounded-3xl border border-white/40 hover:shadow-lg transition-shadow"
+//             >
+//               <div className="flex items-start justify-between mb-3">
+//                 <div className="flex items-center gap-3">
+//                   <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+//                     <User className="w-5 h-5 text-gray-400" />
+//                   </div>
+//                   <div>
+//                     <p className="font-bold text-gray-900">{review.userName ?? 'Anonymous'}</p>
+//                     <p className="text-xs text-gray-400 font-medium">
+//                       {new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+//                     </p>
+//                   </div>
+//                 </div>
+//                 <StarRating rating={review.rating} />
+//               </div>
+//               {review.comment && (
+//                 <p className="text-gray-600 font-medium leading-relaxed ml-[52px]">{review.comment}</p>
+//               )}
+//             </motion.div>
+//           ))}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }

@@ -182,7 +182,7 @@ export default function Navbar({ onLoginClick, showUserActions = false, onFilter
                       <IconCountBadge count={unreadNotificationCount} />
                     </button>
 
-                    <button onClick={() => setIsWishlistOpen(true)} className="relative p-1.5 text-gray-700 hover:text-sky-600 transition-colors hidden lg:block">
+                    <button onClick={() => setIsWishlistOpen(true)} className="relative p-1.5 text-gray-700 hover:text-sky-600 transition-colors">
                       <Bookmark className="w-5 h-5" />
                       <IconCountBadge count={wishlistCount} />
                     </button>
@@ -287,7 +287,7 @@ export default function Navbar({ onLoginClick, showUserActions = false, onFilter
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-[280px] sm:w-[320px] bg-white z-[91] lg:hidden flex flex-col shadow-2xl safe-bottom"
+              className="fixed top-0 right-0 h-full w-[280px] sm:w-[320px] bg-white z-[91] lg:hidden flex flex-col shadow-2xl safe-bottom overflow-y-auto"
             >
               {/* Menu Top Actions: User Info & Logout (Redesigned) */}
               {isMounted && isAuthenticated && (

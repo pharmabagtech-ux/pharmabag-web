@@ -315,7 +315,7 @@ export default function PremiumProductCard({
           </h3>
           <button
             type="button"
-            className="w-[22px] h-[22px] bg-black rounded-full flex items-center justify-center ml-2 mr-[-8px] flex-shrink-0 hover:scale-110 transition-transform shadow-sm"
+            className="w-[22px] h-[22px] bg-[#999999] rounded-full flex items-center justify-center ml-2 mr-[-8px] flex-shrink-0 hover:scale-110 transition-transform shadow-sm"
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
@@ -323,7 +323,7 @@ export default function PremiumProductCard({
               onQuickView?.();
             }}
           >
-            <ArrowUpRight className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+            <ArrowUpRight className="w-3.5 h-3.5  text-white" strokeWidth={3} />
           </button>
         </div>
 

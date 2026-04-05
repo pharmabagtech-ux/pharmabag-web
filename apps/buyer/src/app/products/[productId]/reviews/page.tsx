@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Star, 
-  ArrowLeft, 
-  MessageSquare, 
-  ThumbsUp, 
-  User, 
+import {
+  Star,
+  ArrowLeft,
+  MessageSquare,
+  ThumbsUp,
+  User,
   Clock,
   Plus,
   X
@@ -30,7 +30,7 @@ export default function ProductReviewsPage() {
   const [comment, setComment] = useState('');
 
   const reviews = reviewsData?.data ?? [];
-  const averageRating = reviews.length > 0 
+  const averageRating = reviews.length > 0
     ? (reviews.reduce((acc: number, rev: any) => acc + rev.rating, 0) / reviews.length).toFixed(1)
     : 0;
 
@@ -54,7 +54,7 @@ export default function ProductReviewsPage() {
   if (isProductLoading || isReviewsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f8fbfa]">
-        <motion.div 
+        <motion.div
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
           className="w-12 h-12 border-4 border-lime-300 border-t-transparent rounded-full"
@@ -68,8 +68,8 @@ export default function ProductReviewsPage() {
       <Navbar showUserActions={true} />
 
       <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 px-[4vw] w-full mx-auto">
-        <Link 
-          href={`/products/${productId}`} 
+        <Link
+          href={`/products/${productId}`}
           className="inline-flex items-center gap-2 text-gray-400 font-bold hover:text-gray-900 transition-colors mb-6 sm:mb-8 group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -77,15 +77,15 @@ export default function ProductReviewsPage() {
         </Link>
 
         {/* Product Summary Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/40 backdrop-blur-3xl border border-white/50 rounded-2xl sm:rounded-3xl md:rounded-[40px] p-4 sm:p-6 md:p-8 lg:p-10 mb-8 sm:mb-12 shadow-xl flex flex-col md:flex-row items-center gap-6 sm:gap-8 md:gap-10"
         >
           <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 bg-[#f1f6ea] rounded-2xl sm:rounded-3xl flex-shrink-0 relative overflow-hidden flex items-center justify-center">
-            <img 
-              src={product?.images?.[0] || '/product_placeholder.png'} 
-              alt={product?.name} 
+            <img
+              src={product?.images?.[0] || '/product_placeholder.png'}
+              alt={product?.name}
               className="object-contain p-6"
             />
           </div>
@@ -103,7 +103,7 @@ export default function ProductReviewsPage() {
               </p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setIsAddingReview(true)}
             className="px-5 sm:px-8 h-12 sm:h-14 md:h-16 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-xl sm:rounded-2xl font-black shadow-xl shadow-lime-300/20 active:scale-95 transition-all flex items-center gap-2 sm:gap-3 text-sm sm:text-base flex-shrink-0"
           >
@@ -116,7 +116,7 @@ export default function ProductReviewsPage() {
         <div className="space-y-6">
           <AnimatePresence>
             {reviews.map((review: any, idx: number) => (
-              <motion.div 
+              <motion.div
                 key={review.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -140,9 +140,9 @@ export default function ProductReviewsPage() {
                   </div>
                   <div className="flex gap-1">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className={`w-4 h-4 ${i < review.rating ? 'text-lime-500 fill-lime-500' : 'text-gray-200'}`} 
+                      <Star
+                        key={i}
+                        className={`w-4 h-4 ${i < review.rating ? 'text-lime-500 fill-lime-500' : 'text-gray-200'}`}
                       />
                     ))}
                   </div>
@@ -178,14 +178,14 @@ export default function ProductReviewsPage() {
       <AnimatePresence>
         {isAddingReview && (
           <>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsAddingReview(false)}
               className="fixed inset-0 bg-black/5 backdrop-blur-xl z-[150]"
             />
-            <motion.div 
+            <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
@@ -194,7 +194,7 @@ export default function ProductReviewsPage() {
             >
               <div className="flex items-center justify-between mb-12">
                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">Review Product</h2>
-                <button 
+                <button
                   onClick={() => setIsAddingReview(false)}
                   className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
                 >
@@ -222,7 +222,7 @@ export default function ProductReviewsPage() {
 
                   <div className="space-y-4">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Your Experience</p>
-                    <textarea 
+                    <textarea
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                       placeholder="What do you think about the product?"
@@ -233,7 +233,7 @@ export default function ProductReviewsPage() {
                 </div>
 
                 <div className="mt-auto">
-                  <button 
+                  <button
                     type="submit"
                     disabled={createReview.isPending || !comment.trim()}
                     className="w-full h-16 bg-lime-300 hover:bg-lime-400 disabled:opacity-50 text-gray-900 rounded-2xl text-xl font-black shadow-xl shadow-lime-300/20 active:scale-95 transition-all"

@@ -155,11 +155,11 @@ function ProductsPageContent() {
   const getSortablePrice = (p: any) => {
     // If sellingPrice is already on the object from backend, use it
     if (p.sellingPrice && p.sellingPrice > 0) return p.sellingPrice;
-    
+
     // Fallback to manual discount calculation to ensure sort matches UI
     const mrp = p.mrp || p.price || 0;
     const discount = p.discountMeta || p.discountDetails || p.discountFormDetails;
-    
+
     if (discount && mrp > 0) {
       if (discount.discountPercent > 0) {
         return mrp * (1 - (discount.discountPercent / 100));
@@ -167,7 +167,7 @@ function ProductsPageContent() {
         return discount.specialPrice;
       }
     }
-    
+
     return mrp || p.price || p.ptr || 0;
   };
 
@@ -311,9 +311,9 @@ function ProductsPageContent() {
                 <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">Home</Link>
                 <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" strokeWidth={3} />
                 <Link href="/products" className="text-gray-400 hover:text-gray-600 transition-colors">
-                <span className={`${searchTerm ? 'text-gray-400' : 'text-gray-900'} capitalize truncate max-w-[120px]`}>
-                  {selectedCategory ? (categoryObject?.name || 'Category') : 'All Products'}
-                </span>
+                  <span className={`${searchTerm ? 'text-gray-400' : 'text-gray-900'} capitalize truncate max-w-[120px]`}>
+                    {selectedCategory ? (categoryObject?.name || 'Category') : 'All Products'}
+                  </span>
                 </Link>
                 {searchTerm && (
                   <>
