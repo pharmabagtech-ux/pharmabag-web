@@ -12,7 +12,7 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config: any) => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("pb_access_token");
+    const token = localStorage.getItem("pb_access_token") || localStorage.getItem("pb_token");
     if (token && config.headers) {
       const cleanToken = token.replace(/^(Bearer\s+)+/i, "");
       config.headers.Authorization = `Bearer ${cleanToken}`;

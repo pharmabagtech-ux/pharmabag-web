@@ -394,7 +394,7 @@ export async function sendUserNotification(userId: string, payload: { title: str
     const { data } = await apiClient.post<{ data: any }>(`/admin/notifications/user/${userId}`, payload);
     return data.data;
   } catch {
-    // Notification send is best-effort — don't block approval if this endpoint doesn't exist
+    // Notification send is best-effort
     console.warn('[Admin] Failed to send user notification — endpoint may not exist');
     return null;
   }
@@ -404,8 +404,14 @@ export async function getNotificationHistory(params: { page?: number; limit?: nu
   const qs = new URLSearchParams();
   if (params.page) qs.set("page", String(params.page));
   if (params.limit) qs.set("limit", String(params.limit));
-  const { data } = await apiClient.get<{ data: any }>(`/admin/notifications?${qs}`);
-  return data.data;
+  
+  const { data } = await apiClient.get<any>(`/admin/notifications/broadcasts?${qs}`);
+  return data.data ?? data;
+}
+
+export async function getMyBroadcastHistory() {
+  const { data } = await apiClient.get<any>(`/admin/notifications/broadcasts/me`);
+  return data.data ?? data;
 }
 
 // ─── Platform Settings ───────────────────────────────

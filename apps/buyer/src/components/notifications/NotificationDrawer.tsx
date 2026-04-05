@@ -153,7 +153,7 @@ export default function NotificationDrawer({ isOpen, onClose }: { isOpen: boolea
                           </span>
                         </div>
                         <p className={`text-xs sm:text-sm leading-relaxed ${notif.isRead ? 'text-gray-400' : 'text-gray-600 font-medium'}`}>
-                          {notif.message}
+                          {notif.message || notif.body || notif.msg}
                         </p>
                       </div>
                     </motion.div>

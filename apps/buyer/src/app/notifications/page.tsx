@@ -134,8 +134,8 @@ export default function NotificationsPage() {
                           {formatTimeAgo(notif.createdAt)}
                         </span>
                       </div>
-                      <p className={`text-sm leading-relaxed ${notif.isRead ? 'text-gray-400' : 'text-gray-600 font-medium'}`}>
-                        {notif.message}
+                      <p className={`text-xs sm:text-sm leading-relaxed ${notif.isRead ? 'text-gray-400' : 'text-gray-600 font-medium'}`}>
+                        {notif.message || notif.body || notif.msg}
                       </p>
                     </div>
 

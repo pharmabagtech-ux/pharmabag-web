@@ -15,7 +15,7 @@ import {
   getSuggestions, createSuggestion, updateSuggestion, deleteSuggestion, importSuggestionsCsv,
   getBanners, createBanner, updateBanner, deleteBanner,
   getReferralCodes, createReferralCode, deleteReferralCode,
-  broadcastNotification, getNotificationHistory, sendUserNotification,
+  broadcastNotification, getNotificationHistory, getMyBroadcastHistory, sendUserNotification,
   getPlatformSettings, updatePlatformSettings,
   getRevenueChart, getOrdersChart, getTopProducts, getTopSellers,
 } from "@/api/admin.api";
@@ -413,11 +413,19 @@ export function useDeleteReferralCode() {
 
 // ─── Notifications ───────────────────────────────────
 export function useBroadcastNotification() {
-  return useMutation({ mutationFn: (payload: { target: string; message: string }) => broadcastNotification(payload) });
+  const qc = useQueryClient();
+  return useMutation({ 
+    mutationFn: (payload: { target: string; message: string }) => broadcastNotification(payload),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "notifications"] }),
+  });
 }
 
 export function useNotificationHistory(params: { page?: number; limit?: number } = {}) {
   return useQuery({ queryKey: ["admin", "notifications", params], queryFn: () => getNotificationHistory(params), staleTime: 60_000, retry: 1 });
+}
+
+export function useMyNotificationHistory() {
+  return useQuery({ queryKey: ["admin", "notifications", "me"], queryFn: getMyBroadcastHistory, staleTime: 60_000, retry: 1 });
 }
 
 // ─── Platform Settings ───────────────────────────────

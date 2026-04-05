@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Bell, Send, AlertCircle, Clock, Users } from "lucide-react";
-import { useBroadcastNotification, useNotificationHistory } from "@/hooks/useAdmin";
+import { useBroadcastNotification, useNotificationHistory, useMyNotificationHistory } from "@/hooks/useAdmin";
 import { toast } from "react-hot-toast";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Tabs, Badge, Pagination } from "@/components/ui";
@@ -34,11 +34,27 @@ export default function NotificationsPage() {
     );
   };
 
-  const [tab, setTab] = useState("broadcast");
+  const [tab, setTab] = useState<"broadcast" | "history">("broadcast");
   const [historyPage, setHistoryPage] = useState(1);
-  const { data: historyData } = useNotificationHistory({ page: historyPage, limit: 20 });
-  const notifications: any[] = Array.isArray(historyData) ? historyData : (historyData?.data ?? []);
-  const historyTotal = historyData?.total ?? notifications.length;
+  const [showMyOnly, setShowMyOnly] = useState(false);
+
+  const { data: historyAll, isLoading: allLoading } = useNotificationHistory({ page: historyPage, limit: 20 });
+  const { data: historyMe, isLoading: meLoading } = useMyNotificationHistory();
+  
+  const historyRaw = showMyOnly ? historyMe : historyAll;
+  const historyLoading = showMyOnly ? meLoading : allLoading;
+
+  // High-resilience extraction
+  const notifications: any[] = (() => {
+    if (!historyRaw) return [];
+    if (Array.isArray(historyRaw)) return historyRaw;
+    if (Array.isArray(historyRaw.data)) return historyRaw.data;
+    if (Array.isArray(historyRaw.notifications)) return historyRaw.notifications;
+    if (Array.isArray(historyRaw.result)) return historyRaw.result;
+    return [];
+  })();
+
+  const historyTotal = historyRaw?.total ?? historyRaw?.count ?? notifications.length;
 
   return (
     <AdminLayout>
@@ -66,42 +82,75 @@ export default function NotificationsPage() {
         <Tabs tabs={[
           { value: "broadcast", label: "Broadcast" },
           { value: "history", label: "History", count: historyTotal || undefined },
-        ]} active={tab} onChange={setTab} />
+        ]} active={tab} onChange={(v: any) => setTab(v)} />
 
         {tab === "history" && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl overflow-hidden">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Broadcast History</h2>
+              <div className="flex items-center gap-2 bg-accent/30 p-1 rounded-lg border border-border/50">
+                <button 
+                  onClick={() => setShowMyOnly(false)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!showMyOnly ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  All Broadcasts
+                </button>
+                <button 
+                  onClick={() => setShowMyOnly(true)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${showMyOnly ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Sent by Me
+                </button>
+              </div>
+            </div>
+
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl overflow-hidden">
             <div className="divide-y divide-border/30">
-              {notifications.length === 0 ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">No notification history</div>
+              {historyLoading ? (
+                <div className="py-20 flex flex-col items-center justify-center gap-4">
+                  <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  <p className="text-sm text-muted-foreground animate-pulse">Loading broadcast history...</p>
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="py-16 text-center">
+                   <Bell className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
+                   <p className="text-sm text-muted-foreground font-medium">No notification history found.</p>
+                   <p className="text-xs text-muted-foreground/60 mt-1">Broadcasted messages will appear here once sent.</p>
+                </div>
               ) : notifications.map((n: any, i: number) => (
                 <div key={n.id || i} className="p-5 hover:bg-accent/30 transition-colors">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <p className="text-sm text-foreground">{n.message}</p>
-                      <div className="flex items-center gap-3 mt-2">
+                      <p className="text-sm font-medium text-foreground leading-relaxed">
+                        {n.message || n.body || n.msg || "No message content"}
+                      </p>
+                      <div className="flex items-center gap-3 mt-3">
                         <Badge variant={n.target === "ALL" ? "info" : n.target === "BUYER" ? "success" : "purple"}>
                           <Users className="h-3 w-3 mr-1" />
-                          {n.target ?? "All"}
+                          {n.target ?? "Everyone"}
                         </Badge>
                         {n.deliveredCount != null && (
-                          <span className="text-xs text-muted-foreground">{n.deliveredCount} delivered</span>
+                          <span className="text-xs font-semibold text-muted-foreground/70 bg-muted/50 px-2 py-0.5 rounded-full">
+                            {n.deliveredCount} delivered
+                          </span>
                         )}
                       </div>
                     </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                    <span className="text-xs font-medium text-muted-foreground whitespace-nowrap flex items-center gap-1.5 opacity-80 bg-accent/50 px-2 py-1 rounded-lg">
                       <Clock className="h-3 w-3" />
-                      {n.createdAt ? new Date(n.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
+                      {n.createdAt ? new Date(n.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Recently"}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
-            {historyTotal > 20 && (
-              <div className="p-4 border-t border-border/50">
+            {!historyLoading && historyTotal > 20 && (
+              <div className="p-4 border-t border-border/50 bg-accent/5">
                 <Pagination page={historyPage} totalPages={Math.ceil(historyTotal / 20)} onPageChange={setHistoryPage} />
               </div>
             )}
           </motion.div>
+          </div>
         )}
 
         {tab === "broadcast" && <motion.div 
