@@ -11,7 +11,7 @@ import { useOrderById, useCancelOrder } from '@/hooks/useOrders';
 import { useClearCart } from '@/hooks/useCart';
 import AuthGuard from '@/components/shared/AuthGuard';
 
-const STATUS_ORDER = ['PLACED', 'ACCEPTED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
+const STATUS_ORDER = ['PLACED', 'ACCEPTED', 'PAYMENT_RECEIVED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
 function normalizeStatus(s: string | undefined): string {
   const status = (s || '').toUpperCase();
@@ -48,7 +48,7 @@ function formatImageUrl(url: any): string | undefined {
 
 function buildTimelineSteps(status: string | undefined) {
   const normalized = normalizeStatus(status);
-  const labels = ['Order Placed', 'Confirmed', 'Shipped', 'Out for Delivery', 'Delivered'];
+  const labels = ['Order Placed', 'Confirmed', 'Payment Received', 'Shipped', 'Out for Delivery', 'Delivered'];
   const currentIdx = STATUS_ORDER.indexOf(normalized);
   
   // Also handle cases where status might be slightly ahead/behind
@@ -58,8 +58,8 @@ function buildTimelineSteps(status: string | undefined) {
   return labels.map((label, idx) => ({
     label,
     description: idx <= activeIdx ? '' : 'Pending',
-    isCompleted: idx < activeIdx,
-    isActive: idx === activeIdx,
+    isCompleted: idx <= activeIdx,
+    isActive: idx === activeIdx + 1,
   }));
 }
 
@@ -69,6 +69,7 @@ function getStatusBadge(status: string | undefined) {
   if (s === 'SHIPPED') return { label: 'In Transit', cls: 'bg-blue-100 text-blue-700 font-bold' };
   if (s === 'OUT_FOR_DELIVERY') return { label: 'Out for Delivery', cls: 'bg-purple-100 text-purple-700 font-bold' };
   if (s === 'CANCELLED') return { label: 'Cancelled', cls: 'bg-red-100 text-red-700 font-bold' };
+  if (s === 'PAYMENT_RECEIVED') return { label: 'Payment Received', cls: 'bg-indigo-100 text-indigo-700 font-bold' };
   if (s === 'ACCEPTED') return { label: 'Confirmed', cls: 'bg-lime-100 text-lime-700 font-bold' };
   if (s === 'PLACED') return { label: 'Order Placed', cls: 'bg-yellow-100 text-yellow-700 font-bold' };
   return { label: s || 'Unknown', cls: 'bg-gray-100 text-gray-700 font-bold' };

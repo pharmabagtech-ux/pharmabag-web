@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 const ORDER_STATUSES = [
   { key: "PLACED", label: "Placed", icon: Clock, color: "bg-yellow-500" },
   { key: "ACCEPTED", label: "Accepted", icon: CheckCircle, color: "bg-blue-500" },
+  { key: "PAYMENT_RECEIVED", label: "Payment Received", icon: CreditCard, color: "bg-teal-500" },
   { key: "SHIPPED", label: "Shipped", icon: Truck, color: "bg-indigo-500" },
   { key: "OUT_FOR_DELIVERY", label: "Out for Delivery", icon: Package, color: "bg-purple-500" },
   { key: "DELIVERED", label: "Delivered", icon: CheckCircle, color: "bg-green-500" },

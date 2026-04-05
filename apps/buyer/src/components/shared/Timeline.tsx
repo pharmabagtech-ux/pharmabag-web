@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, Package, ThumbsUp, Truck, MapPin, PartyPopper } from 'lucide-react';
+import { CheckCircle2, Circle, Package, ThumbsUp, Truck, MapPin, PartyPopper, CreditCard } from 'lucide-react';
 
 interface TimelineStep {
   label: string;
@@ -10,7 +10,7 @@ interface TimelineStep {
   isActive: boolean;
 }
 
-const stepIcons = [Package, ThumbsUp, Truck, MapPin, PartyPopper];
+const stepIcons = [Package, ThumbsUp, CreditCard, Truck, MapPin, CheckCircle2];
 
 export default function Timeline({ steps }: { steps: TimelineStep[] }) {
   const completedCount = steps.filter((s) => s.isCompleted).length;
@@ -69,7 +69,7 @@ export default function Timeline({ steps }: { steps: TimelineStep[] }) {
                     transition={{ type: 'spring', delay: idx * 0.2, stiffness: 300 }}
                     className="w-9 h-9 bg-lime-400 rounded-xl flex items-center justify-center shadow-lg shadow-lime-200"
                   >
-                    <CheckCircle2 className="w-4.5 h-4.5 text-gray-900" />
+                    <StepIcon className="w-4.5 h-4.5 text-gray-900" />
                   </motion.div>
                 ) : step.isActive ? (
                   <div className="w-9 h-9 bg-white border-2 border-lime-400 rounded-xl flex items-center justify-center relative">
