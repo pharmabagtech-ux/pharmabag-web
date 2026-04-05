@@ -91,6 +91,39 @@ export default function MasterCatalogPage() {
     if (fileRef.current) fileRef.current.value = "";
   };
 
+  const handleExport = async () => {
+    try {
+      toast.loading("Preparing CSV...", { id: "export-csv" });
+      // Fetch all suggestions (using a large limit to get the full catalog)
+      const res = await (require("@/api/admin.api").getSuggestions({ limit: 5000 }));
+      const allSuggestions = Array.isArray(res) ? res : (res?.data ?? []);
+      
+      if (allSuggestions.length === 0) {
+        toast.error("No catalog data to export", { id: "export-csv" });
+        return;
+      }
+
+      const headers = "name,manufacturer,chemicalComposition,mrp,gstPercent,category,subCategory\n";
+      const rows = allSuggestions.map((s: any) => {
+        const cat = s.category?.name || s.category || "";
+        const sub = s.subCategory?.name || s.subCategory || "";
+        const comp = s.composition || s.chemicalComposition || "";
+        return `"${s.name}","${s.manufacturer}","${comp}",${s.mrp || 0},${s.gstPercent || 0},"${cat}","${sub}"`;
+      }).join("\n");
+
+      const blob = new Blob([headers + rows], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `master_catalog_export_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      
+      toast.success(`Exported ${allSuggestions.length} products`, { id: "export-csv" });
+    } catch (err) {
+      toast.error("Failed to export catalog", { id: "export-csv" });
+    }
+  };
+
   const downloadSample = () => {
     const headers = "name,manufacturer,chemicalComposition,mrp,gstPercent,category,subCategory\n";
     const sample = 'Paracetamol 500mg,Cipla,Paracetamol,15.00,12,Tablets,Pain Relief\n';
@@ -126,6 +159,7 @@ export default function MasterCatalogPage() {
           <div className="flex items-center gap-2">
             <input ref={fileRef} type="file" accept=".csv" onChange={handleImport} className="hidden" />
             <Button variant="outline" onClick={downloadSample} leftIcon={<Download className="h-4 w-4" />}>Sample CSV</Button>
+            <Button variant="outline" onClick={handleExport} leftIcon={<FileSpreadsheet className="h-4 w-4" />}>Export Full CSV</Button>
             <Button variant="outline" onClick={() => fileRef.current?.click()} loading={importCsv.isPending} leftIcon={<Upload className="h-4 w-4" />}>Import CSV</Button>
             <Button onClick={openCreate} leftIcon={<Plus className="h-4 w-4" />}>Add Product</Button>
           </div>
