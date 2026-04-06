@@ -10,7 +10,7 @@ import Navbar from '@/components/landing/Navbar';
 import LoginModal from '@/components/landing/LoginModal';
 import AuthGuard from '@/components/shared/AuthGuard';
 import { useCreateBuyerProfile, useUpdateBuyerProfile, useVerifyPanGst, useBuyerProfile } from '@/hooks/useBuyerProfile';
-import { useUploadKycDocument } from '@/hooks/useStorage';
+import { useUploadDrugLicense } from '@/hooks/useStorage';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
 import { useRouter } from 'next/navigation';
@@ -33,7 +33,7 @@ export default function OnboardingPage() {
   const createProfile = useCreateBuyerProfile();
   const updateProfile = useUpdateBuyerProfile();
   const verifyPanGst = useVerifyPanGst();
-  const uploadKyc = useUploadKycDocument();
+  const uploadKyc = useUploadDrugLicense();
   const { data: existingProfile, isLoading: isProfileLoading } = useBuyerProfile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);

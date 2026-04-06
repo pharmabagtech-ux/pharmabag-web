@@ -12,6 +12,13 @@ import { useAdminUsers, useAdminSellers, useAffirmUserStatus, useUserById, useUp
 type RoleFilter = "all" | "BUYER" | "SELLER" | "ADMIN";
 type StatusFilter = "all" | "APPROVED" | "PENDING" | "BLOCKED" | "VACATION";
 
+const getFullUrl = (url: string) => {
+  if (!url) return "";
+  if (url.startsWith("http") || url.startsWith("data:")) return url;
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/api$/, "");
+  return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
 function BuyerDetails({ userId }: { userId: string }) {
   const { data: user, isLoading } = useUserById(userId);
   if (isLoading) return <div className="py-4 text-center text-sm text-muted-foreground">Loading buyer details…</div>;
@@ -40,11 +47,11 @@ function BuyerDetails({ userId }: { userId: string }) {
           <div className="space-y-1 lg:col-span-2">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />Drug License Document</div>
             {/\.(jpe?g|png|webp)$/i.test(bp.drugLicenseUrl) ? (
-              <a href={bp.drugLicenseUrl} target="_blank" rel="noopener noreferrer">
-                <img src={bp.drugLicenseUrl} alt="Drug License" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain" />
+              <a href={getFullUrl(bp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer">
+                <img src={getFullUrl(bp.drugLicenseUrl)} alt="Drug License" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain" />
               </a>
             ) : (
-              <a href={bp.drugLicenseUrl} target="_blank" rel="noopener noreferrer"
+              <a href={getFullUrl(bp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
                 View Document <ExternalLink className="h-3 w-3" />
               </a>
@@ -109,11 +116,11 @@ function SellerDetails({ userId }: { userId: string }) {
         <div className="space-y-1 lg:col-span-3">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />Drug License Document</div>
           {/\.(jpe?g|png|webp)$/i.test(sp.drugLicenseUrl) ? (
-            <a href={sp.drugLicenseUrl} target="_blank" rel="noopener noreferrer">
-              <img src={sp.drugLicenseUrl} alt="Drug License" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain" />
+            <a href={getFullUrl(sp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer">
+              <img src={getFullUrl(sp.drugLicenseUrl)} alt="Drug License" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain" />
             </a>
           ) : (
-            <a href={sp.drugLicenseUrl} target="_blank" rel="noopener noreferrer"
+            <a href={getFullUrl(sp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
               View Document <ExternalLink className="h-3 w-3" />
             </a>

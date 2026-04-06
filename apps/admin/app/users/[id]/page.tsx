@@ -16,6 +16,13 @@ const STATUS_LEVELS = [
   { level: 3, label: "Full Credit", desc: "30-day credit line enabled", color: "purple" as const },
 ];
 
+const getFullUrl = (url: string) => {
+  if (!url) return "";
+  if (url.startsWith("http") || url.startsWith("data:")) return url;
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/api$/, "");
+  return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
 export default function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -148,11 +155,11 @@ export default function UserDetailPage() {
                     </div>
                     <div className="mt-2">
                       {/\.(jpe?g|png|webp)$/i.test(sp.drugLicenseUrl) ? (
-                        <a href={sp.drugLicenseUrl} target="_blank" rel="noopener noreferrer" className="block">
-                          <img src={sp.drugLicenseUrl} alt="Drug License" className="max-w-xs max-h-48 rounded-xl border border-border object-contain" />
+                        <a href={getFullUrl(sp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer" className="block">
+                          <img src={getFullUrl(sp.drugLicenseUrl)} alt="Drug License" className="max-w-xs max-h-48 rounded-xl border border-border object-contain" />
                         </a>
                       ) : (
-                        <a href={sp.drugLicenseUrl} target="_blank" rel="noopener noreferrer"
+                        <a href={getFullUrl(sp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-accent/30 text-sm font-medium text-foreground hover:bg-accent transition-colors">
                           <FileText className="h-4 w-4" />View Drug License Document<ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                         </a>
@@ -177,11 +184,11 @@ export default function UserDetailPage() {
                     </div>
                     <div className="mt-2">
                       {/\.(jpe?g|png|webp)$/i.test(bp?.drugLicenseUrl ?? user.drugLicenseUrl ?? '') ? (
-                        <a href={bp?.drugLicenseUrl ?? user.drugLicenseUrl} target="_blank" rel="noopener noreferrer" className="block">
-                          <img src={bp?.drugLicenseUrl ?? user.drugLicenseUrl} alt="Drug License" className="max-w-xs max-h-48 rounded-xl border border-border object-contain" />
+                        <a href={getFullUrl(bp?.drugLicenseUrl ?? user.drugLicenseUrl ?? "")} target="_blank" rel="noopener noreferrer" className="block">
+                          <img src={getFullUrl(bp?.drugLicenseUrl ?? user.drugLicenseUrl ?? "")} alt="Drug License" className="max-w-xs max-h-48 rounded-xl border border-border object-contain" />
                         </a>
                       ) : (
-                        <a href={bp?.drugLicenseUrl ?? user.drugLicenseUrl} target="_blank" rel="noopener noreferrer"
+                        <a href={getFullUrl(bp?.drugLicenseUrl ?? user.drugLicenseUrl ?? "")} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-accent/30 text-sm font-medium text-foreground hover:bg-accent transition-colors">
                           <FileText className="h-4 w-4" />View Drug License Document<ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                         </a>

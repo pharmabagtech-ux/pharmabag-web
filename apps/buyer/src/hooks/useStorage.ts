@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { uploadPaymentProofFile, uploadKycDocument } from '@pharmabag/api-client';
+import { uploadPaymentProofFile, uploadKycDocument, uploadDrugLicense } from '@pharmabag/api-client';
 
 export function useUploadPaymentProofFile() {
   return useMutation({
@@ -12,5 +12,11 @@ export function useUploadPaymentProofFile() {
 export function useUploadKycDocument() {
   return useMutation({
     mutationFn: (file: File) => uploadKycDocument(file),
+  });
+}
+
+export function useUploadDrugLicense() {
+  return useMutation({
+    mutationFn: (file: File) => uploadDrugLicense(file),
   });
 }
