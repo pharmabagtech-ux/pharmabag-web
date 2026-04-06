@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, User, ShoppingBag, LogOut, ClipboardList, CreditCard, HelpCircle, ArrowRight, Bookmark, Menu, X, LifeBuoy } from 'lucide-react';
+import { Bell, User, ShoppingBag, LogOut, ClipboardList, CreditCard, HelpCircle, ArrowRight, Bookmark, Menu, X, LifeBuoy, Filter } from 'lucide-react';
 import CategoryMegaMenu from '@/components/landing/CategoryMegaMenu';
 import CartDrawer from '@/components/cart/CartDrawer';
 import WishlistDrawer from '@/components/wishlist/WishlistDrawer';
@@ -171,10 +171,17 @@ export default function Navbar({ onLoginClick, showUserActions = false, onFilter
                         <Link href="/orders" className="p-1.5 text-gray-700 hover:text-sky-600 transition-colors lg:hidden">
                           <ClipboardList className="w-5 h-5" />
                         </Link>
-                        <Link href="/payments" className="p-1.5 text-gray-700 hover:text-sky-600 transition-colors lg:hidden">
-                          <CreditCard className="w-5 h-5" />
-                        </Link>
                       </>
+                    )}
+
+                    {onFilterClick && (
+                      <button
+                        type="button"
+                        onClick={onFilterClick}
+                        className="p-1.5 text-gray-700 hover:text-sky-600 transition-colors lg:hidden"
+                      >
+                        <Filter className="w-5 h-5" />
+                      </button>
                     )}
 
                     <button onClick={() => setIsNotificationsOpen(true)} className="relative p-1.5 text-gray-700 hover:text-sky-600 transition-colors">
@@ -202,7 +209,7 @@ export default function Navbar({ onLoginClick, showUserActions = false, onFilter
               {/* Profile Dropdown or Login Button */}
               {isMounted && isAuthenticated ? (
                 <div
-                  className="relative"
+                  className="relative hidden lg:block"
                   onMouseEnter={() => {
                     if (profileTimeoutRef.current) clearTimeout(profileTimeoutRef.current);
                     setIsProfileMenuOpen(true);

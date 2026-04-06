@@ -7,10 +7,13 @@ interface ProductCardProps {
   name: string;
   price: string;
   image: string;
+  stock?: number;
   onClick?: () => void;
 }
 
-export default function ProductCard({ name, price, image, onClick }: ProductCardProps) {
+export default function ProductCard({ name, price, image, stock, onClick }: ProductCardProps) {
+  const isOutOfStock = stock !== undefined && stock <= 0;
+
   return (
     <motion.div
       whileHover={{ y: -5 }}
@@ -23,7 +26,7 @@ export default function ProductCard({ name, price, image, onClick }: ProductCard
           src={image}
           alt={name}
           fill
-          className="object-contain p-1 transform group-hover:scale-105 transition-transform duration-700 ease-out drop-shadow-md"
+          className={`object-contain p-1 transform group-hover:scale-105 transition-transform duration-700 ease-out drop-shadow-md ${isOutOfStock ? 'grayscale brightness-90 opacity-80' : ''}`}
         />
       </div>
       <h3 className="text-[14px] sm:text-[15px] font-medium text-gray-700 mb-1 truncate text-center w-full">{name}</h3>

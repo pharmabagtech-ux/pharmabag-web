@@ -194,7 +194,11 @@ function ProductsPageContent() {
       </div>
 
       <div className="z-50 relative">
-        <Navbar showUserActions={true} onLoginClick={() => setIsLoginOpen(true)} onFilterClick={() => setShowMobileFilters(true)} />
+        <Navbar
+          showUserActions={true}
+          onLoginClick={() => setIsLoginOpen(true)}
+          onFilterClick={() => setShowMobileFilters(true)}
+        />
       </div>
 
 

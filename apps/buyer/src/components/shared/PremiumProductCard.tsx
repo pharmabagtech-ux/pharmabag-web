@@ -92,6 +92,7 @@ export default function PremiumProductCard({
   const initials = `${firstChar}${lastChar}`;
 
   const hasValidImage = image && image !== '/products/pharma_bottle.png' && !imageError;
+  const isOutOfStock = stock <= 0;
 
   const handleCardClick = () => {
     if (actionClicked.current) {
@@ -283,7 +284,7 @@ export default function PremiumProductCard({
               alt={name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-              className="object-contain"
+              className={`object-contain transition-all duration-300 ${isOutOfStock ? 'grayscale brightness-90 opacity-80' : ''}`}
               onError={() => setImageError(true)}
             />
           ) : (
