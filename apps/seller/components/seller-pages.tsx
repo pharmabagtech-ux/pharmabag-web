@@ -25,6 +25,8 @@ const ORDER_TABS = [
   { key: "all", label: "All Orders" },
   { key: "pending", label: "Pending" },
   { key: "accepted", label: "Accepted" },
+  { key: "dispatched", label: "Dispatched" },
+  { key: "warehouse", label: "At Warehouse" },
   { key: "shipped", label: "Shipped" },
   { key: "delivered", label: "Delivered" },
   { key: "cancelled", label: "Cancelled" },
@@ -70,6 +72,9 @@ function OrderTable({ orders, showConfirm = false, updateFn }: { orders: any[]; 
                         {showConfirm && (order.orderStatus==="PLACED" || order.status==="PLACED") && updateFn && (
                           <Button size="sm" className="text-xs h-7 px-3" onClick={()=>updateFn.mutate({orderId:order.orderId || order.id,status:"ACCEPTED"})}>Confirm</Button>
                         )}
+                        {showConfirm && (order.orderStatus==="ACCEPTED" || order.status==="ACCEPTED" || order.orderStatus==="PAYMENT_RECEIVED" || order.status==="PAYMENT_RECEIVED") && updateFn && (
+                          <Button size="sm" variant="info" className="text-xs h-7 px-3" onClick={()=>updateFn.mutate({orderId:order.orderId || order.id,status:"DISPATCHED_FROM_SELLER"})}>Dispatch</Button>
+                        )}
                       </div>
                     </td>
                   </>
@@ -95,7 +100,9 @@ export function OrdersContent() {
       switch(tab) {
         case "pending": return s === "PLACED" || s === "PENDING";
         case "accepted": return s === "ACCEPTED" || s === "CONFIRMED" || s === "PROCESSING";
-        case "shipped": return s === "SHIPPED" || s === "TRANSIT" || s === "WAREHOUSE";
+        case "dispatched": return s === "DISPATCHED_FROM_SELLER";
+        case "warehouse": return s === "RECEIVED_AT_WAREHOUSE" || s === "WAREHOUSE";
+        case "shipped": return s === "SHIPPED" || s === "TRANSIT";
         case "delivered": return s === "DELIVERED";
         case "cancelled": return s === "CANCELLED";
         default: return true;

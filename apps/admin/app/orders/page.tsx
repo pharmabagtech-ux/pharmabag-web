@@ -15,6 +15,8 @@ const STATUS_FILTERS = [
   { label: "Placed", v: "PLACED" },
   { label: "Accepted", v: "ACCEPTED" },
   { label: "Paid", v: "PAYMENT_RECEIVED" },
+  { label: "Dispatched", v: "DISPATCHED_FROM_SELLER" },
+  { label: "At Warehouse", v: "RECEIVED_AT_WAREHOUSE" },
   { label: "Shipped", v: "SHIPPED" },
   { label: "Delivered", v: "DELIVERED" },
   { label: "Cancelled", v: "CANCELLED" },
@@ -54,7 +56,9 @@ export default function AdminOrdersPage() {
     const nextMap: Record<string, string> = {
       PLACED: "ACCEPTED",
       ACCEPTED: "PAYMENT_RECEIVED",
-      PAYMENT_RECEIVED: "SHIPPED",
+      PAYMENT_RECEIVED: "DISPATCHED_FROM_SELLER",
+      DISPATCHED_FROM_SELLER: "RECEIVED_AT_WAREHOUSE",
+      RECEIVED_AT_WAREHOUSE: "SHIPPED",
       SHIPPED: "OUT_FOR_DELIVERY",
       OUT_FOR_DELIVERY: "DELIVERED",
     };
@@ -132,9 +136,9 @@ export default function AdminOrdersPage() {
                     <td className="px-5 py-4"><Badge variant={o.paymentStatus === "PAID" ? "success" : o.paymentStatus === "PENDING" ? "warning" : "error"}>{o.paymentStatus ?? "—"}</Badge></td>
                     <td className="px-5 py-4"><Badge variant={o.orderStatus === "DELIVERED" ? "success" : o.orderStatus === "PLACED" ? "warning" : o.orderStatus === "CANCELLED" ? "error" : "info"}>{o.orderStatus ?? "—"}</Badge></td>
                     <td className="px-5 py-4">
-                      {["PLACED", "ACCEPTED", "PAYMENT_RECEIVED", "SHIPPED", "OUT_FOR_DELIVERY"].includes(o.orderStatus) && (
+                      {["PLACED", "ACCEPTED", "PAYMENT_RECEIVED", "DISPATCHED_FROM_SELLER", "RECEIVED_AT_WAREHOUSE", "SHIPPED", "OUT_FOR_DELIVERY"].includes(o.orderStatus) && (
                         <button onClick={(e) => void handleOverride(e, o.id, o.orderStatus)} className="text-xs text-primary underline hover:text-primary/80">
-                          → {o.orderStatus === "PLACED" ? "Accept" : o.orderStatus === "ACCEPTED" ? "Mark Paid" : o.orderStatus === "PAYMENT_RECEIVED" ? "Ship" : o.orderStatus === "SHIPPED" ? "Out for Delivery" : "Deliver"}
+                          → {o.orderStatus === "PLACED" ? "Accept" : o.orderStatus === "ACCEPTED" ? "Mark Paid" : o.orderStatus === "PAYMENT_RECEIVED" ? "Dispatch" : o.orderStatus === "DISPATCHED_FROM_SELLER" ? "Recv at Wh" : o.orderStatus === "RECEIVED_AT_WAREHOUSE" ? "Ship" : o.orderStatus === "SHIPPED" ? "Out for Delivery" : "Deliver"}
                         </button>
                       )}
                     </td>
