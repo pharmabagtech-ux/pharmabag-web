@@ -6,6 +6,7 @@ import {
   getPaymentByOrderId,
   createPayment,
   uploadPaymentProof,
+  uploadPaymentProofByOrder,
   type CreatePaymentInput,
 } from '@pharmabag/api-client';
 
@@ -42,6 +43,21 @@ export function useUploadPaymentProof() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['payment'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+
+export function useUploadPaymentProofByOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orderId, proofUrl }: { orderId: string; proofUrl: string }) =>
+      uploadPaymentProofByOrder(orderId, proofUrl),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['payment', variables.orderId] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', variables.orderId] });
     },
   });
 }

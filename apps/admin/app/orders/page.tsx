@@ -2,12 +2,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
-import { Button, Input, Badge, Pagination } from "@/components/ui";
+import { Button, Input, Badge, Pagination, Modal } from "@/components/ui";
 import { formatCurrency } from "@pharmabag/utils";
 import { cn } from "@/lib/utils";
 import { useAdminOrders, useUpdateAdminOrderStatus } from "@/hooks/useAdmin";
+import { getPresignedUrl } from "@pharmabag/api-client";
 import toast from "react-hot-toast";
 
 const STATUS_FILTERS = [
@@ -72,6 +73,29 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const [proofModal, setProofModal] = useState<{ open: boolean; key?: string; url?: string }>({ open: false });
+
+  const handleOpenProof = async (e: React.MouseEvent, key?: string) => {
+    e.stopPropagation();
+    if (!key) return;
+    
+    setProofModal({ open: true, key });
+    
+    // If it's already a full URL, use it directly
+    if (key.startsWith('http')) {
+      setProofModal({ open: true, key, url: key });
+      return;
+    }
+
+    try {
+      const url = await getPresignedUrl(key);
+      setProofModal({ open: true, key, url });
+    } catch {
+      toast.error("Failed to generate viewing link");
+      setProofModal({ open: false });
+    }
+  };
+
   if (isLoading) {
     return (
       <AdminLayout>
@@ -133,7 +157,16 @@ export default function AdminOrdersPage() {
                     <td className="px-5 py-4 whitespace-nowrap"><span className="font-mono text-xs text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded">{(o.buyer?.id || o.buyerId || "—").slice(0, 8)}</span></td>
                     <td className="px-5 py-4 text-xs text-muted-foreground">{o.items?.length ?? o._count?.items ?? 0}</td>
                     <td className="px-5 py-4 text-sm font-semibold text-foreground">{formatCurrency(o.totalAmount ?? 0)}</td>
-                    <td className="px-5 py-4"><Badge variant={o.paymentStatus === "PAID" ? "success" : o.paymentStatus === "PENDING" ? "warning" : "error"}>{o.paymentStatus ?? "—"}</Badge></td>
+                    <td className="px-5 py-4">
+                      <div 
+                        onClick={(e) => handleOpenProof(e, o.payments?.[0]?.proofUrl)}
+                        className={cn(o.payments?.[0]?.proofUrl ? "cursor-pointer hover:opacity-80 transition-opacity" : "cursor-default")}
+                      >
+                        <Badge variant={o.paymentStatus === "SUCCESS" || o.paymentStatus === "PAID" ? "success" : o.paymentStatus === "PENDING" ? "warning" : "error"}>
+                          {o.paymentStatus === "SUCCESS" ? "PAID" : (o.paymentStatus ?? "—")}
+                        </Badge>
+                      </div>
+                    </td>
                     <td className="px-5 py-4"><Badge variant={o.orderStatus === "DELIVERED" ? "success" : o.orderStatus === "PLACED" ? "warning" : o.orderStatus === "CANCELLED" ? "error" : "info"}>{o.orderStatus ?? "—"}</Badge></td>
                     <td className="px-5 py-4">
                       {["PLACED", "ACCEPTED", "PAYMENT_RECEIVED", "DISPATCHED_FROM_SELLER", "RECEIVED_AT_WAREHOUSE", "SHIPPED", "OUT_FOR_DELIVERY"].includes(o.orderStatus) && (
@@ -152,6 +185,27 @@ export default function AdminOrdersPage() {
 
         {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
       </div>
+
+      <Modal open={proofModal.open} onClose={() => setProofModal({ open: false })} title="Payment Proof Verification">
+        <div className="flex flex-col items-center justify-center min-h-[300px] gap-4">
+          {proofModal.url ? (
+            <div className="w-full space-y-4">
+              <div className="aspect-auto max-h-[60vh] overflow-auto rounded-xl border border-border/50 bg-muted/10 p-2">
+                <img src={proofModal.url} alt="Payment Proof" className="max-w-full h-auto rounded-lg mx-auto" />
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" size="sm" onClick={() => window.open(proofModal.url, '_blank')}>Open in New Tab</Button>
+                <Button variant="primary" size="sm" onClick={() => setProofModal({ open: false })}>Close</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center space-y-2">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+              <p className="text-sm text-muted-foreground">Fetching secure image link...</p>
+            </div>
+          )}
+        </div>
+      </Modal>
     </AdminLayout>
   );
 }

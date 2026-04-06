@@ -7,7 +7,7 @@ import Navbar from '@/components/landing/Navbar';
 import { useToast } from '@/components/shared/Toast';
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePaymentByOrderId, useUploadPaymentProof } from '@/hooks/usePayments';
+import { usePaymentByOrderId, useUploadPaymentProofByOrder } from '@/hooks/usePayments';
 import { useUploadPaymentProofFile } from '@/hooks/useStorage';
 import { useOrderById } from '@/hooks/useOrders';
 import AuthGuard from '@/components/shared/AuthGuard';
@@ -20,23 +20,24 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
   const { data: payment, isLoading: isPaymentLoading, isError: isPaymentError } = usePaymentByOrderId(params.orderId);
   const { data: order, isLoading: isOrderLoading, isError: isOrderError } = useOrderById(params.orderId);
   const uploadFileMutation = useUploadPaymentProofFile();
-  const uploadProofMutation = useUploadPaymentProof();
+  const uploadProofByOrderMutation = useUploadPaymentProofByOrder();
   const { toast } = useToast();
 
   const isError = isPaymentError && isOrderError;
   const isLoading = isPaymentLoading || isOrderLoading;
-  const isUploading = uploadFileMutation.isPending || uploadProofMutation.isPending;
+  const isUploading = uploadFileMutation.isPending || uploadProofByOrderMutation.isPending;
 
   const handleUpload = async () => {
-    if (!file || !payment) return;
+    if (!file || !order) return;
     setUploadError('');
     try {
-      const { url } = await uploadFileMutation.mutateAsync(file);
-      await uploadProofMutation.mutateAsync({ paymentId: payment.id, proofUrl: url });
+      const { key } = await uploadFileMutation.mutateAsync(file);
+      await uploadProofByOrderMutation.mutateAsync({ orderId: params.orderId, proofUrl: key });
       setIsSuccess(true);
       toast('Payment proof submitted successfully!', 'success');
-    } catch {
-      setUploadError('Failed to upload payment proof. Please try again.');
+    } catch (err: any) {
+      console.error('[Payment] Upload flow failed:', err);
+      setUploadError(err.message || 'Failed to upload payment proof. Please try again.');
       toast('Upload failed. Please try again.', 'error');
     }
   };

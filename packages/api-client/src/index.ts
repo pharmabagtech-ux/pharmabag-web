@@ -69,6 +69,7 @@ export {
 export {
   createPayment,
   uploadPaymentProof,
+  uploadPaymentProofByOrder,
   getPaymentByOrderId,
   getPaymentHistory,
   type Payment,
@@ -136,6 +137,7 @@ export {
   uploadPaymentProofFile,
   uploadKycDocument,
   uploadDrugLicense,
+  getPresignedUrl,
 } from './modules/storage.api';
 
 // Platform Config

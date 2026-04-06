@@ -41,6 +41,11 @@ export async function uploadPaymentProof(paymentId: string, proofUrl: string): P
   return response.data.data ?? response.data;
 }
 
+export async function uploadPaymentProofByOrder(orderId: string, proofUrl: string): Promise<Payment> {
+  const response = await api.post(`/payments/order/${orderId}/proof`, { proofUrl });
+  return response.data.data ?? response.data;
+}
+
 export async function getPaymentByOrderId(orderId: string): Promise<Payment> {
   const response = await api.get(`/payments/order/${orderId}`);
   return response.data.data ?? response.data;
