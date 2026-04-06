@@ -85,6 +85,14 @@ export default function ProductDetailPage() {
                      <div><p className="text-xs text-muted-foreground font-medium uppercase">Max Order</p><p className="font-medium">{product.maximumOrderQuantity || "-"}</p></div>
                    </div>
                  </div>
+
+                 {/* Description */}
+                 {product.description && (
+                   <div className="glass-card p-6 rounded-2xl space-y-4">
+                     <h3 className="font-semibold text-lg border-b border-border/50 pb-2">Description</h3>
+                     <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{product.description}</p>
+                   </div>
+                 )}
                </div>
 
                {/* Right column: Images */}

@@ -19,14 +19,14 @@ export default function MasterCatalogPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "" });
+  const [form, setForm] = useState({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "", description: "" });
 
   const suggestions: any[] = Array.isArray(suggestionsData) ? suggestionsData : (suggestionsData?.data ?? []);
   const total = suggestionsData?.total ?? suggestions.length;
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "" });
+    setForm({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "", description: "" });
     setShowModal(true);
   };
 
@@ -39,7 +39,8 @@ export default function MasterCatalogPage() {
       mrp: String(item.mrp ?? ""), 
       gstPercent: String(item.gstPercent ?? ""),
       category: item.categoryId || item.category?.id || item.category?.name || item.category || "",
-      subCategory: item.subCategoryId || item.subCategory?.id || item.subCategory?.name || item.subCategory || "" 
+      subCategory: item.subCategoryId || item.subCategory?.id || item.subCategory?.name || item.subCategory || "",
+      description: item.description ?? ""
     });
     setShowModal(true);
   };
@@ -52,8 +53,9 @@ export default function MasterCatalogPage() {
         chemicalComposition: form.composition,
         mrp: form.mrp ? Number(form.mrp) : undefined,
         gstPercent: form.gstPercent ? Number(form.gstPercent) : undefined,
-        categoryId: form.category, // Assuming ID is passed from selection in a real scenario
-        subCategoryId: form.subCategory
+        categoryId: form.category,
+        subCategoryId: form.subCategory,
+        description: form.description
       };
       
       if (editing) {
@@ -103,12 +105,13 @@ export default function MasterCatalogPage() {
         return;
       }
 
-      const headers = "name,manufacturer,chemicalComposition,mrp,gstPercent,category,subCategory\n";
+      const headers = "name,manufacturer,chemicalComposition,mrp,gstPercent,category,subCategory,description\n";
       const rows = allSuggestions.map((s: any) => {
         const cat = s.category?.name || s.category || "";
         const sub = s.subCategory?.name || s.subCategory || "";
         const comp = s.composition || s.chemicalComposition || "";
-        return `"${s.name}","${s.manufacturer}","${comp}",${s.mrp || 0},${s.gstPercent || 0},"${cat}","${sub}"`;
+        const desc = (s.description || "").replace(/"/g, '""'); // Escape quotes
+        return `"${s.name}","${s.manufacturer}","${comp}",${s.mrp || 0},${s.gstPercent || 0},"${cat}","${sub}","${desc}"`;
       }).join("\n");
 
       const blob = new Blob([headers + rows], { type: 'text/csv' });
@@ -125,8 +128,8 @@ export default function MasterCatalogPage() {
   };
 
   const downloadSample = () => {
-    const headers = "name,manufacturer,chemicalComposition,mrp,gstPercent,category,subCategory\n";
-    const sample = 'Paracetamol 500mg,Cipla,Paracetamol,15.00,12,Tablets,Pain Relief\n';
+    const headers = "name,manufacturer,chemicalComposition,mrp,gstPercent,category,subCategory,description\n";
+    const sample = 'Paracetamol 500mg,Cipla,Paracetamol,15.00,12,Tablets,Pain Relief,"Effective relief from fever and pain."\n';
     const blob = new Blob([headers + sample], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -233,6 +236,7 @@ export default function MasterCatalogPage() {
                 <li>Download the sample CSV for correct formatting.</li>
                 <li><strong>MRP</strong> and <strong>GST Percent</strong> should be numbers.</li>
                 <li>Categories and subcategories must exist or will be matched by name.</li>
+                <li><strong>Description</strong> field is optional but highly recommended.</li>
                 <li>Duplicate products (by name + manufacturer) will be updated.</li>
                 <li>Large files (up to 5000 rows) are supported.</li>
               </ul>
@@ -270,6 +274,9 @@ export default function MasterCatalogPage() {
             </div>
             <Input label="Category" placeholder="e.g. Tablets" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} />
             <Input label="Sub-Category" placeholder="e.g. Pain Relief" value={form.subCategory} onChange={e => setForm(f => ({ ...f, subCategory: e.target.value }))} />
+            <div className="col-span-2">
+              <Textarea label="Description" placeholder="Detailed product description..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={4} />
+            </div>
           </div>
           <div className="flex justify-end gap-3 pt-6">
             <Button variant="ghost" onClick={() => setShowModal(false)}>Cancel</Button>
