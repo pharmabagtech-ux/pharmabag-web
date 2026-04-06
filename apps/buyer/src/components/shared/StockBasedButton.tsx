@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Clock, Loader2 } from 'lucide-react';
+import { Plus, Clock, Loader2, Dot } from 'lucide-react';
 
 export type StockStatus = 'good' | 'selling-fast' | 'low' | 'out-of-stock';
 
@@ -75,20 +75,22 @@ export function StockBasedButton({
       >
         {isLoading ? (
           <Loader2 className="w-6 h-6 animate-spin" />
-        ) : status === 'out-of-stock' ? (
-          <Clock className="w-6 h-6 text-red-500" strokeWidth={2.5} />
-        ) : (
-          <Plus className="w-6 h-6" strokeWidth={2.5} />
-        )}
+        )
+          : status === 'out-of-stock' ? (
+            <Dot size={32} className="w-6 h-6 text-white" strokeWidth={2.5} />
+          )
+            :
+            (
+              <Plus className="w-6 h-6" strokeWidth={2.5} />
+            )}
       </button>
 
       {/* Stock Status Badge */}
       {badgeMap[status] && (
-        <div className={`text-[8px] font-bold text-center truncate px-1 ${
-          status === 'selling-fast' ? 'text-yellow-700' :
+        <div className={`text-[8px] font-bold text-center truncate px-1 ${status === 'selling-fast' ? 'text-yellow-700' :
           status === 'low' ? 'text-red-600' :
-          'text-gray-500'
-        }`}>
+            'text-gray-500'
+          }`}>
           {badgeMap[status]}
         </div>
       )}

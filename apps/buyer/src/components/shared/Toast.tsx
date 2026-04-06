@@ -52,16 +52,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast: addToast }}>
       {children}
-      <div className="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 max-w-sm">
+      <div className="fixed top-6 lg:top-24 left-4 lg:left-6 z-[200] flex flex-col gap-3 max-w-sm pointer-events-none">
         <AnimatePresence>
           {toasts.map((t) => (
             <motion.div
               key={t.id}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 80, scale: 0.95 }}
+              initial={{ opacity: 0, x: -80, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -80, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className={`flex items-center gap-3 px-5 py-4 rounded-2xl border shadow-xl backdrop-blur-xl ${bgMap[t.type]}`}
+              className={`flex items-center gap-3 px-5 py-4 rounded-2xl border shadow-xl backdrop-blur-xl pointer-events-auto ${bgMap[t.type]}`}
             >
               {iconMap[t.type]}
               <p className="flex-1 text-sm font-bold text-gray-900">{t.message}</p>
