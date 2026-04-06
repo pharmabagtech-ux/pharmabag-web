@@ -29,11 +29,11 @@ function CartCountBadge() {
   );
 }
 
-function IconCountBadge({ count }: { count: number }) {
+function IconCountBadge({ count, bgColorClass = 'bg-red-500' }: { count: number, bgColorClass?: string }) {
   if (!count) return null;
   const label = count > 99 ? '99+' : String(count);
   return (
-    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border border-white shadow-sm">
+    <span className={`absolute -top-1 -right-1 w-4 h-4 ${bgColorClass} text-white text-[10px] font-black rounded-full flex items-center justify-center border border-white shadow-sm`}>
       {label}
     </span>
   );
@@ -191,7 +191,7 @@ export default function Navbar({ onLoginClick, showUserActions = false, onFilter
 
                     <button onClick={() => setIsWishlistOpen(true)} className="relative p-1.5 text-gray-700 hover:text-sky-600 transition-colors">
                       <Bookmark className="w-5 h-5" />
-                      <IconCountBadge count={wishlistCount} />
+                      <IconCountBadge count={wishlistCount} bgColorClass="bg-blue-500" />
                     </button>
                   </div>
                   {(isAuthenticated || (cartData?.items?.length ?? 0) > 0) && (
