@@ -12,10 +12,10 @@ export default function HomePage() {
     <main className="w-full bg-gradient-to-br from-[#8deaffe] via-[#e0ffc7e6] to-[#f4ffede6] min-h-screen relative">
       <Navbar showUserActions={true} />
       <section className="flex-1 overflow-hidden flex flex-col bg-transparent pt-16 lg:pt-24">
-        <div className="w-full flex-shrink-0 bg-transparent flex flex-col mb-10 lg:mb-8">
+        <div className="w-full flex-shrink-0 lg:pt-10 bg-transparent flex flex-col mb-10 lg:mb-8">
           <HeroSection />
         </div>
-        <div className="flex-1 min-h-[300px] overflow-hidden bg-transparent">
+        <div className="flex-1 lg:pt-10 min-h-[300px] overflow-hidden bg-transparent">
           <ProductCarousel />
         </div>
       </section>
