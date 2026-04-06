@@ -177,11 +177,22 @@ export default function UsersPage() {
 
   const vacationCount = users.filter((u: any) => u.role === "SELLER" && u.isOnVacation).length;
 
-  const filtered = users.filter((u: any) =>
-    (role === "all" || u.role === role) &&
-    (status === "all" || (status === "VACATION" ? (u.role === "SELLER" && u.isOnVacation) : u.status === status)) &&
-    (!search || (u.phone ?? "").includes(search) || (u.email ?? "").toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = users.filter((u: any) => {
+    const s = search.toLowerCase();
+    const matchesId = (u.id ?? "").toLowerCase().includes(s);
+    const matchesPhone = (u.phone ?? "").includes(search);
+    const matchesEmail = (u.email ?? "").toLowerCase().includes(s);
+    const matchesBiz = (
+      (u.sellerProfile?.companyName ?? "").toLowerCase().includes(s) ||
+      (u.sellerProfile?.businessName ?? "").toLowerCase().includes(s) ||
+      (u.buyerProfile?.legalName ?? "").toLowerCase().includes(s) ||
+      (u.businessName ?? "").toLowerCase().includes(s)
+    );
+
+    return (role === "all" || u.role === role) &&
+      (status === "all" || (status === "VACATION" ? (u.role === "SELLER" && u.isOnVacation) : u.status === status)) &&
+      (!search || matchesId || matchesPhone || matchesEmail || matchesBiz);
+  });
 
   const handleAction = async (id: string, phone: string, action: "approve" | "reject" | "block" | "unblock") => {
     try {
