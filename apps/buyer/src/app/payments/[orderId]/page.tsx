@@ -7,12 +7,14 @@ import Navbar from '@/components/landing/Navbar';
 import { useToast } from '@/components/shared/Toast';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { usePaymentByOrderId, useUploadPaymentProofByOrder } from '@/hooks/usePayments';
 import { useUploadPaymentProofFile } from '@/hooks/useStorage';
 import { useOrderById } from '@/hooks/useOrders';
 import AuthGuard from '@/components/shared/AuthGuard';
 
 export default function PaymentIdPage({ params }: { params: { orderId: string } }) {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -35,6 +37,11 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
       await uploadProofByOrderMutation.mutateAsync({ orderId: params.orderId, proofUrl: key });
       setIsSuccess(true);
       toast('Payment proof submitted successfully!', 'success');
+      
+      // Auto redirect after 2 seconds
+      setTimeout(() => {
+        router.push(`/orders/${params.orderId}`);
+      }, 2000);
     } catch (err: any) {
       console.error('[Payment] Upload flow failed:', err);
       setUploadError(err.message || 'Failed to upload payment proof. Please try again.');
@@ -240,10 +247,10 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
                     We&apos;ll notify you once it&apos;s confirmed.
                   </p>
                   <Link 
-                    href="/payments"
+                    href={`/orders/${params.orderId}`}
                     className="px-12 py-4 bg-gray-900 text-white rounded-full font-bold shadow-xl shadow-black/20 hover:bg-black transition-colors inline-block"
                   >
-                    Return to Payments
+                    View Order Details
                   </Link>
                 </motion.div>
               )}
