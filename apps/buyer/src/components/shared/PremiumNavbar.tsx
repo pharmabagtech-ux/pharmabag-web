@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Menu } from 'lucide-react';
+import { X, Menu, ChevronDown } from 'lucide-react';
 import PremiumBrandsMegaMenu from '@/components/shared/PremiumBrandsMegaMenu';
 import PremiumCategoriesMegaMenu from '@/components/shared/PremiumCategoriesMegaMenu';
 import CartDrawer from '@/components/cart/CartDrawer';
@@ -24,6 +24,7 @@ export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const navItems = [
@@ -34,6 +35,8 @@ export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
         label: c.label || c.name,
         href: `/products?category=${c.id}`,
         type: 'link',
+        categoryId: c.id,
+        subCategories: c.subCategories || (c as any).subcategories || [],
       }))
       : []
     ),
@@ -85,8 +88,8 @@ export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-2 sm:pt-4 px-2 sm:px-4 transition-all duration-300 ease-out">
         <div className={`w-[92vw] mx-auto flex items-center justify-between px-4 sm:px-6 md:px-12 py-2.5 sm:py-3 rounded-2xl transition-all duration-300 ${scrolled
-            ? 'bg-white/80 backdrop-blur-md shadow-sm border border-gray-100'
-            : 'bg-white/40 backdrop-blur-xl shadow-xl border border-white/40'
+          ? 'bg-white/80 backdrop-blur-md shadow-sm border border-gray-100'
+          : 'bg-white/40 backdrop-blur-xl shadow-xl border border-white/40'
           }`}>
           {/* Logo Section */}
           <Link href="/" className="flex items-center gap-2 group transition-transform hover:scale-105">
@@ -208,16 +211,77 @@ export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
                 </button>
               </div>
               <div className="p-4 space-y-1">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.type === 'menu' || item.type === 'category' ? '/products' : item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-4 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50 rounded-xl transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {navItems.map((item) => {
+                  const hasSubCategories = (item as any).subCategories && (item as any).subCategories.length > 0;
+                  const isExpanded = expandedMobileCategory === item.label;
+
+                  return (
+                    <div key={item.label} className="border-b border-gray-50 last:border-0 relative">
+                      {hasSubCategories ? (
+                        <div className="flex flex-col">
+                          <div className="flex items-center justify-between">
+                            <Link
+                              href={item.href}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              className="flex-1 block px-4 py-3 text-sm font-semibold text-gray-800 hover:text-black transition-colors"
+                            >
+                              {item.label}
+                            </Link>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setExpandedMobileCategory(isExpanded ? null : item.label);
+                              }}
+                              className="p-3 text-gray-500 hover:text-black transition-colors flex items-center justify-center cursor-pointer"
+                            >
+                              <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                            </button>
+                          </div>
+
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden bg-gray-50 rounded-xl mx-2 mb-2"
+                              >
+                                <div className="py-2">
+                                  <Link
+                                    href={item.href}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="block px-6 py-2.5 text-[13px] font-bold text-black hover:bg-gray-100"
+                                  >
+                                    Show all {item.label}
+                                  </Link>
+                                  {(item as any).subCategories.map((sub: any) => (
+                                    <Link
+                                      key={sub.id}
+                                      href={`/products?category=${(item as any).categoryId}&subCategory=${sub.id}`}
+                                      onClick={() => setIsMobileMenuOpen(false)}
+                                      className="block px-6 py-2 text-[13px] text-gray-600 hover:text-black hover:bg-gray-100"
+                                    >
+                                      - {sub.name}
+                                    </Link>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      ) : (
+                        <Link
+                          href={item.type === 'menu' || item.type === 'category' ? '/products' : item.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block px-4 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors rounded-xl"
+                        >
+                          {item.label}
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               {isMounted && (
                 <div className="p-4 border-t border-gray-100">

@@ -146,7 +146,7 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
                 {/* Titles - Mobile: mb-3, Desktop: mb-10 */}
                 <div className="text-center mb-3 md:mb-10 w-full">
                   <h2 className="text-[36px] md:text-[52px] font-black text-[#1A1A1A] md:text-black mb-0 tracking-tighter leading-none uppercase md:normal-case">Express Login!</h2>
-                  <p className="text-[18px] md:text-xl text-[#1A1A1A] font-bold uppercase tracking-tight md:text-black/50">NO SIGNUP REQUIRED</p>
+                  <p className="text-[18px] md:text-xl text-[#1A1A1A] font-bold pt-3 uppercase tracking-tight md:text-black/50">NO SIGNUP REQUIRED</p>
                 </div>
 
                 <form onSubmit={(e) => { e.preventDefault(); step === 'phone' ? handleSendOtp() : handleVerifyOtp(); }} className="space-y-4 md:space-y-8 flex flex-col items-center w-full px-0">
@@ -174,13 +174,13 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
                   </div>
 
                   {/* Desktop App Badges */}
-                  <div className="hidden md:block pt-8 border-t border-gray-100/50 w-full">
+                  {/* <div className="hidden md:block pt-8 border-t border-gray-100/50 w-full">
                     <p className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Experience on our App</p>
                     <div className="flex flex-row gap-3 md:gap-4 justify-center items-center">
                       <Image src="/app_store_badge.png" alt="App Store" width={160} height={50} className="h-10 md:h-32 w-auto cursor-pointer object-contain" />
                       <Image src="/google_play_badge.png" alt="Google Play" width={160} height={50} className="h-10 md:h-32 w-auto cursor-pointer object-contain" />
                     </div>
-                  </div>
+                  </div> */}
                 </form>
               </div>
             </motion.div>

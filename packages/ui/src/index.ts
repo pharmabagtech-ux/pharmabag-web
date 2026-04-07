@@ -22,6 +22,17 @@ export {
   TableCell,
   TableCaption,
 } from './components/table';
+export {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from './components/accordion';
+export {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from './components/collapsible';
 
 // Utilities
 export { cn } from './lib/utils';

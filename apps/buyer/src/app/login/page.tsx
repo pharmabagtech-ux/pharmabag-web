@@ -72,23 +72,18 @@ export default function LoginPage() {
         </div>
 
         <div className="flex-1 w-full pt-6 pb-32 sm:pt-32 sm:pb-4 px-0 flex flex-col items-center justify-start sm:justify-center relative z-10 overflow-hidden">
-          
-          {/* MOBILE ONLY TOP BADGES */}
-          <div className="flex md:hidden flex-row gap-3 mt-4 mb-3 w-full justify-center flex-shrink-0 px-0">
-            <Image src="/app_store_badge.png" alt="App Store" width={112} height={32} className="w-auto h-[32px] opacity-90" />
-            <Image src="/google_play_badge.png" alt="Google Play" width={112} height={32} className="w-auto h-[32px] opacity-90" />
-          </div>
 
+          {/* Badges removed per request */}
           <div className="container max-w-7xl mx-auto flex-1 flex flex-col items-center justify-center w-full px-0">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-0 lg:gap-16 xl:gap-24 w-full h-fit px-0">
-              
+
               {/* FORM SECTION (Desktop Right, Mobile Top) */}
               <motion.div initial={{ opacity: 0, scale: 0.98, y: 15 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="w-full lg:w-[45%] max-w-lg mx-auto order-1 lg:order-2 px-0 lg:px-0">
                 <div className="bg-transparent md:bg-white md:backdrop-blur-3xl md:border md:border-white/60 md:rounded-[48px] p-0 sm:p-4 md:p-10 xl:p-12 md:shadow-2xl md:shadow-lime-900/5 transition-all w-full flex flex-col items-center">
-                  
-                  <div className="text-center mb-3 md:mb-10 w-full px-4">
+
+                  <div className="flex flex-col items-center justify-center text-center mb-3 md:mb-10 w-full px-4">
                     <h2 className="text-[36px] md:text-[52px] font-black text-[#1A1A1A] md:text-black mb-0 tracking-tighter leading-none uppercase md:normal-case">Express Login!</h2>
-                    <p className="text-[18px] md:text-xl text-[#1A1A1A] md:text-black/50 font-bold uppercase tracking-tight">NO SIGNUP REQUIRED</p>
+                    <p className="text-[14px] md:text-xl text-[#1A1A1A] md:text-black/50 font-bold uppercase tracking-widest  md:pt-0 mt-1 md:mt-2 text-center">NO SIGNUP REQUIRED</p>
                   </div>
 
                   <form onSubmit={(e) => { e.preventDefault(); step === 'phone' ? handleSendOtp() : handleVerifyOtp(); }} className="space-y-4 md:space-y-8 flex flex-col items-center w-full px-0">
@@ -110,15 +105,15 @@ export default function LoginPage() {
                       </button>
 
                       <div className="mt-6 flex flex-col items-center gap-4">
-                        <a 
-                          href="https://seller.pharmabag.in" 
-                          target="_blank" 
+                        <a
+                          href="https://seller.pharmabag.in"
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="group flex flex-col items-center gap-1 bg-white/40 hover:bg-white/60 p-4 rounded-3xl border border-white/60 transition-all hover:scale-[1.02] shadow-sm w-full"
                         >
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Business Owner?</span>
                           <span className="text-sm font-black text-gray-900 flex items-center gap-2">
-                             Become a Seller <span className="text-lime-600 group-hover:translate-x-1 transition-transform">→</span>
+                            Become a Seller <span className="text-lime-600 group-hover:translate-x-1 transition-transform">→</span>
                           </span>
                         </a>
                       </div>
@@ -130,14 +125,7 @@ export default function LoginPage() {
                       )}
                     </div>
 
-                    {/* DESKTOP ONLY BADGES */}
-                    <div className="hidden md:block pt-8 border-t border-gray-100/50 w-full">
-                       <p className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Experience on our App</p>
-                       <div className="flex flex-row gap-3 md:gap-4 justify-center items-center">
-                        <Image src="/app_store_badge.png" alt="App Store" width={160} height={50} className="h-10 md:h-12 w-auto cursor-pointer object-contain" />
-                        <Image src="/google_play_badge.png" alt="Google Play" width={160} height={50} className="h-10 md:h-12 w-auto cursor-pointer object-contain" />
-                      </div>
-                    </div>
+                    {/* Badges removed from desktop per request */}
                   </form>
                 </div>
               </motion.div>
