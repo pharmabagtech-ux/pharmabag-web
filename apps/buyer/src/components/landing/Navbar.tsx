@@ -17,6 +17,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCategories } from '@/hooks/useProducts';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 
 function CartCountBadge() {
@@ -81,11 +82,9 @@ export default function Navbar({ onLoginClick, showUserActions = false, onFilter
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Lock body scroll when mobile menu open
-  useEffect(() => {
-    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [isMobileMenuOpen]);
+  // Lock body scroll when ANY drawer is open
+  const isAnyDrawerOpen = isMobileMenuOpen || isCartOpen || isWishlistOpen || isNotificationsOpen;
+  useScrollLock(isAnyDrawerOpen);
 
   const handleLoginClick = () => {
     if (onLoginClick) {

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@pharmabag/api-client';
 import { useToast } from '@/components/shared/Toast';
 import ProductCarousel from '@/components/landing/ProductCarousel';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 const TRUST_HIGHLIGHTS = [
   {
@@ -53,6 +54,7 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
 
   const isOpen = isOpenProp !== undefined ? isOpenProp : isOpenState;
   const onClose = onCloseProp !== undefined ? onCloseProp : () => setIsOpenState(false);
+  useScrollLock(isOpen);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

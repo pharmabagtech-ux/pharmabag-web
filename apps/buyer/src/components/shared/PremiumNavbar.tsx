@@ -7,6 +7,7 @@ import { X, Menu } from 'lucide-react';
 import PremiumBrandsMegaMenu from '@/components/shared/PremiumBrandsMegaMenu';
 import PremiumCategoriesMegaMenu from '@/components/shared/PremiumCategoriesMegaMenu';
 import CartDrawer from '@/components/cart/CartDrawer';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 import { useAuth, getCategories, Category } from '@pharmabag/api-client';
 
@@ -49,15 +50,9 @@ export default function PremiumNavbar({ onLoginClick }: PremiumNavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [isMobileMenuOpen]);
+  // Lock body scroll when any relevant menu is open
+  const isAnyOpen = isMobileMenuOpen || isCartOpen;
+  useScrollLock(isAnyOpen);
 
   // Close mobile menu on resize to desktop
   useEffect(() => {
