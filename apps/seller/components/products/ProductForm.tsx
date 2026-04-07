@@ -200,6 +200,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         ...(Object.keys(extra_fields).length > 0 && { extraFields: extra_fields }),
         ...(mappedDiscountType && { discountType: mappedDiscountType }),
         ...(Object.keys(discountMeta).length > 0 && { discountMeta }),
+        ...(selectedMasterId && { masterProductId: selectedMasterId }),
       };
 
       if (isEditing) {
@@ -395,7 +396,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         {/* Submit */}
         <div className="flex justify-end gap-3 sticky bottom-6 z-10 p-4 bg-background/80 backdrop-blur-xl border border-border rounded-2xl shadow-lg">
           <Button type="button" variant="outline" onClick={() => router.push("/products")} disabled={isSubmitting}>Cancel</Button>
-          <Button type="submit" loading={isSubmitting}>{isEditing ? "Update Product" : "Submit for Approval"}</Button>
+          <Button type="submit" loading={isSubmitting}>{isEditing ? "Update Product" : selectedMasterId ? "Add Product" : "Submit for Approval"}</Button>
         </div>
       </form>
     </div>
