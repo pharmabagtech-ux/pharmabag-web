@@ -107,24 +107,38 @@ export function useSyncCart() {
       const local = localCart.get();
       if (local.items.length === 0) return null;
 
+      // 1. Fetch current backend cart to see what's already there
+      const backendCart = await getCart();
+      const backendItems = backendCart.items || [];
       const errors: string[] = [];
 
-      // Sync local items to backend
+      // 2. Sync local items to backend
       for (const item of local.items) {
-        if (item.productId) {
-          try {
+        if (!item.productId) continue;
+
+        try {
+          // Check if this product is already in the backend cart
+          const existingBackendItem = backendItems.find(
+            (bi: any) => bi.productId === item.productId || bi.product?.id === item.productId
+          );
+
+          if (existingBackendItem) {
+            // If it exists, update it (PATCH)
+            // Note: We use the ID of the cart item specifically
+            await updateCartItem(existingBackendItem.id, item.quantity);
+          } else {
+            // If it doesn't exist, add it (POST)
             await addToCart(item.productId, item.quantity);
-          } catch (e: any) {
-            const msg = e?.response?.data?.message || e.message;
-            const productName = item.productName || item.name || item.product?.name || 'Product';
-            errors.push(`${productName}: ${msg}`);
-            console.error(`Failed to sync item ${item.productId}`, e);
           }
+        } catch (e: any) {
+          const msg = e?.response?.data?.message || e.message;
+          const productName = item.productName || item.name || item.product?.name || 'Product';
+          errors.push(`${productName}: ${msg}`);
+          console.error(`Failed to sync item ${item.productId}`, e);
         }
       }
 
       if (errors.length > 0) {
-        // Concatenate unique errors to avoid duplicates if multiple products have same seller issue
         const uniqueErrors = Array.from(new Set(errors));
         throw new Error(uniqueErrors.join('; '));
       }
