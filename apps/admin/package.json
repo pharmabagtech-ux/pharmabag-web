@@ -16,7 +16,9 @@
     "zustand": "^4.5.4", "lucide-react": "^0.414.0",
     "clsx": "^2.1.1", "tailwind-merge": "^2.4.0",
     "recharts": "^2.12.7", "next-themes": "^0.3.0",
-    "react-hot-toast": "^2.4.1", "@pharmabag/utils": "workspace:*"
+    "react-hot-toast": "^2.4.1", 
+    "@pharmabag/utils": "workspace:*",
+    "@pharmabag/api-client": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20", "@types/react": "^18", "@types/react-dom": "^18",

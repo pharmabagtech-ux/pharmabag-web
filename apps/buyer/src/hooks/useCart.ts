@@ -107,20 +107,28 @@ export function useSyncCart() {
       const local = localCart.get();
       if (local.items.length === 0) return null;
 
+      const errors: string[] = [];
+
       // Sync local items to backend
       for (const item of local.items) {
         if (item.productId) {
           try {
             await addToCart(item.productId, item.quantity);
-          } catch (e) {
+          } catch (e: any) {
+            const msg = e?.response?.data?.message || e.message;
+            const productName = item.productName || item.name || item.product?.name || 'Product';
+            errors.push(`${productName}: ${msg}`);
             console.error(`Failed to sync item ${item.productId}`, e);
           }
         }
       }
+
+      if (errors.length > 0) {
+        // Concatenate unique errors to avoid duplicates if multiple products have same seller issue
+        const uniqueErrors = Array.from(new Set(errors));
+        throw new Error(uniqueErrors.join('; '));
+      }
       
-      // After sync, we might want to clear local or keep them.
-      // Usually clear so backend is now source of truth.
-      // But user said "only backend ... checkout button clicked".
       return getCart();
     },
     onSuccess: () => {

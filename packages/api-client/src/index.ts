@@ -116,7 +116,6 @@ export {
   createBuyerProfile,
   updateBuyerProfile,
   verifyPanGst,
-  getBuyerCreditDetails,
   getBuyerInvoices,
   type BuyerProfile,
   type CreateBuyerProfileInput,

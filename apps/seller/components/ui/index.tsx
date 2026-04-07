@@ -8,7 +8,7 @@ import type { OrderStatus, ApprovalStatus, ProductStatus } from "@pharmabag/util
 
 /* Button */
 interface BtnProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary"|"secondary"|"ghost"|"outline"|"danger"; size?: "xs"|"sm"|"md"|"lg"|"icon"; loading?: boolean; leftIcon?: React.ReactNode; rightIcon?: React.ReactNode;
+  variant?: "primary"|"secondary"|"ghost"|"outline"|"danger"|"info"; size?: "xs"|"sm"|"md"|"lg"|"icon"; loading?: boolean; leftIcon?: React.ReactNode; rightIcon?: React.ReactNode;
 }
 export const Button = forwardRef<HTMLButtonElement, BtnProps>(({ variant="primary", size="md", loading, leftIcon, rightIcon, children, className, disabled, ...p }, ref) => (
   <motion.button ref={ref} whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.01 }} transition={{ duration: 0.12 }} disabled={disabled||loading}
@@ -16,7 +16,8 @@ export const Button = forwardRef<HTMLButtonElement, BtnProps>(({ variant="primar
       size==="xs"&&"h-7 px-2.5 text-xs", size==="sm"&&"h-8 px-3 text-sm", size==="md"&&"h-10 px-4 text-sm", size==="lg"&&"h-12 px-6 text-base", size==="icon"&&"h-10 w-10",
       variant==="primary"&&"bg-primary text-white hover:bg-primary/90 shadow-sm", variant==="secondary"&&"bg-secondary text-secondary-foreground hover:bg-secondary/80",
       variant==="ghost"&&"hover:bg-accent text-foreground", variant==="outline"&&"border border-border bg-transparent hover:bg-accent text-foreground",
-      variant==="danger"&&"bg-red-500 text-white hover:bg-red-600", className)} {...(p as any)}>
+      variant==="danger"&&"bg-red-500 text-white hover:bg-red-600", 
+      variant==="info"&&"bg-blue-600 text-white hover:bg-blue-700 shadow-sm", className)} {...(p as any)}>
     {loading?<Loader2 className="h-4 w-4 animate-spin"/>:leftIcon}{children}{!loading&&rightIcon}
   </motion.button>
 ));

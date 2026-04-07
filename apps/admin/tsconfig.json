@@ -10,7 +10,11 @@
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ],
+      "@pharmabag/api-client": ["../../packages/api-client/src"],
+      "@pharmabag/api-client/*": ["../../packages/api-client/src/*"],
+      "@pharmabag/utils": ["../../packages/utils/src"],
+      "@pharmabag/utils/*": ["../../packages/utils/src/*"]
     },
     "jsx": "preserve"
   },

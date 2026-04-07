@@ -194,8 +194,8 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                         await syncCart.mutateAsync();
                         onClose();
                         router.push('/checkout');
-                      } catch (e) {
-                        toast('Failed to sync bag with backend', 'error');
+                      } catch (e: any) {
+                        toast(e.message || 'Failed to sync bag with backend', 'error');
                       }
                     } else {
                       window.dispatchEvent(new CustomEvent('open-login'));

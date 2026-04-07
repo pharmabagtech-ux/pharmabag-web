@@ -98,36 +98,6 @@ export async function verifyPanGst(params: {
   return data.data || data;
 }
 
-export async function getBuyerCreditDetails(): Promise<{
-  creditLimit: number;
-  usedCredit: number;
-  availableCredit: number;
-  status: string; // normal | emi | credit
-  milestones: Array<{
-    id: string;
-    orderId: string;
-    amount: number;
-    dueDate: string;
-    status: string;
-  }>;
-}> {
-  try {
-    const { data } = await api.get('/buyers/credit');
-    return data.data || data;
-  } catch (err: any) {
-    if (err.response?.status === 404) {
-      return { 
-        creditLimit: 0, 
-        usedCredit: 0, 
-        availableCredit: 0, 
-        status: 'normal', 
-        milestones: [] 
-      };
-    }
-    throw err;
-  }
-}
-
 export async function getBuyerInvoices(params?: {
   page?: number;
   limit?: number;

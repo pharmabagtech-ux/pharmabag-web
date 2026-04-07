@@ -17,7 +17,7 @@ import Navbar from '@/components/landing/Navbar';
 import { useCart, useSyncCart, useClearCart } from '@/hooks/useCart';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { useCreatePayment } from '@/hooks/usePayments';
-import { useBuyerProfile, useBuyerCreditDetails } from '@/hooks/useBuyerProfile';
+import { useBuyerProfile } from '@/hooks/useBuyerProfile';
 import { useToast } from '@/components/shared/Toast';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import Image from 'next/image';
@@ -41,7 +41,6 @@ export default function CheckoutPage() {
 
   const { data: cartData, isLoading: isCartLoading } = useCart();
   const { data: profileData } = useBuyerProfile();
-  const { data: creditData } = useBuyerCreditDetails();
   const { toast } = useToast();
   const createOrder = useCreateOrder();
   const createPaymentMut = useCreatePayment();
@@ -49,9 +48,9 @@ export default function CheckoutPage() {
   const { data: platformConfig } = usePlatformConfig();
   const syncCart = useSyncCart();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH_ON_DELIVERY');
+  const [syncError, setSyncError] = useState<string | null>(null);
 
-  const credit = (creditData as any)?.data || creditData;
-  const isCreditEligible = credit?.status === 'active' && (credit?.availableCredit ?? 0) > 0;
+
   
   const [address, setAddress] = useState({
     name: '',
@@ -92,13 +91,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (paymentMethod === 'CREDIT') {
-      const availableCredit = credit?.availableCredit ?? 0;
-      if (total > availableCredit) {
-        toast(`Insufficient credit. Available: ₹${availableCredit.toLocaleString()}, Required: ₹${total.toLocaleString()}`, 'error');
-        return;
-      }
-    }
+    setSyncError(null);
 
     // Ensure cart is synced before placing order
     syncCart.mutate(undefined, {
@@ -151,7 +144,9 @@ export default function CheckoutPage() {
       },
       onError: (error: any) => {
         console.error("Failed to sync cart", error);
-        toast('Failed to synchronize your bag. Please try again.', 'error');
+        const errorMsg = error?.message || 'Failed to synchronize your bag. Please try again.';
+        setSyncError(errorMsg);
+        toast(errorMsg, 'error');
       }
     });
   };
@@ -364,35 +359,7 @@ export default function CheckoutPage() {
                   </div>
                 </button>
 
-                {/* Credit / EMI */}
-                <button
-                  onClick={() => isCreditEligible && setPaymentMethod('CREDIT')}
-                  disabled={!isCreditEligible}
-                  className={`flex items-center justify-between p-6 rounded-3xl border-2 text-left transition-all ${
-                    paymentMethod === 'CREDIT'
-                      ? 'bg-white border-lime-300 shadow-xl shadow-lime-900/5'
-                      : isCreditEligible
-                      ? 'bg-white/50 border-gray-100 hover:border-gray-200'
-                      : 'bg-gray-50/50 border-gray-100 opacity-50 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${paymentMethod === 'CREDIT' ? 'bg-emerald-50' : 'bg-gray-50'}`}>
-                      <CreditCard className={`w-5 h-5 ${paymentMethod === 'CREDIT' ? 'text-emerald-600' : 'text-gray-400'}`} />
-                    </div>
-                    <div>
-                      <p className={`font-bold leading-tight ${paymentMethod === 'CREDIT' ? 'text-gray-900' : isCreditEligible ? 'text-gray-600' : 'text-gray-400'}`}>
-                        Credit / EMI
-                      </p>
-                      <p className="text-xs font-medium text-gray-400 mt-0.5">
-                        {isCreditEligible
-                          ? `Available credit: ₹${(credit.availableCredit ?? 0).toLocaleString('en-IN')}`
-                          : 'Not eligible — apply for credit in your profile'}
-                      </p>
-                    </div>
-                  </div>
-                  {paymentMethod === 'CREDIT' && <CheckCircle2 className="w-6 h-6 text-lime-500" />}
-                </button>
+
               </div>
             </motion.div>
           </div>
@@ -468,6 +435,31 @@ export default function CheckoutPage() {
                   </>
                 )}
               </button>
+
+              <AnimatePresence>
+                {syncError && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden mt-6"
+                  >
+                    <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-bold text-red-800">Cannot place order:</p>
+                        <ul className="text-xs font-semibold text-red-600 list-inside space-y-1">
+                          {syncError.split('; ').map((err, i) => (
+                            <li key={i} className="list-disc leading-tight">{err}</li>
+                          ))}
+                        </ul>
+                        <p className="text-[10px] text-red-400 font-medium pt-1">Please remove these items from your bag to continue.</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
 
               <div className="mt-6 flex items-center justify-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
                 <ShieldCheck className="w-4 h-4 text-lime-500" />

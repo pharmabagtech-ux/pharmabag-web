@@ -6,7 +6,6 @@ import {
   createBuyerProfile,
   updateBuyerProfile,
   verifyPanGst,
-  getBuyerCreditDetails,
   getBuyerInvoices,
   type CreateBuyerProfileInput,
   type UpdateBuyerProfileInput,
@@ -43,13 +42,6 @@ export function useUpdateBuyerProfile() {
 export function useVerifyPanGst() {
   return useMutation({
     mutationFn: (params: { type: 'GST' | 'PAN'; value: string }) => verifyPanGst(params),
-  });
-}
-
-export function useBuyerCreditDetails() {
-  return useQuery({
-    queryKey: ['buyerCredit'],
-    queryFn: getBuyerCreditDetails,
   });
 }
 
