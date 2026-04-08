@@ -111,7 +111,8 @@ export default function UserDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {(user.status === "PENDING" && (user.buyerProfile?.gstNumber || user.buyerProfile?.panNumber || user.sellerProfile?.gstNumber || user.sellerProfile?.panNumber || user.gstNumber || user.panNumber)) && (
+            {((user.status === "PENDING" || user.status === "NEW" || user.status === "REJECTED") && 
+              (user.buyerProfile?.gstNumber || user.buyerProfile?.panNumber || user.sellerProfile?.gstNumber || user.sellerProfile?.panNumber || user.gstNumber || user.panNumber)) && (
               <>
                 <Button size="sm" variant="primary" onClick={() => handleAction("approve")} leftIcon={<UserCheck className="h-4 w-4" />}>Approve</Button>
                 <Button size="sm" variant="danger" onClick={() => handleAction("reject")} leftIcon={<UserX className="h-4 w-4" />}>Reject</Button>
@@ -244,6 +245,12 @@ export default function UserDetailPage() {
               <KycCard label="GST Verification" status={sp.gstVerified ? "verified" : "pending"} value={sp.gstNumber} />
               <KycCard label="Drug License" status={sp.drugLicenseVerified ? "verified" : "pending"} value={sp.drugLicenseNumber} />
             </div>
+            {user.status !== "APPROVED" && (
+              <div className="mt-6 pt-6 border-t border-border flex gap-3">
+                <Button variant="primary" onClick={() => handleAction("approve")} leftIcon={<UserCheck className="h-4 w-4" />}>Approve Seller</Button>
+                <Button variant="danger" onClick={() => handleAction("reject")} leftIcon={<UserX className="h-4 w-4" />}>Reject Seller</Button>
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -262,6 +269,12 @@ export default function UserDetailPage() {
                 <pre className="p-4 bg-muted/20 border border-border rounded-xl text-xs font-mono overflow-auto max-h-48">
                   {JSON.stringify(bp.gstPanResponse ?? user.gstPanResponse, null, 2)}
                 </pre>
+              </div>
+            )}
+            {user.status !== "APPROVED" && (
+              <div className="mt-6 pt-6 border-t border-border flex gap-3">
+                <Button variant="primary" onClick={() => handleAction("approve")} leftIcon={<UserCheck className="h-4 w-4" />}>Approve Buyer</Button>
+                <Button variant="danger" onClick={() => handleAction("reject")} leftIcon={<UserX className="h-4 w-4" />}>Reject Buyer</Button>
               </div>
             )}
           </motion.div>
