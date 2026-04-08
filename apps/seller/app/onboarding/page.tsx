@@ -166,7 +166,6 @@ export default function SellerOnboardingPage() {
 
     const payload: any = {
       companyName: formData.companyName,
-      businessName: formData.companyName,
       drugLicenseNumber: formData.drugLicenseNumber.toUpperCase(),
       drugLicenseUrl: formData.drugLicenseUrl,
       address: formData.address,
