@@ -163,21 +163,35 @@ export default function SellerOnboardingPage() {
   };
 
   const handleSubmit = async () => {
-    const payload = {
-      ...formData,
+    // Construct payload ensuring we don't send empty strings for optional fields 
+    // that have strict regex validation on the backend.
+    const payload: any = {
+      companyName: formData.companyName,
       businessName: formData.companyName,
-      gstNumber: formData.gstNumber.toUpperCase(),
-      panNumber: formData.panNumber.toUpperCase(),
       drugLicenseNumber: formData.drugLicenseNumber.toUpperCase(),
-      gst_pan_response: verificationResult,
+      drugLicenseUrl: formData.drugLicenseUrl,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      pincode: formData.pincode,
+      gstPanResponse: verificationResult,
     };
+
+    if (formData.gstNumber?.trim()) {
+      payload.gstNumber = formData.gstNumber.trim().toUpperCase();
+    }
+    
+    if (formData.panNumber?.trim()) {
+      payload.panNumber = formData.panNumber.trim().toUpperCase();
+    }
 
     try {
       await updateProfile.mutateAsync(payload);
       toast.success("Application submitted successfully");
-      // status will change to PENDING on server, guard will handle or local state will show "Review"
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to submit application");
+      const msg = error?.response?.data?.message;
+      const displayMsg = Array.isArray(msg) ? msg.join(", ") : msg;
+      toast.error(displayMsg || "Failed to submit application");
     }
   };
 
