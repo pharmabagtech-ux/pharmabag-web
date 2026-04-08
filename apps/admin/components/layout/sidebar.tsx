@@ -17,10 +17,7 @@ const NAV = [
   { icon: Banknote, label: "Settlements", href: "/settlements" },
   { icon: Ticket, label: "Tickets", href: "/tickets" },
   { icon: UserCog, label: "Admins", href: "/admins" },
-  { icon: Image, label: "Banners", href: "/banners" },
-  { icon: Gift, label: "Referrals", href: "/referrals" },
   { icon: Bell, label: "Notifications", href: "/notifications" },
-  { icon: BarChart3, label: "Analytics", href: "/analytics" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
 

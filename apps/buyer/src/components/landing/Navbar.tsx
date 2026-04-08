@@ -244,10 +244,6 @@ export default function Navbar({ onLoginClick, showUserActions = false, onFilter
                         <CreditCard className="w-4 h-4" />
                         <span>Payment History</span>
                       </Link> */}
-                      <Link href="/wishlist" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                        <Bookmark className="w-4 h-4" />
-                        <span>Wishlist</span>
-                      </Link>
                       {/* <Link href="/credit" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
                         <CreditCard className="w-4 h-4" />
                         <span>Credit & EMI</span>
