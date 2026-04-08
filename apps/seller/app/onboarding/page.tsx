@@ -104,8 +104,11 @@ export default function SellerOnboardingPage() {
             else setPanVerified(true);
             
             setVerificationResult(res);
-            updateField("companyName", res.legalName);
-            if (res.address) updateField("address", res.address);
+            
+            if (type === "GST") {
+              updateField("companyName", res.legalName);
+              if (res.address) updateField("address", res.address);
+            }
             
             toast.success(`${res.message}: ${res.legalName}`);
           } else {
