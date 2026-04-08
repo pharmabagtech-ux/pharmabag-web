@@ -58,19 +58,40 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
 
   const watchMrp = watch("product_price");
   const watchGst = watch("gst_percent");
+  const watchMinMoq = watch("min_order_qty");
+  const watchStock = watch("stock");
+  const watchMaxMoq = watch("max_order_qty");
+  const lastMrpRef = useRef<number>(0);
 
-  // Real-time synchronization of MOQ, Stock, and Max Qty based on MRP
+  // Real-time synchronization and enforcement of ₹20,000 minimum rule
   useEffect(() => {
-    if (watchMrp && watchMrp > 0) {
-      const minRequiredMoq = Math.ceil(20000 / watchMrp);
-      const targetMaxMoq = minRequiredMoq * 5;
+    if (!watchMrp || watchMrp <= 0) return;
 
-      // Force update all fields to sync with the new MRP
-      setValue("min_order_qty", minRequiredMoq, { shouldDirty: true });
-      setValue("stock", minRequiredMoq, { shouldDirty: true });
-      setValue("max_order_qty", targetMaxMoq, { shouldDirty: true });
+    const minRequiredMoq = Math.ceil(20000 / watchMrp);
+    const targetMaxMoq = minRequiredMoq * 5;
+
+    // Detect if MRP itself has changed (Manual price update)
+    const isPriceChanged = watchMrp !== lastMrpRef.current;
+
+    if (isPriceChanged) {
+      // If price changed, we force re-sync everything to the new baseline
+      setValue("min_order_qty", minRequiredMoq, { shouldDirty: true, shouldValidate: true });
+      setValue("stock", minRequiredMoq, { shouldDirty: true, shouldValidate: true });
+      setValue("max_order_qty", targetMaxMoq, { shouldDirty: true, shouldValidate: true });
+      lastMrpRef.current = watchMrp;
+    } else {
+      // If price is the same but values changed (Manual edit of MOQ/Stock), enforce the minimum
+      if (watchMinMoq < minRequiredMoq) {
+        setValue("min_order_qty", minRequiredMoq, { shouldDirty: true, shouldValidate: true });
+      }
+      if (watchStock < minRequiredMoq) {
+        setValue("stock", minRequiredMoq, { shouldDirty: true, shouldValidate: true });
+      }
+      if (watchMaxMoq < minRequiredMoq) {
+        setValue("max_order_qty", targetMaxMoq, { shouldDirty: true, shouldValidate: true });
+      }
     }
-  }, [watchMrp, setValue]);
+  }, [watchMrp, watchMinMoq, watchStock, watchMaxMoq, setValue]);
 
   // Close suggestions on outside click
   useEffect(() => {
@@ -336,12 +357,24 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
               error={errors.product_price?.message} 
               {...register("product_price", { valueAsNumber: true })} 
             />
-            <Input label="Current Stock *" type="number" error={errors.stock?.message} {...register("stock", { valueAsNumber: true })} />
+            <Input 
+              label="Current Stock *" 
+              type="number" 
+              min={watchMrp > 0 ? Math.ceil(20000 / watchMrp) : 1}
+              error={errors.stock?.message} 
+              {...register("stock", { valueAsNumber: true })} 
+            />
             <Input label="Expiry Date *" type="date" error={errors.expire_date?.message} {...register("expire_date")} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
             <div className="space-y-1">
-              <Input label="Minimum Order Qty *" type="number" error={errors.min_order_qty?.message} {...register("min_order_qty", { valueAsNumber: true })} />
+              <Input 
+                label="Minimum Order Qty *" 
+                type="number" 
+                min={watchMrp > 0 ? Math.ceil(20000 / watchMrp) : 1}
+                error={errors.min_order_qty?.message} 
+                {...register("min_order_qty", { valueAsNumber: true })} 
+              />
               {watchMrp > 0 && (
                 <p className="text-[10px] text-muted-foreground px-1">
                   Min. {Math.ceil(20000 / watchMrp)} units (₹20k min)
