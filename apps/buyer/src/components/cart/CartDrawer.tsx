@@ -8,6 +8,40 @@ import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+function QuantityInput({ value, max, min, onUpdate, disabled }: { value: number; max: number; min: number; onUpdate: (val: number) => void; disabled?: boolean }) {
+  const [localValue, setLocalValue] = useState(String(value));
+
+  useEffect(() => {
+    setLocalValue(String(value));
+  }, [value]);
+
+  const handleBlur = () => {
+    const parsed = parseInt(localValue, 10);
+    if (!isNaN(parsed)) {
+      const final = Math.max(min, Math.min(parsed, max));
+      setLocalValue(String(final));
+      if (final !== value) {
+        onUpdate(final);
+      }
+    } else {
+      setLocalValue(String(value));
+    }
+  };
+
+  return (
+    <input
+      type="number"
+      value={localValue}
+      disabled={disabled}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={handleBlur}
+      onKeyDown={(e) => e.key === 'Enter' && (e.target as any).blur()}
+      className="w-12 bg-white border border-gray-100 rounded-lg text-sm font-black text-gray-900 text-center outline-none hover:border-gray-300 focus:border-lime-500 focus:ring-1 focus:ring-lime-100 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
+    />
+  );
+}
 
 export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { data: cart, isLoading, isError } = useCart();
@@ -121,33 +155,29 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-3 py-1">
                             <button
-                              onClick={() => updateItem.mutate({ itemId: item.id, quantity: Math.max(1, item.quantity - 1) })}
-                              disabled={updateItem.isPending || item.quantity <= 1 || syncCart.isPending}
+                              onClick={() => {
+                                const moq = item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1;
+                                updateItem.mutate({ itemId: item.id, quantity: Math.max(moq, item.quantity - 1) });
+                              }}
+                              disabled={updateItem.isPending || item.quantity <= (item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1) || syncCart.isPending}
                               className="text-gray-400 hover:text-gray-900 disabled:opacity-30"
                             >
                               <Minus className="w-3 h-3" />
                             </button>
-                            <input
-                              type="number"
-                              value={item.quantity}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value, 10);
-                                if (!isNaN(val)) {
-                                  const stock = item.product?.stock || 0;
-                                  const maxLimit = item.product?.maximumOrderQuantity || stock;
-                                  const max = Math.min(stock, maxLimit);
-                                  const finalQty = Math.max(1, Math.min(val, max));
-                                  if (finalQty !== item.quantity) {
-                                    updateItem.mutate({ itemId: item.id, quantity: finalQty });
-                                  }
-                                }
-                              }}
-                              className="w-10 bg-transparent text-sm font-bold text-gray-900 text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            <QuantityInput 
+                              value={item.quantity} 
+                              max={Math.min(
+                                item.stock ?? item.product?.stock ?? 9999,
+                                (item.maximumOrderQuantity || item.product?.maximumOrderQuantity) || (item.stock ?? item.product?.stock ?? 9999)
+                              )}
+                              min={item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1}
+                              onUpdate={(qty) => updateItem.mutate({ itemId: item.id, quantity: qty })}
+                              disabled={updateItem.isPending || syncCart.isPending}
                             />
                             <button
                               onClick={() => {
-                                const stock = item.product?.stock || 0;
-                                const maxLimit = item.product?.maximumOrderQuantity || stock;
+                                const stock = item.stock ?? item.product?.stock ?? 9999;
+                                const maxLimit = (item.maximumOrderQuantity || item.product?.maximumOrderQuantity) || stock;
                                 const max = Math.min(stock, maxLimit);
                                 if (item.quantity < max) {
                                   updateItem.mutate({ itemId: item.id, quantity: item.quantity + 1 });
@@ -155,7 +185,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                                   toast(`Only ${max} units available in stock`, 'error');
                                 }
                               }}
-                              disabled={updateItem.isPending || syncCart.isPending || item.quantity >= Math.min(item.product?.stock || 0, item.product?.maximumOrderQuantity || (item.product?.stock || 0))}
+                              disabled={updateItem.isPending || syncCart.isPending || item.quantity >= Math.min(item.stock ?? item.product?.stock ?? 9999, (item.maximumOrderQuantity || item.product?.maximumOrderQuantity) || (item.stock ?? item.product?.stock ?? 9999))}
                               className="text-gray-400 hover:text-gray-900 disabled:opacity-30"
                             >
                               <Plus className="w-3 h-3" />

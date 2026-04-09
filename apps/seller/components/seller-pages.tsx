@@ -4,12 +4,13 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { formatCurrency, formatDate } from "@pharmabag/utils";
 import { OrderStatusBadge, Button, Badge, StatCard } from "@/components/ui";
-import { Package, Warehouse, CreditCard, TrendingUp, AlertTriangle, CheckCircle, Clock, Eye } from "lucide-react";
+import { Package, Warehouse, CreditCard, TrendingUp, AlertTriangle, CheckCircle, Clock, Eye, Loader2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line } from "recharts";
 import { 
   useSellerOrders, 
   useUpdateSellerOrderStatus, 
   useSellerProducts, 
+  useUpdateSellerProduct,
   useSellerSettlements, 
   useSellerSettlementSummary,
   useRequestPayout,
@@ -154,29 +155,79 @@ export function InventoryContent() {
           <table className="w-full" aria-label="Inventory">
             <thead><tr className="border-b border-border/50 bg-muted/20">{["Product","SKU","Current Stock","Min Order Qty","Status"].map(h=><th key={h} scope="col" className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">{h}</th>)}</tr></thead>
             <tbody className="divide-y divide-border/30">
-              {inventoryItems.map((item: any, i: number)=>(
-                <motion.tr key={item.id} initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} transition={{delay:i*0.07}} className="hover:bg-accent/30 transition-colors">
-                  <td className="px-5 py-4 text-sm font-medium text-foreground">{item.name}</td>
-                  <td className="px-5 py-4"><span className="font-mono text-xs text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded">{item.id.slice(0, 8)}</span></td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-sm font-bold ${typeof item.stock === 'number' && item.stock === 0 ? "text-red-500" : typeof item.stock === 'number' && item.stock < 10 ? "text-yellow-600" : "text-green-600"}`}>{item.stock ?? 0}</span>
-                      {item.stock === 0 && <AlertTriangle className="h-3.5 w-3.5 text-red-500" aria-label="Out of stock"/>}
-                    </div>
-                  </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">{item.minimumOrderQuantity ?? 1}</td>
-                  <td className="px-5 py-4">
-                    <Badge variant={item.isActive ? "success" : "error"}>
-                      {item.isActive ? "Active" : "Disabled"}
-                    </Badge>
-                  </td>
-                </motion.tr>
+              {inventoryItems.map((item: any, i: number) => (
+                <InventoryRow key={item.id} item={item} index={i} />
               ))}
             </tbody>
           </table>
         </div>
       </div>
     </div>
+  );
+}
+
+function InventoryRow({ item, index }: { item: any, index: number }) {
+  const updateProduct = useUpdateSellerProduct();
+  const [stock, setStock] = useState(String(item.stock ?? 0));
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleUpdate = async () => {
+    const newStock = parseInt(stock, 10);
+    if (!isNaN(newStock) && newStock !== item.stock) {
+      setIsUpdating(true);
+      try {
+        await updateProduct.mutateAsync({
+          productId: item.id,
+          input: { stock: newStock }
+        });
+      } catch (err) {
+        setStock(String(item.stock ?? 0));
+      } finally {
+        setIsUpdating(false);
+      }
+    } else if (isNaN(newStock)) {
+      setStock(String(item.stock ?? 0));
+    }
+  };
+
+  return (
+    <motion.tr initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.07 }} className="hover:bg-accent/30 transition-colors">
+      <td className="px-5 py-4 text-sm font-medium text-foreground">{item.name}</td>
+      <td className="px-5 py-4"><span className="font-mono text-xs text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded">{item.id.slice(0, 8)}</span></td>
+      <td className="px-5 py-4">
+        <div className="flex items-center gap-2">
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={stock}
+              disabled={isUpdating}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                setStock(val);
+              }}
+              onBlur={handleUpdate}
+              onKeyDown={(e) => e.key === 'Enter' && (e.target as any).blur()}
+              className={cn(
+                "w-20 h-9 px-3 text-sm font-bold rounded-lg border bg-background transition-all outline-none text-center",
+                typeof item.stock === 'number' && item.stock === 0 ? "text-red-500 border-red-200 bg-red-50/50" : 
+                typeof item.stock === 'number' && item.stock < 10 ? "text-yellow-600 border-yellow-200 bg-yellow-50/50" : 
+                "text-green-600 border-border hover:border-primary/30 focus:border-primary"
+              )}
+            />
+            {isUpdating && <Loader2 className="absolute -right-6 h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+          </div>
+          {item.stock === 0 && !isUpdating && <AlertTriangle className="h-3.5 w-3.5 text-red-500 ml-1" aria-label="Out of stock" />}
+        </div>
+      </td>
+      <td className="px-5 py-4 text-sm text-muted-foreground">{item.minimumOrderQuantity ?? 1}</td>
+      <td className="px-5 py-4">
+        <Badge variant={item.isActive ? "success" : "error"}>
+          {item.isActive ? "Active" : "Disabled"}
+        </Badge>
+      </td>
+    </motion.tr>
   );
 }
 

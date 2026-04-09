@@ -542,7 +542,11 @@ function ProductsPageContent() {
                             productName: product.name,
                             price: computedSellingPrice,
                             mrp: product.mrp,
-                            imageUrl: image
+                            imageUrl: image,
+                            stock: product.stock,
+                            moq: product.moq || product.minimumOrderQuantity || 1,
+                            minimumOrderQuantity: product.minimumOrderQuantity,
+                            maximumOrderQuantity: product.maximumOrderQuantity
                           },
                           {
                             onSuccess: () => {

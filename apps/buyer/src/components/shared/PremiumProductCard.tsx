@@ -211,33 +211,35 @@ export default function PremiumProductCard({
               {isEditingQty ? (
                 <input
                   ref={inputRef}
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setEditValue(val);
+                  }}
                   onBlur={() => {
                     const parsed = parseInt(editValue, 10);
-                    if (!isNaN(parsed) && parsed >= moq) {
-                      const finalQty = Math.min(parsed, stock);
-                      setCount(finalQty);
-                      notifyCartChange(finalQty);
-                      if (parsed > stock) {
-                        setEditValue(String(finalQty));
-                      }
-                    } else if (!isNaN(parsed) && parsed > 0 && parsed < moq) {
-                      setCount(moq);
-                      notifyCartChange(moq);
-                    } else if (parsed === 0 || editValue === '') {
-                      setCount(0);
-                      notifyCartChange(null);
+                    if (!isNaN(parsed)) {
+                      const finalQty = Math.max(0, Math.min(parsed, stock));
+                      // If it's less than MOQ but more than 0, snap to MOQ
+                      const reportedQty = (finalQty > 0 && finalQty < moq) ? moq : finalQty;
+                      
+                      setCount(reportedQty);
+                      notifyCartChange(reportedQty > 0 ? reportedQty : null);
+                      setEditValue(String(reportedQty));
+                    } else {
+                      setEditValue(String(count));
                     }
                     setIsEditingQty(false);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      (e.target as HTMLInputElement).blur();
+                      (e.target as any).blur();
                     }
                   }}
-                  className="w-[28px] bg-transparent text-white text-[13px] font-bold text-center tabular-nums outline-none border-b border-white/40 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="w-10 min-w-10 bg-white/10 text-white text-[13px] font-bold text-center tabular-nums outline-none border-b border-white/40 rounded px-1 appearance-none"
                   autoFocus
                 />
               ) : (
@@ -251,7 +253,7 @@ export default function PremiumProductCard({
                     setIsEditingQty(true);
                     setTimeout(() => inputRef.current?.select(), 0);
                   }}
-                  className="text-white text-[11px] sm:text-[13px] font-bold min-w-[20px] sm:min-w-[26px] text-center tabular-nums select-none cursor-text hover:opacity-80 transition-opacity"
+                  className="text-white text-[11px] sm:text-[13px] font-bold min-w-[24px] sm:min-w-[32px] px-1 text-center tabular-nums select-none cursor-text hover:bg-white/10 rounded transition-all"
                 >
                   {count}
                 </button>
