@@ -48,12 +48,12 @@ export function useCart() {
 export function useAddToCart() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ productId, quantity, ...extra }: { productId: string; quantity?: number; [key: string]: any }) => {
+    mutationFn: async ({ productId, quantity, replace = false, ...extra }: { productId: string; quantity?: number; replace?: boolean; [key: string]: any }) => {
       return localCart.addItem({ 
         productId, 
         quantity: quantity || 1,
         ...extra 
-      } as any);
+      } as any, replace);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });

@@ -27,12 +27,16 @@ export const localCart = {
     window.dispatchEvent(new Event('storage'));
   },
 
-  addItem: (itemData: any) => {
+  addItem: (itemData: any, replace: boolean = false) => {
     const cart = localCart.get();
     const existingIndex = cart.items.findIndex(item => item.productId === itemData.productId);
     
     if (existingIndex > -1) {
-      cart.items[existingIndex].quantity += itemData.quantity;
+      if (replace) {
+        cart.items[existingIndex].quantity = itemData.quantity;
+      } else {
+        cart.items[existingIndex].quantity += itemData.quantity;
+      }
     } else {
       cart.items.push({
         id: `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

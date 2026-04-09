@@ -25,21 +25,22 @@ export default function ProductDetailPage({ params }: { params: { productId: str
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
-  // Sync quantity with cart when product loads
+  // Sync quantity with cart only ONCE when product loads
+  const [initialSyncDone, setInitialSyncDone] = useState(false);
   useEffect(() => {
-    if (!product) return;
+    if (!product || initialSyncDone) return;
 
     // Check if product is already in cart
     const cartItem = cartData?.items?.find(item => item.productId === product.id);
 
     if (cartItem) {
-      // Product is in cart, show current cart quantity
       setQuantity(cartItem.quantity);
+      setInitialSyncDone(true);
     } else {
-      // Product not in cart, start with MOQ
       setQuantity(product.minimumOrderQuantity || 1);
+      setInitialSyncDone(true);
     }
-  }, [product?.id, cartData?.items]);
+  }, [product?.id, cartData?.items, initialSyncDone]);
 
   const wishlistItems = wishlistData?.items ?? [];
   const wishlistEntry = wishlistItems.find((w) => w.productId === params.productId || w.product?.id === params.productId);
@@ -61,10 +62,23 @@ export default function ProductDetailPage({ params }: { params: { productId: str
 
   const handleAddToCart = () => {
     if (!product) return;
+    
+    // Validate quantity before sending
+    const min = (product as any).minimumOrderQuantity || 1;
+    const stock = product.stock || 0;
+    const maxLimit = (product as any).maximumOrderQuantity || stock;
+    const max = Math.min(stock, maxLimit);
+    
+    let finalQty = parseInt(String(quantity), 10);
+    if (isNaN(finalQty)) finalQty = min;
+    if (finalQty < min) finalQty = min;
+    if (finalQty > max) finalQty = max;
+
     addToCart.mutate(
       {
         productId: product.id,
-        quantity,
+        quantity: finalQty,
+        replace: true, // IMPORTANT: REPLACE instead of ADD to fix the "Addition" bug
         productName: product.name,
         price: sellingPrice,
         mrp: product.mrp,
@@ -72,11 +86,12 @@ export default function ProductDetailPage({ params }: { params: { productId: str
       },
       {
         onSuccess: () => {
+          setQuantity(finalQty);
           setAdded(true);
-          toast(`${product.name} added to bag!`, 'success');
+          toast(`${product.name} updated in bag!`, 'success');
           setTimeout(() => setAdded(false), 2000);
         },
-        onError: () => toast('Failed to add to bag', 'error'),
+        onError: () => toast('Failed to update bag', 'error'),
       }
     );
   };
@@ -326,36 +341,62 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                 <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 sm:gap-4 md:gap-6">
                   <div className="flex items-center bg-white/60 rounded-2xl border border-gray-200 overflow-hidden">
                     <button
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      type="button"
+                      onClick={() => {
+                        const min = (product as any).minimumOrderQuantity || 1;
+                        setQuantity((q) => Math.max(min, Number(q) - 1));
+                      }}
                       className="px-4 py-3 hover:bg-gray-100 transition-colors"
                     >
                       <Minus className="w-4 h-4 text-gray-600" />
                     </button>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={quantity}
                       onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
+                        const val = e.target.value.replace(/\D/g, '');
+                        if (val === '') {
+                          setQuantity('' as any);
+                          return;
+                        }
+                        const parsed = parseInt(val, 10);
+                        const stock = product.stock || 0;
+                        const maxLimit = (product as any).maximumOrderQuantity || stock;
+                        const max = Math.min(stock, maxLimit);
+                        
+                        if (parsed > max) {
+                            setQuantity(max);
+                            toast(`Only ${max} units available in stock`, 'error');
+                        } else {
+                            setQuantity(parsed);
+                        }
+                      }}
+                      onBlur={() => {
                         const min = (product as any).minimumOrderQuantity || 1;
                         const stock = product.stock || 0;
                         const maxLimit = (product as any).maximumOrderQuantity || stock;
                         const max = Math.min(stock, maxLimit);
-                        if (!isNaN(val)) {
-                          setQuantity(Math.max(min, Math.min(max, val)));
-                        } else {
-                          setQuantity(min);
+                        
+                        let val = parseInt(String(quantity), 10);
+                        if (isNaN(val) || val < min) {
+                           setQuantity(min);
+                        } else if (val > max) {
+                           setQuantity(max);
                         }
                       }}
-                      className="w-16 px-2 py-3 font-bold text-gray-900 tabular-nums text-center bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-16 px-2 py-3 font-bold text-gray-900 tabular-nums text-center bg-transparent outline-none border-x border-gray-100"
                     />
                     <button
+                      type="button"
                       onClick={() => {
                         const stock = product.stock || 0;
                         const maxLimit = (product as any).maximumOrderQuantity || stock;
                         const max = Math.min(stock, maxLimit);
-                        setQuantity((q) => Math.min(max, q + 1));
+                        setQuantity((q) => Math.min(max, Number(q) + 1));
                       }}
-                      disabled={quantity >= Math.min(product.stock || 0, (product as any).maximumOrderQuantity || (product.stock || 0))}
+                      disabled={Number(quantity) >= Math.min(product.stock || 0, (product as any).maximumOrderQuantity || (product.stock || 0))}
                       className="px-4 py-3 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       <Plus className="w-4 h-4 text-gray-600" />
