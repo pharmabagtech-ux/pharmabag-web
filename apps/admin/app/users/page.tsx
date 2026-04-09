@@ -26,7 +26,7 @@ function BuyerDetails({ userId }: { userId: string }) {
   if (!bp) return <div className="py-4 text-center text-sm text-muted-foreground">No buyer profile submitted yet</div>;
   return (
     <div className="py-4 space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><Building2 className="h-3 w-3" />Legal Name</div>
           <p className="text-sm font-medium text-foreground">{bp.legalName || bp.name || "—"}</p>
@@ -47,54 +47,62 @@ function BuyerDetails({ userId }: { userId: string }) {
           <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />Drug License 2 (21B)</div>
           <p className="text-sm font-mono text-foreground">{bp.drugLicenseNumber2 || "—"}</p>
         </div>
-        
-        <div className="space-y-4 sm:col-span-2 lg:col-span-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {bp.drugLicenseUrl && (
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />License 1 Document</div>
-                {/\.(jpe?g|png|webp)$/i.test(bp.drugLicenseUrl) ? (
-                  <div className="space-y-2">
-                    <a href={getFullUrl(bp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer" className="block w-fit">
-                      <img src={getFullUrl(bp.drugLicenseUrl)} alt="Drug License 1" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain hover:border-primary/50 transition-colors" />
-                    </a>
-                  </div>
-                ) : (
-                  <a href={getFullUrl(bp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-                    View Document 1 <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-                <div className="mt-1">
-                  <a href={getFullUrl(bp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 break-all">
-                    S3 Link: {bp.drugLicenseUrl}
-                  </a>
-                </div>
-              </div>
-            )}
+        <div /> {/* Spacer for alignment */}
 
-            {bp.drugLicenseUrl2 && (
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />License 2 Document</div>
-                {/\.(jpe?g|png|webp)$/i.test(bp.drugLicenseUrl2) ? (
-                  <div className="space-y-2">
-                    <a href={getFullUrl(bp.drugLicenseUrl2)} target="_blank" rel="noopener noreferrer" className="block w-fit">
-                      <img src={getFullUrl(bp.drugLicenseUrl2)} alt="Drug License 2" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain hover:border-primary/50 transition-colors" />
+        {/* License Documents Row */}
+        <div className="lg:col-span-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 pt-4 border-t border-border/50">
+            {bp.drugLicenseUrl && (() => {
+              const url = typeof bp.drugLicenseUrl === 'object' ? bp.drugLicenseUrl.url : bp.drugLicenseUrl;
+              return (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />License 1 Document</div>
+                  {/\.(jpe?g|png|webp)$/i.test(url) ? (
+                    <div className="space-y-2">
+                      <a href={getFullUrl(url)} target="_blank" rel="noopener noreferrer" className="block w-fit">
+                        <img src={getFullUrl(url)} alt="Drug License 1" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain hover:border-primary/50 transition-colors" />
+                      </a>
+                    </div>
+                  ) : (
+                    <a href={getFullUrl(url)} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-primary font-bold hover:underline">
+                      View Document 1 <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                  <div className="mt-1">
+                    <a href={getFullUrl(url)} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 break-all font-mono">
+                      S3: {url}
                     </a>
                   </div>
-                ) : (
-                  <a href={getFullUrl(bp.drugLicenseUrl2)} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-                    View Document 2 <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-                <div className="mt-1">
-                  <a href={getFullUrl(bp.drugLicenseUrl2)} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 break-all">
-                    S3 Link: {bp.drugLicenseUrl2}
-                  </a>
                 </div>
-              </div>
-            )}
+              );
+            })()}
+
+            {bp.drugLicenseUrl2 && (() => {
+              const url2 = typeof bp.drugLicenseUrl2 === 'object' ? bp.drugLicenseUrl2.url : bp.drugLicenseUrl2;
+              return (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />License 2 Document</div>
+                  {/\.(jpe?g|png|webp)$/i.test(url2) ? (
+                    <div className="space-y-2">
+                      <a href={getFullUrl(url2)} target="_blank" rel="noopener noreferrer" className="block w-fit">
+                        <img src={getFullUrl(url2)} alt="Drug License 2" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain hover:border-primary/50 transition-colors" />
+                      </a>
+                    </div>
+                  ) : (
+                    <a href={getFullUrl(url2)} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-primary font-bold hover:underline">
+                      View Document 2 <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                  <div className="mt-1">
+                    <a href={getFullUrl(url2)} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 break-all font-mono">
+                      S3: {url2}
+                    </a>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
         <div className="space-y-1 sm:col-span-2">
@@ -102,8 +110,8 @@ function BuyerDetails({ userId }: { userId: string }) {
           <p className="text-sm text-foreground">{
             bp.address
               ? (typeof bp.address === 'object'
-                  ? [bp.address.street1, bp.address.city, bp.address.state, bp.address.pincode].filter(Boolean).join(", ")
-                  : [bp.address, bp.city, bp.state, bp.pincode].filter(Boolean).join(", "))
+                ? [bp.address.street1, bp.address.city, bp.address.state, bp.address.pincode].filter(Boolean).join(", ")
+                : [bp.address, bp.city, bp.state, bp.pincode].filter(Boolean).join(", "))
               : "—"
           }</p>
         </div>
@@ -134,87 +142,104 @@ function SellerDetails({ userId }: { userId: string }) {
   const sp = user?.sellerProfile;
   if (!sp) return <div className="py-4 text-center text-sm text-muted-foreground">No seller profile submitted yet</div>;
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
-      <div className="space-y-1">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><Building2 className="h-3 w-3" />Business</div>
-        <p className="text-sm font-medium text-foreground">{sp.companyName || sp.businessName || "—"}</p>
-      </div>
-      <div className="space-y-1">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />GST Number</div>
-        <p className="text-sm font-mono text-foreground">{sp.gstNumber || "—"}</p>
-      </div>
-      <div className="space-y-1">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />PAN Number</div>
-        <p className="text-sm font-mono text-foreground">{sp.panNumber || "—"}</p>
-      </div>
-      <div className="space-y-1">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />Drug License 1 (20B)</div>
-        <p className="text-sm font-mono text-foreground">{sp.drugLicenseNumber || "—"}</p>
-      </div>
-      <div className="space-y-1">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />Drug License 2 (21B)</div>
-        <p className="text-sm font-mono text-foreground">{sp.drugLicenseNumber2 || "—"}</p>
-      </div>
-      
-      <div className="space-y-4 sm:col-span-2 lg:col-span-3">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {sp.drugLicenseUrl && (
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />License 1 Document</div>
-              {/\.(jpe?g|png|webp)$/i.test(sp.drugLicenseUrl) ? (
-                <div className="space-y-2">
-                  <a href={getFullUrl(sp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer" className="block w-fit">
-                    <img src={getFullUrl(sp.drugLicenseUrl)} alt="Drug License 1" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain hover:border-primary/50 transition-colors" />
-                  </a>
-                </div>
-              ) : (
-                <a href={getFullUrl(sp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-                  View Document 1 <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-              <div className="mt-1">
-                <a href={getFullUrl(sp.drugLicenseUrl)} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 break-all">
-                  S3 Link: {sp.drugLicenseUrl}
-                </a>
-              </div>
-            </div>
-          )}
-
-          {sp.drugLicenseUrl2 && (
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />License 2 Document</div>
-              {/\.(jpe?g|png|webp)$/i.test(sp.drugLicenseUrl2) ? (
-                <div className="space-y-2">
-                  <a href={getFullUrl(sp.drugLicenseUrl2)} target="_blank" rel="noopener noreferrer" className="block w-fit">
-                    <img src={getFullUrl(sp.drugLicenseUrl2)} alt="Drug License 2" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain hover:border-primary/50 transition-colors" />
-                  </a>
-                </div>
-              ) : (
-                <a href={getFullUrl(sp.drugLicenseUrl2)} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-                  View Document 2 <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-              <div className="mt-1">
-                <a href={getFullUrl(sp.drugLicenseUrl2)} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 break-all">
-                  S3 Link: {sp.drugLicenseUrl2}
-                </a>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="space-y-1 sm:col-span-2">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><MapPin className="h-3 w-3" />Address</div>
-        <p className="text-sm text-foreground">{[sp.address, sp.city, sp.state, sp.pincode].filter(Boolean).join(", ") || "—"}</p>
-      </div>
-      {sp.verificationStatus && (
+    <div className="py-4 space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="space-y-1">
-          <div className="text-xs font-semibold text-muted-foreground uppercase">Verification</div>
-          <Badge variant={sp.verificationStatus === "APPROVED" ? "success" : sp.verificationStatus === "PENDING" ? "warning" : "error"}>{sp.verificationStatus}</Badge>
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><Building2 className="h-3 w-3" />Business</div>
+          <p className="text-sm font-medium text-foreground">{sp.companyName || sp.businessName || "—"}</p>
         </div>
-      )}
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />GST Number</div>
+          <p className="text-sm font-mono text-foreground">{sp.gstNumber || "—"}</p>
+        </div>
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />PAN Number</div>
+          <p className="text-sm font-mono text-foreground">{sp.panNumber || "—"}</p>
+        </div>
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />Drug License 1 (20B)</div>
+          <p className="text-sm font-mono text-foreground">{sp.drugLicenseNumber || "—"}</p>
+        </div>
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />Drug License 2 (21B)</div>
+          <p className="text-sm font-mono text-foreground">{sp.drugLicenseNumber2 || "—"}</p>
+        </div>
+        <div /> {/* Spacer */}
+
+        {/* License Documents Row */}
+        <div className="lg:col-span-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 pt-4 border-t border-border/50">
+            {sp.drugLicenseUrl && (() => {
+              const url = typeof sp.drugLicenseUrl === 'object' ? sp.drugLicenseUrl.url : sp.drugLicenseUrl;
+              return (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />License 1 Document</div>
+                  {/\.(jpe?g|png|webp)$/i.test(url) ? (
+                    <div className="space-y-2">
+                      <a href={getFullUrl(url)} target="_blank" rel="noopener noreferrer" className="block w-fit">
+                        <img src={getFullUrl(url)} alt="Drug License 1" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain hover:border-primary/50 transition-colors" />
+                      </a>
+                    </div>
+                  ) : (
+                    <a href={getFullUrl(url)} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-primary font-bold hover:underline">
+                      View Document 1 <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                  <div className="mt-1">
+                    <a href={getFullUrl(url)} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 break-all font-mono">
+                      S3: {url}
+                    </a>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {sp.drugLicenseUrl2 && (() => {
+              const url2 = typeof sp.drugLicenseUrl2 === 'object' ? sp.drugLicenseUrl2.url : sp.drugLicenseUrl2;
+              return (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase"><FileText className="h-3 w-3" />License 2 Document</div>
+                  {/\.(jpe?g|png|webp)$/i.test(url2) ? (
+                    <div className="space-y-2">
+                      <a href={getFullUrl(url2)} target="_blank" rel="noopener noreferrer" className="block w-fit">
+                        <img src={getFullUrl(url2)} alt="Drug License 2" className="max-w-[200px] max-h-32 rounded-lg border border-border object-contain hover:border-primary/50 transition-colors" />
+                      </a>
+                    </div>
+                  ) : (
+                    <a href={getFullUrl(url2)} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-primary font-bold hover:underline">
+                      View Document 2 <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                  <div className="mt-1">
+                    <a href={getFullUrl(url2)} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 break-all font-mono">
+                      S3: {url2}
+                    </a>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+
+        <div className="space-y-1 sm:col-span-2">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase">
+            <MapPin className="h-3 w-3" /> Address
+          </div>
+          <p className="text-sm text-foreground">
+            {[sp.address, sp.city, sp.state, sp.pincode].filter(Boolean).join(", ") || "—"}
+          </p>
+        </div>
+        {sp.verificationStatus && (
+          <div className="space-y-1">
+            <div className="text-xs font-semibold text-muted-foreground uppercase">Verification</div>
+            <Badge variant={sp.verificationStatus === "APPROVED" ? "success" : sp.verificationStatus === "PENDING" ? "warning" : "error"}>
+              {sp.verificationStatus}
+            </Badge>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -280,7 +305,7 @@ export default function UsersPage() {
       toast.error(`Failed to ${action} user ${phone}`);
     }
   };
-  
+
   const handleDeleteUser = async (id: string, phone: string) => {
     if (!window.confirm(`Are you sure you want to permanently delete user ${phone}? This action cannot be undone.`)) return;
     try {
@@ -405,7 +430,7 @@ export default function UsersPage() {
                                   {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                                 </button>
                               )}
-                              
+
                               {(u.status === "PENDING" && (u.buyerProfile?.gstNumber || u.buyerProfile?.panNumber || u.sellerProfile?.gstNumber || u.sellerProfile?.panNumber || u.gstNumber || u.panNumber)) && (
                                 <>
                                   <button onClick={(e) => { e.stopPropagation(); void handleAction(u.id, u.phone, "approve"); }} aria-label="Approve" title="Approve"
@@ -423,22 +448,22 @@ export default function UsersPage() {
                             {/* Legacy IDFY Actions */}
                             {u.role === 'BUYER' && u.gstPanResponse && (
                               <div className="flex flex-wrap gap-1 mt-1">
-                                <button 
+                                <button
                                   onClick={(e) => { e.stopPropagation(); updateGstStatus.mutate({ userId: u.id, role: 'BUYER', data: { verified: true, creditTier: 'PREPAID' } }); }}
                                   className="px-2 py-1 text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 rounded hover:bg-blue-100 transition-colors">
                                   Prepaid
                                 </button>
-                                <button 
+                                <button
                                   onClick={(e) => { e.stopPropagation(); updateGstStatus.mutate({ userId: u.id, role: 'BUYER', data: { verified: true, creditTier: 'EMI' } }); }}
                                   className="px-2 py-1 text-[10px] font-bold bg-purple-50 text-purple-600 border border-purple-100 rounded hover:bg-purple-100 transition-colors">
                                   EMI
                                 </button>
-                                <button 
+                                <button
                                   onClick={(e) => { e.stopPropagation(); updateGstStatus.mutate({ userId: u.id, role: 'BUYER', data: { verified: true, creditTier: 'FULLCREDIT' } }); }}
                                   className="px-2 py-1 text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 rounded hover:bg-emerald-100 transition-colors">
                                   Full
                                 </button>
-                                <button 
+                                <button
                                   onClick={(e) => { e.stopPropagation(); updateGstStatus.mutate({ userId: u.id, role: 'BUYER', data: { verified: false } }); }}
                                   className="px-2 py-1 text-[10px] font-bold bg-red-50 text-red-600 border border-red-100 rounded hover:bg-red-100 transition-colors">
                                   Reject
