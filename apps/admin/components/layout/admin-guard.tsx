@@ -26,7 +26,7 @@ function hasPermission(permissions: string | undefined, route: string): boolean 
 }
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { user, isAuth } = useAdminAuth();
+  const { user, isAuth, logout } = useAdminAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
@@ -43,6 +43,13 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!mounted) return;
     
+    // Auto-logout if pending
+    if (isAuth && user?.status === "PENDING" && pathname !== "/auth") {
+      logout();
+      router.replace("/auth");
+      return;
+    }
+
     // Redirect to auth if not authenticated and trying to access protected page
     if (!isAuth && pathname !== "/auth") {
       router.replace("/auth");
@@ -52,7 +59,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     if (isAuth && pathname === "/auth") {
       router.replace("/");
     }
-  }, [isAuth, pathname, mounted, router]);
+  }, [isAuth, user?.status, pathname, mounted, router, logout]);
 
   if (!mounted) {
     return (

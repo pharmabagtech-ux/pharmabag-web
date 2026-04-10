@@ -32,11 +32,13 @@ export function useVerifyAdminOtp() {
     mutationFn: verifyOtp,
     onSuccess: (data) => {
       const inner = data.data ?? data;
-      if (typeof window !== "undefined" && inner.accessToken) {
+      if (typeof window !== "undefined" && inner.accessToken && inner.user?.status !== "PENDING") {
         localStorage.setItem("pb_access_token", inner.accessToken);
       }
-      if (inner.user) setUser(inner.user);
-      void queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+      if (inner.user && inner.user.status !== "PENDING") {
+        setUser(inner.user);
+        void queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+      }
     },
   });
 }

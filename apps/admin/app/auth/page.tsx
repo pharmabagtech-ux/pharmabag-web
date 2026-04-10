@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, ArrowRight, Phone } from "lucide-react";
+import { Shield, ArrowRight, Phone, ShieldOff, XCircle, LogOut } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { useAdminAuth } from "@/store";
 import { useSendAdminOtp, useVerifyAdminOtp } from "@/hooks/useAdmin";
@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 export default function AdminAuthPage() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"phone"|"otp">("phone");
+  const [step, setStep] = useState<"phone"|"otp"|"denied">("phone");
   const { setUser } = useAdminAuth();
   const router = useRouter();
   const sendOtpMutation = useSendAdminOtp();
@@ -50,11 +50,20 @@ export default function AdminAuthPage() {
       const inner = (res as any).data ?? res;
       const user = inner.user;
       const role = user?.role?.toUpperCase?.() ?? "";
+
       if (role !== "ADMIN") {
-        toast.error("Access denied. This portal is for admins only.");
+        setStep("denied");
         localStorage.removeItem("pb_access_token");
         return;
       }
+
+      if (user?.status === "PENDING") {
+        setStep("denied");
+        localStorage.removeItem("pb_access_token");
+        localStorage.removeItem("pb_refresh_token");
+        return;
+      }
+
       setUser(user);
       toast.success("Admin signed in");
       router.push("/dashboard");
@@ -106,27 +115,51 @@ export default function AdminAuthPage() {
             </div>
             <span className="font-semibold text-xl text-foreground">Admin Panel</span>
           </div>
-          <div>
-            <h2 className="font-semibold text-3xl text-foreground">Admin Sign In</h2>
-            <p className="text-muted-foreground text-sm mt-1">One-time password login for admin access</p>
-          </div>
-          {step === "phone" ? (
-            <form onSubmit={sendOTP} className="space-y-4">
-              <Input label="Phone Number" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                placeholder="Enter your phone number" leftIcon={<Phone className="h-4 w-4" />} required maxLength={15} />
-              <Button type="submit" className="w-full" size="lg" loading={loading} rightIcon={<ArrowRight className="h-4 w-4" />}>
-                Send OTP
-              </Button>
-            </form>
+          
+          {step === "denied" ? (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6 text-center">
+              <div className="h-20 w-20 bg-red-50 dark:bg-red-900/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-100 dark:border-red-900/20">
+                <ShieldOff className="h-10 w-10" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="font-semibold text-3xl text-foreground">Access Restricted</h2>
+                <p className="text-muted-foreground text-sm px-4">
+                  Your application is currently <span className="text-amber-600 font-bold italic">under review</span> by the system administrators. 
+                  Access will be granted once your account is approved.
+                </p>
+              </div>
+              <div className="pt-4 space-y-3">
+                <Button onClick={() => setStep("phone")} className="w-full" variant="outline" size="lg" leftIcon={<LogOut className="h-4 w-4" />}>
+                  Back to login
+                </Button>
+                <p className="text-xs text-muted-foreground">Contact super admin if you believe this is an error</p>
+              </div>
+            </motion.div>
           ) : (
-            <form onSubmit={verify} className="space-y-4">
-              <Input label="OTP" type="text" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                placeholder="Enter 6-digit OTP" leftIcon={<Shield className="h-4 w-4" />} required maxLength={6} />
-              <Button type="submit" className="w-full" size="lg" loading={loading} rightIcon={<ArrowRight className="h-4 w-4" />}>
-                Verify & Sign In
-              </Button>
-              <button type="button" onClick={() => setStep("phone")} className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-center">← Change phone</button>
-            </form>
+            <>
+              <div>
+                <h2 className="font-semibold text-3xl text-foreground">Admin Sign In</h2>
+                <p className="text-muted-foreground text-sm mt-1">One-time password login for admin access</p>
+              </div>
+              {step === "phone" ? (
+                <form onSubmit={sendOTP} className="space-y-4">
+                  <Input label="Phone Number" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Enter your phone number" leftIcon={<Phone className="h-4 w-4" />} required maxLength={15} />
+                  <Button type="submit" className="w-full" size="lg" loading={loading} rightIcon={<ArrowRight className="h-4 w-4" />}>
+                    Send OTP
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={verify} className="space-y-4">
+                  <Input label="OTP" type="text" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                    placeholder="Enter 6-digit OTP" leftIcon={<Shield className="h-4 w-4" />} required maxLength={6} />
+                  <Button type="submit" className="w-full" size="lg" loading={loading} rightIcon={<ArrowRight className="h-4 w-4" />}>
+                    Verify & Sign In
+                  </Button>
+                  <button type="button" onClick={() => setStep("phone")} className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-center">← Change phone</button>
+                </form>
+              )}
+            </>
           )}
         </motion.div>
       </div>
