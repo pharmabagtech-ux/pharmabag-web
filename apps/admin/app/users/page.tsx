@@ -19,7 +19,7 @@ const getFullUrl = (url: string) => {
   return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
 };
 
-function SecureDocViewer({ url, label, number }: { url: string; label: string; number?: string }) {
+function SecureDocViewer({ url, label, number, expiry }: { url: string; label: string; number?: string; expiry?: string }) {
   const { data: presignedUrl, isLoading } = usePresignedUrl(url);
   const displayUrl = presignedUrl || getFullUrl(url);
   const isImage = /\.(jpe?g|png|webp)$/i.test(url);
@@ -32,7 +32,14 @@ function SecureDocViewer({ url, label, number }: { url: string; label: string; n
         <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase">
           <FileText className="h-3 w-3" /> {label}
         </div>
-        {number && <p className="text-sm font-mono text-foreground">{number}</p>}
+        <div className="flex flex-col">
+          {number && <p className="text-sm font-mono font-bold text-foreground">{number}</p>}
+          {expiry && (
+            <p className="text-[10px] text-muted-foreground">
+              Expires: <span className="font-semibold text-foreground">{new Date(expiry).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</span>
+            </p>
+          )}
+        </div>
       </div>
       {isImage ? (
         <a href={displayUrl} target="_blank" rel="noopener noreferrer" className="block w-fit">
@@ -82,6 +89,7 @@ function BuyerDetails({ userId }: { userId: string }) {
             url={typeof bp.drugLicenseUrl === 'object' ? bp.drugLicenseUrl.url : bp.drugLicenseUrl} 
             label="License 1 (20B)" 
             number={bp.drugLicenseNumber} 
+            expiry={bp.drugLicenseExpiry}
           />
         )}
         {bp.drugLicenseUrl2 && (
@@ -89,6 +97,7 @@ function BuyerDetails({ userId }: { userId: string }) {
             url={typeof bp.drugLicenseUrl2 === 'object' ? bp.drugLicenseUrl2.url : bp.drugLicenseUrl2} 
             label="License 2 (21B)" 
             number={bp.drugLicenseNumber2} 
+            expiry={bp.drugLicenseExpiry2}
           />
         )}
         <div className="space-y-1 sm:col-span-2">
@@ -148,6 +157,7 @@ function SellerDetails({ userId }: { userId: string }) {
             url={typeof sp.drugLicenseUrl === 'object' ? sp.drugLicenseUrl.url : sp.drugLicenseUrl} 
             label="License 1 (20B)" 
             number={sp.drugLicenseNumber} 
+            expiry={sp.drugLicenseExpiry}
           />
         )}
         {sp.drugLicenseUrl2 && (
@@ -155,6 +165,7 @@ function SellerDetails({ userId }: { userId: string }) {
             url={typeof sp.drugLicenseUrl2 === 'object' ? sp.drugLicenseUrl2.url : sp.drugLicenseUrl2} 
             label="License 2 (21B)" 
             number={sp.drugLicenseNumber2} 
+            expiry={sp.drugLicenseExpiry2}
           />
         )}
 

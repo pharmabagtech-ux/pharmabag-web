@@ -47,8 +47,10 @@ export default function OnboardingPage() {
     panNumber: '',
     drugLicenseNumber: '',
     drugLicenseUrl: '',
+    drugLicenseExpiry: '',
     drugLicenseNumber2: '',
     drugLicenseUrl2: '',
+    drugLicenseExpiry2: '',
     address: '',
     city: '',
     state: '',
@@ -168,8 +170,10 @@ export default function OnboardingPage() {
       panNumber: form.panNumber.trim().toUpperCase(),
       drugLicenseNumber: form.drugLicenseNumber.trim(),
       drugLicenseUrl: form.drugLicenseUrl || undefined,
+      drugLicenseExpiry: form.drugLicenseExpiry ? new Date(form.drugLicenseExpiry).toISOString() : undefined,
       drugLicenseNumber2: form.drugLicenseNumber2.trim(),
       drugLicenseUrl2: form.drugLicenseUrl2 || undefined,
+      drugLicenseExpiry2: form.drugLicenseExpiry2 ? new Date(form.drugLicenseExpiry2).toISOString() : undefined,
       address: {
         street1: form.address.trim(),
         street2: '',
@@ -181,13 +185,13 @@ export default function OnboardingPage() {
         {
           type: 'DL20B',
           number: form.drugLicenseNumber.trim(),
-          expiry: '',
+          expiry: form.drugLicenseExpiry || '',
           imgUrl: form.drugLicenseUrl || undefined,
         },
         ...(form.drugLicenseNumber2.trim() ? [{
           type: 'DL21B',
           number: form.drugLicenseNumber2.trim(),
-          expiry: '',
+          expiry: form.drugLicenseExpiry2 || '',
           imgUrl: form.drugLicenseUrl2 || undefined,
         }] : [])
       ] : undefined,
@@ -433,6 +437,18 @@ export default function OnboardingPage() {
                         {errors.drugLicenseNumber && <p className="text-xs text-red-500 mt-1">{errors.drugLicenseNumber}</p>}
                       </div>
                       <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date 1</label>
+                        <input
+                          type="month"
+                          value={form.drugLicenseExpiry}
+                          onChange={(e) => updateField('drugLicenseExpiry', e.target.value)}
+                          className={`w-full px-4 py-3 rounded-xl border ${errors.drugLicenseExpiry ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50/50'} focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none transition-colors`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Drug License Number 2 (Form 21B)</label>
                         <input
                           type="text"
@@ -442,6 +458,15 @@ export default function OnboardingPage() {
                           className={`w-full px-4 py-3 rounded-xl border ${errors.drugLicenseNumber2 ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50/50'} focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none transition-colors`}
                         />
                         {errors.drugLicenseNumber2 && <p className="text-xs text-red-500 mt-1">{errors.drugLicenseNumber2}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date 2</label>
+                        <input
+                          type="month"
+                          value={form.drugLicenseExpiry2}
+                          onChange={(e) => updateField('drugLicenseExpiry2', e.target.value)}
+                          className={`w-full px-4 py-3 rounded-xl border ${errors.drugLicenseExpiry2 ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50/50'} focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none transition-colors`}
+                        />
                       </div>
                     </div>
 
@@ -560,7 +585,9 @@ export default function OnboardingPage() {
                         { label: 'GST Number', value: form.gstNumber, verified: gstVerified },
                         { label: 'PAN Number', value: form.panNumber, verified: panVerified },
                         { label: 'Drug License 1', value: form.drugLicenseNumber },
+                        { label: 'Expiry 1', value: form.drugLicenseExpiry ? new Date(form.drugLicenseExpiry).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : '—' },
                         { label: 'Drug License 2', value: form.drugLicenseNumber2 },
+                        { label: 'Expiry 2', value: form.drugLicenseExpiry2 ? new Date(form.drugLicenseExpiry2).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : '—' },
                         { label: 'City', value: form.city },
                         { label: 'State', value: form.state },
                         { label: 'Pincode', value: form.pincode },
