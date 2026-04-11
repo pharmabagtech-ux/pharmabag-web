@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginWithSimplePassword } from "@pharmabag/api-client";
-import { Lock, Loader2 } from "lucide-react";
+import { Lock, Loader2, ArrowRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function AdminLoginPage() {
@@ -28,34 +29,44 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center p-6">
-      <div className="max-w-md w-full glass-card p-8 border-white/10 animate-fade-in">
-        <div className="mb-8 text-center">
-          <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/20">
-            <Lock className="text-black" size={32} />
+    <div className="min-h-screen premium-gradient text-foreground flex items-center justify-center p-6">
+      <div className="max-w-md w-full glass-card p-10 border-white/60 animate-fade-in shadow-2xl shadow-primary/5">
+        <div className="mb-10 text-center">
+          <Link href="/" className="inline-block mb-10">
+            <Image
+              src="/pharmabag_logo.png"
+              alt="PharmaBag Logo"
+              width={180}
+              height={50}
+              className="h-10 w-auto mx-auto"
+            />
+          </Link>
+          
+          <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/10 border border-primary/20">
+            <Lock className="text-primary" size={36} />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Blog Admin PortaL</h1>
-          <p className="text-gray-400 mt-2">Enter secret password to access dashboard</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">Admin Portal</h1>
+          <p className="text-gray-500 mt-2 font-medium">Authentication Required</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Secret Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+            <label className="text-sm font-bold text-gray-700 ml-1">Access Password</label>
+            <div className="relative group">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={20} />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-10 pr-4 focus:outline-none focus:border-green-500/50 transition-colors text-lg"
+                className="w-full bg-white/50 backdrop-blur-sm border border-white/60 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-lg font-medium text-gray-900"
                 required
               />
             </div>
           </div>
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+            <div className="p-4 rounded-2xl bg-red-50 text-red-600 text-sm font-semibold border border-red-100 animate-shake">
               {error}
             </div>
           )}
@@ -63,22 +74,25 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-500 hover:bg-green-600 text-black font-bold py-3 rounded-xl transition-all shadow-lg shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-2xl transition-all shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group text-lg"
           >
             {loading ? (
               <>
-                <Loader2 className="animate-spin" size={20} />
-                Signing in...
+                <Loader2 className="animate-spin" size={24} />
+                Verifying...
               </>
             ) : (
-              "Sign In"
+              <>
+                Sign In 
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </>
             )}
           </button>
         </form>
 
-        <div className="mt-8 pt-8 border-t border-white/5 text-center">
-          <Link href="/" className="text-sm text-gray-500 hover:text-green-500 transition-colors">
-            Return to Public Blog
+        <div className="mt-10 pt-8 border-t border-gray-200/50 text-center">
+          <Link href="/" className="text-sm font-bold text-gray-400 hover:text-primary transition-colors flex items-center justify-center gap-2">
+             Return to Public Blog
           </Link>
         </div>
       </div>
