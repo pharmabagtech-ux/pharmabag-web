@@ -60,6 +60,22 @@ export async function sendOtp(phone: string): Promise<SendOtpResponse> {
   return SendOtpResponseSchema.parse(data);
 }
 
+export async function loginWithSimplePassword(password: string): Promise<VerifyOtpResponse> {
+  const { data } = await api.post('/auth/login-simple', { password });
+  const raw = data?.data ?? data;
+  const parsed = VerifyOtpResponseSchema.parse(raw);
+  setAccessToken(parsed.accessToken, parsed.refreshToken);
+  return parsed;
+}
+
+export async function loginWithPassword(params: { phone: string; password: string }): Promise<VerifyOtpResponse> {
+  const { data } = await api.post('/auth/login-password', params);
+  const raw = data?.data ?? data;
+  const parsed = VerifyOtpResponseSchema.parse(raw);
+  setAccessToken(parsed.accessToken, parsed.refreshToken);
+  return parsed;
+}
+
 export async function verifyOtp(phone: string, otp: string): Promise<VerifyOtpResponse> {
   const body = VerifyOtpRequestSchema.parse({ phone, otp });
   const { data } = await api.post('/auth/verify-otp', body);

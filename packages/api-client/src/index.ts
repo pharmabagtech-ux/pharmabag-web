@@ -5,6 +5,8 @@ export { api, setAccessToken, getAccessToken, onApiEvent, setBaseURL } from './a
 export {
   sendOtp,
   verifyOtp,
+  loginWithPassword,
+  loginWithSimplePassword,
   refreshToken,
   logout,
   getProfile,
@@ -151,6 +153,12 @@ export {
   getBlogs,
   getBlogById,
   getBlogBySlug,
-  type Blog,
+  createBlogPost,
+  updateBlogPost,
+  deleteBlogPost,
+  getBlogCategories,
+  createBlogCategory,
+  uploadBlogImage,
+  type BlogPost,
   type BlogListResponse,
 } from './modules/blogs.api';

@@ -148,7 +148,7 @@ export default function BlogsPage() {
                             {blog.author && (
                               <span className="flex items-center gap-1">
                                 <User className="w-3 h-3" />
-                                {blog.author}
+                                {typeof blog.author === 'string' ? blog.author : blog.author?.name}
                               </span>
                             )}
                             {blog.publishedAt && (

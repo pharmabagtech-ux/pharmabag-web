@@ -95,7 +95,7 @@ export default function BlogDetailPage() {
               {blog.author && (
                 <span className="flex items-center gap-1.5">
                   <User className="w-4 h-4" />
-                  {blog.author}
+                  {typeof blog.author === 'string' ? blog.author : blog.author?.name}
                 </span>
               )}
               {blog.publishedAt && (
