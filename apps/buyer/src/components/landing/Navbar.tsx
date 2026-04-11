@@ -64,9 +64,26 @@ export default function Navbar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] =
     useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const { data: categoriesData } = useCategories();
+  const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.data ?? [];
 
   useEffect(() => {
     setIsMounted(true);
+
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      const handleWheel = (e: WheelEvent) => {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          scrollContainer.scrollLeft += e.deltaY;
+        }
+      };
+      scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
+      return () => scrollContainer.removeEventListener('wheel', handleWheel);
+    }
   }, []);
 
   const isAnyDrawerOpen =
@@ -92,9 +109,8 @@ export default function Navbar({
 
         <div className="relative w-[96vw] sm:w-[92vw] mx-auto px-3 sm:px-4 lg:px-8 py-2.5 lg:py-3.5 rounded-2xl bg-white shadow-xl flex items-center justify-between border border-gray-100/50">
 
-          {/* LEFT SIDE */}
-          <div className="flex items-center gap-2 flex-1">
-
+          {/* LEFT SIDE - LOGO */}
+          <div className="flex items-center">
             <Link
               href="/"
               className="flex-shrink-0 flex items-center mr-2"
@@ -107,11 +123,56 @@ export default function Navbar({
                 className="h-5 sm:h-7 w-auto"
               />
             </Link>
+          </div>
 
-            <div className="lg:hidden flex-1">
-              <SearchBar />
+          <div className="lg:hidden flex-1 mx-2">
+            <SearchBar />
+          </div>
+
+          {/* MIDDLE - SCROLLABLE CATEGORIES */}
+          <div className="hidden lg:block flex-1 min-w-0 mx-4 relative overflow-hidden group/nav">
+            {/* Left Shadow Gradient */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none transition-opacity duration-300" />
+            
+            <div 
+              ref={scrollContainerRef}
+              className="flex items-center gap-5 overflow-x-auto scroll-thin whitespace-nowrap scroll-smooth py-1 px-2"
+            >
+              <Link 
+                href="/products"
+                className="text-[14px] font-bold text-gray-600 hover:text-sky-600 transition-colors tracking-tight flex-shrink-0"
+              >
+                All Products
+              </Link>
+              
+              {categories.map((category: Category) => (
+                <div
+                  key={category.id}
+                  className="relative group py-2 flex-shrink-0"
+                  onMouseEnter={() => setActiveCategory(category.id)}
+                  onMouseLeave={() => setActiveCategory(null)}
+                >
+                  <Link
+                    href={`/products?categoryId=${category.id}`}
+                    className={`flex items-center gap-1.5 text-[14px] font-bold tracking-tight transition-colors duration-200 ${
+                      activeCategory === category.id ? 'text-sky-600' : 'text-gray-600 hover:text-sky-600'
+                    }`}
+                  >
+                    {category.name}
+                  </Link>
+                </div>
+              ))}
+
+              <Link 
+                href="/blogs"
+                className="text-[14px] font-bold text-gray-600 hover:text-sky-600 transition-colors tracking-tight flex-shrink-0"
+              >
+                Insights
+              </Link>
             </div>
 
+            {/* Right Shadow Gradient */}
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none transition-opacity duration-300" />
           </div>
 
           {/* RIGHT SIDE ICONS */}
@@ -223,6 +284,17 @@ export default function Navbar({
           setIsNotificationsOpen(false)
         }
       />
+
+      {/* GLOBAL MEGA MENU - Outside scroll context to prevent clipping */}
+      {categories.map((category: Category) => (
+        <CategoryMegaMenu
+          key={`mega-${category.id}`}
+          category={category}
+          isOpen={activeCategory === category.id}
+          onMouseEnter={() => setActiveCategory(category.id)}
+          onMouseLeave={() => setActiveCategory(null)}
+        />
+      ))}
     </>
   );
 }

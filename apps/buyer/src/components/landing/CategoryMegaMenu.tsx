@@ -37,10 +37,10 @@ export default function CategoryMegaMenu({ category, isOpen, onMouseEnter, onMou
           className="fixed top-[88px] left-0 right-0 z-40 flex justify-center px-6"
         >
           <div className="w-[92vw] bg-white rounded-[32px] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] border border-gray-100/50 overflow-hidden backdrop-blur-3xl">
-            <div className="flex p-12 gap-16">
+            <div className="flex p-8 gap-10">
               {/* Categories Column */}
               <div className="flex-1">
-                <h3 className="text-[13px] font-bold uppercase tracking-[0.1em] mb-8 flex items-center gap-2 text-[#800080]">
+                <h3 className="text-[13px] font-bold uppercase tracking-[0.1em] mb-4 flex items-center gap-2 text-[#800080]">
                   Explore {category.name}
                   <span className="text-lg font-light">›</span>
                 </h3>

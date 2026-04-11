@@ -101,6 +101,32 @@
   display: none; /* Chrome, Safari and Opera */
 }
 
+/* ─── Persistent Thin Scrollbar ─── */
+.scroll-thin {
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+.scroll-thin:hover {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}
+.scroll-thin::-webkit-scrollbar {
+  height: 3px;
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 10px;
+}
+.scroll-thin:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+.scroll-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
 /* ─── Thin Scrollbar on Hover ─── */
 .scroll-thin-hover {
   scrollbar-width: none; /* Firefox */
