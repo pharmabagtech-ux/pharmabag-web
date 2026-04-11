@@ -19,7 +19,6 @@ export function useApiEventHandler() {
   useEffect(() => {
     const unsubs = [
       onApiEvent('auth:expired', (detail) => {
-        toast(detail?.message || 'Session expired. Please log in again.', 'error');
         // Clear cart, token and redirect
         localCart.clear();
         queryClient.invalidateQueries({ queryKey: ['cart'] });
