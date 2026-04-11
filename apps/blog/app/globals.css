@@ -2,41 +2,165 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary-green: #22c55e;
-  --secondary-green: #15803d;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 142.1 76.2% 36.3%;
+    --secondary-foreground: 355.7 100% 97.3%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  /* Force light theme by disabling system-adaptive dark mode variables */
+  /* .dark class is kept for compatibility but shouldn't be used as per USER request */
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    /* ... rest mirror light mode to disable dark mode if class is accidentally applied */
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+    -webkit-tap-highlight-color: transparent;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply text-foreground antialiased;
+    overflow-x: hidden;
+  }
 }
 
+/* Premium Gradient matching buyer app background */
 .premium-gradient {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 1) 0%, rgba(21, 128, 61, 1) 100%);
+  background: linear-gradient(135deg, #8deaff 0%, #e0ffc7e6 50%, #f4ffede6 100%);
 }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+/* ─── Responsive Container ─── */
+@layer components {
+  .page-container {
+    @apply w-full mx-auto px-[4vw];
   }
+  .section-padding {
+    @apply py-12 sm:py-16 md:py-20 lg:py-24;
+  }
+  /* Premium glass card — responsive radii + padding */
+  .glass-card {
+    @apply bg-white/40 backdrop-blur-xl border border-white/40 shadow-xl;
+    @apply rounded-2xl sm:rounded-3xl lg:rounded-[32px];
+    @apply p-4 sm:p-6 md:p-8;
+  }
+  .glass-card-sm {
+    @apply bg-white/80 backdrop-blur-xl border border-white/60 shadow-sm;
+    @apply rounded-xl sm:rounded-2xl;
+    @apply p-3 sm:p-4 md:p-6;
+  }
+}
+
+/* ─── Fluid Typography ─── */
+@layer base {
+  h1 { font-size: clamp(1.75rem, 4vw, 3rem); }
+  h2 { font-size: clamp(1.375rem, 3vw, 2.25rem); }
+  h3 { font-size: clamp(1.125rem, 2.5vw, 1.5rem); }
+}
+
+/* ─── Scrollbar Hide ─── */
+.scrollbar-hide, .no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar, .no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* ─── Persistent Thin Scrollbar ─── */
+.scroll-thin {
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+.scroll-thin:hover {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}
+.scroll-thin::-webkit-scrollbar {
+  height: 3px;
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 10px;
+}
+.scroll-thin:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+.scroll-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* ─── Thin Scrollbar on Hover ─── */
+.scroll-thin-hover {
+  scrollbar-width: none; /* Firefox */
+  scrollbar-color: transparent transparent;
+}
+.scroll-thin-hover::-webkit-scrollbar {
+  height: 4px; /* Thin scrollbar */
+}
+.scroll-thin-hover::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-thin-hover::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 20px;
+}
+.scroll-thin-hover:hover {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(148, 163, 184, 0.2) transparent; /* Slate-400 equivalent */
+}
+.scroll-thin-hover:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.2); /* Slate-400/20 */
+}
+
+/* ─── Touch-Friendly Inputs on Mobile ─── */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+}
+
+/* ─── Safe Area for Notch Devices ─── */
+@supports (padding: max(0px)) {
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* ─── Auto-scroll animation ─── */
+@keyframes autoScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.auto-scroll {
+  animation: autoScroll 60s linear infinite;
 }
