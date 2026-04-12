@@ -64,8 +64,10 @@ export default function Navbar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] =
     useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: categoriesData } = useCategories();
   const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.data ?? [];
@@ -74,16 +76,29 @@ export default function Navbar({
     setIsMounted(true);
 
     const scrollContainer = scrollContainerRef.current;
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        if (scrollContainer) scrollContainer.scrollLeft += e.deltaY;
+      }
+    };
+
     if (scrollContainer) {
-      const handleWheel = (e: WheelEvent) => {
-        if (e.deltaY !== 0) {
-          e.preventDefault();
-          scrollContainer.scrollLeft += e.deltaY;
-        }
-      };
       scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
-      return () => scrollContainer.removeEventListener('wheel', handleWheel);
     }
+
+    // Handle clicks outside of profile dropdown
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      if (scrollContainer) scrollContainer.removeEventListener('wheel', handleWheel);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const isAnyDrawerOpen =
@@ -179,14 +194,10 @@ export default function Navbar({
           <div className="flex items-center justify-end gap-1 sm:gap-2 md:gap-3 z-10 min-w-[90px]">
 
             {showUserActions && isMounted && (
-
               <div className="flex items-center gap-1 sm:gap-2">
-
                 {/* Notification */}
                 <button
-                  onClick={() =>
-                    setIsNotificationsOpen(true)
-                  }
+                  onClick={() => setIsNotificationsOpen(true)}
                   className="relative p-1.5 text-gray-700 hover:text-sky-600"
                 >
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -200,9 +211,7 @@ export default function Navbar({
 
                 {/* Wishlist */}
                 <button
-                  onClick={() =>
-                    setIsWishlistOpen(true)
-                  }
+                  onClick={() => setIsWishlistOpen(true)}
                   className="relative p-1.5 text-gray-700 hover:text-sky-600"
                 >
                   <Bookmark className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -216,9 +225,7 @@ export default function Navbar({
 
                 {/* Cart */}
                 <button
-                  onClick={() =>
-                    setIsCartOpen(true)
-                  }
+                  onClick={() => setIsCartOpen(true)}
                   className="relative p-1.5 text-gray-700 hover:text-sky-600"
                 >
                   <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -228,6 +235,57 @@ export default function Navbar({
                     </span>
                   )}
                 </button>
+
+                {/* Profile Dropdown */}
+                {isAuthenticated && (
+                  <div className="relative" ref={profileDropdownRef}>
+                    <button
+                      onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                      className="p-1.5 text-gray-700 hover:text-sky-600 transition-colors"
+                    >
+                      <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+
+                    <AnimatePresence>
+                      {isProfileDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                          className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-[60]"
+                        >
+                          <Link
+                            href="/profile"
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-sky-600 transition-colors"
+                          >
+                            <User className="w-4 h-4" />
+                            My Profile
+                          </Link>
+                          <Link
+                            href="/orders"
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-sky-600 transition-colors"
+                          >
+                            <ClipboardList className="w-4 h-4" />
+                            My Orders
+                          </Link>
+                          <div className="h-px bg-gray-50 my-1 mx-2" />
+                          <button
+                            onClick={() => {
+                              handleLogout();
+                              setIsProfileDropdownOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors text-left"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            Logout
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
 
               </div>
             )}
@@ -271,6 +329,101 @@ export default function Navbar({
           </div>
         </div>
       </nav>
+
+      {/* Mobile Menu Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed top-0 right-0 bottom-0 w-[280px] bg-white z-50 shadow-2xl lg:hidden flex flex-col pt-20"
+            >
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                <Link
+                  href="/products"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-4 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50 rounded-xl"
+                >
+                  All Products
+                </Link>
+                {categories.map((category: Category) => (
+                  <Link
+                    key={category.id}
+                    href={`/products?categoryId=${category.id}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-4 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50 rounded-xl"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+                <Link
+                  href="/blogs"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-4 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50 rounded-xl"
+                >
+                  Insights
+                </Link>
+
+                {isAuthenticated && (
+                  <>
+                    <div className="h-px bg-gray-100 my-4" />
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50 rounded-xl"
+                    >
+                      <User className="w-4 h-4" />
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/orders"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50 rounded-xl"
+                    >
+                      <ClipboardList className="w-4 h-4" />
+                      My Orders
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl text-left"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {!isAuthenticated && (
+                <div className="p-4 border-t border-gray-100 pb-10">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onLoginClick?.();
+                    }}
+                    className="w-full py-3 rounded-full bg-[#ddff85] font-bold text-gray-900 text-sm shadow-lg shadow-lime-200"
+                  >
+                    Login / Sign Up
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Drawers */}
       <CartDrawer
