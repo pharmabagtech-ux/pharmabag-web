@@ -198,16 +198,6 @@ export default function AdminOrdersPage() {
                           <button onClick={(e) => void handleOverride(e, o.id, o.orderStatus)} className="text-xs text-primary underline hover:text-primary/80">
                             → {o.orderStatus === "PLACED" ? "Accept" : o.orderStatus === "ACCEPTED" ? "Mark Paid" : o.orderStatus === "PAYMENT_RECEIVED" ? "Dispatch" : o.orderStatus === "DISPATCHED_FROM_SELLER" ? "Recv at Wh" : o.orderStatus === "RECEIVED_AT_WAREHOUSE" ? "Ship" : o.orderStatus === "SHIPPED" ? "Out for Delivery" : "Deliver"}
                           </button>
-                          <button 
-                            onClick={(e) => {
-                              if (confirm("Are you sure you want to cancel this order?")) {
-                                handleOverride(e, o.id, o.orderStatus, "CANCELLED");
-                              }
-                            }} 
-                            className="text-[10px] text-red-500 hover:text-red-600 underline font-bold"
-                          >
-                            ✕ Cancel
-                          </button>
                         </div>
                       )}
                     </td>
