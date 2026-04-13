@@ -18,9 +18,12 @@ import { cn } from "@/lib/utils";
 const STATUS_STEPS = [
   { key: "PLACED", label: "Placed", icon: Clock },
   { key: "ACCEPTED", label: "Accepted", icon: CheckCircle2 },
-  { key: "AWAITING_INVOICE", label: "Awaiting Invoice", icon: FileText },
-  { key: "WAREHOUSE", label: "At Warehouse", icon: Package },
-  { key: "TRANSIT", label: "In Transit", icon: Truck },
+  { key: "PAYMENT_RECEIVED", label: "Paid", icon: CreditCard },
+  { key: "READY_TO_SHIP", label: "Ready to Ship", icon: Package },
+  { key: "DISPATCHED_FROM_SELLER", label: "Dispatched", icon: Package },
+  { key: "RECEIVED_AT_WAREHOUSE", label: "At Warehouse", icon: MapPin },
+  { key: "SHIPPED", label: "Shipped", icon: Truck },
+  { key: "OUT_FOR_DELIVERY", label: "Out for Delivery", icon: Package },
   { key: "DELIVERED", label: "Delivered", icon: CheckCircle2 },
 ];
 
@@ -28,10 +31,13 @@ function getStepIndex(status: string) {
   const map: Record<string, number> = {
     PLACED: 0, pending: 0,
     ACCEPTED: 1, confirmed: 1, processing: 1,
-    AWAITING_INVOICE: 2,
-    WAREHOUSE: 3,
-    TRANSIT: 4, SHIPPED: 4, shipped: 4,
-    DELIVERED: 5, delivered: 5,
+    PAYMENT_RECEIVED: 2,
+    READY_TO_SHIP: 3,
+    DISPATCHED_FROM_SELLER: 4,
+    RECEIVED_AT_WAREHOUSE: 5, WAREHOUSE: 5,
+    SHIPPED: 6, TRANSIT: 6, shipped: 6,
+    OUT_FOR_DELIVERY: 7,
+    DELIVERED: 8, delivered: 8,
     CANCELLED: -1, cancelled: -1,
   };
   return map[status] ?? 0;
@@ -203,15 +209,6 @@ export default function OrderDetailPage() {
 
         {/* Sidebar Info */}
         <div className="space-y-4">
-          {/* Buyer Info */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-2xl p-5 space-y-3">
-            <h3 className="font-semibold text-sm text-foreground flex items-center gap-2"><User className="h-4 w-4 text-primary" />Buyer</h3>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">{mainOrder.address?.name || mainOrder.buyerName || mainOrder.buyer?.name || mainOrder.name || "—"}</p>
-              <p className="text-xs text-muted-foreground">{mainOrder.buyerBusiness || mainOrder.buyer?.businessName || ""}</p>
-              {(mainOrder.address?.phone || mainOrder.buyerPhone || mainOrder.buyer?.phone || mainOrder.phone) && <p className="text-xs text-muted-foreground">{mainOrder.address?.phone || mainOrder.buyerPhone || mainOrder.buyer?.phone || mainOrder.phone}</p>}
-            </div>
-          </motion.div>
 
           {/* Shipping Address */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card rounded-2xl p-5 space-y-3">
