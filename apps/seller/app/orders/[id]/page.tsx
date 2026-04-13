@@ -110,7 +110,7 @@ export default function OrderDetailPage() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Order #{mainOrder.orderNumber || id.slice(0, 8)}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Order #{mainOrder.orderNumber || id?.slice(0, 8).toUpperCase()}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Placed {formatDate(mainOrder.createdAt)}</p>
         </div>
         <div className="flex gap-2">

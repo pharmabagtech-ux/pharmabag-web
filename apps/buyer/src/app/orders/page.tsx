@@ -94,7 +94,7 @@ export default function OrdersPage() {
               />
             ) : (
               orders.map((order: any, idx: number) => {
-                const orderNumber = order.orderNumber ?? order.id.slice(-8);
+                const orderNumber = order.orderNumber ?? order.id?.slice(0, 8).toUpperCase();
                 const totalAmount = order.totalAmount ?? order.total ?? order.amount ?? 0;
                 const itemCount = order.items?.length ?? order.orderItems?.length ?? 0;
                 const orderDate = order.createdAt

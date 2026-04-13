@@ -118,7 +118,7 @@ export default function PaymentsPage() {
                       <div className="flex-1 space-y-4">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold uppercase tracking-widest text-[#800080]">
-                            Order #{payment.orderId.slice(-8)}
+                            Order #{payment.orderId?.slice(0, 8).toUpperCase()}
                           </span>
                           <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${badge.cls}`}>
                             {payment.status.toUpperCase()}

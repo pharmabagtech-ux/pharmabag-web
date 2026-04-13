@@ -98,7 +98,7 @@ export default function OrderDetailPage() {
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div>
-              <h1 className="font-semibold text-2xl text-foreground">Order #{order.id?.slice(0, 8)}</h1>
+              <h1 className="font-semibold text-2xl text-foreground">Order #{order.id?.slice(0, 8).toUpperCase()}</h1>
               <p className="text-sm text-muted-foreground mt-0.5">
                 Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }) : "—"}
               </p>

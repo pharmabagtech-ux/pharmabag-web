@@ -58,7 +58,7 @@ export default function CreditPage() {
                         <FileText className="w-4 h-4 text-gray-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Order #{invoice.orderId.slice(-8)}</p>
+                        <p className="text-sm font-medium text-gray-900">Order #{invoice.orderId?.slice(0, 8).toUpperCase()}</p>
                         <p className="text-xs text-gray-500">{formatDate(invoice.createdAt)}</p>
                       </div>
                     </div>

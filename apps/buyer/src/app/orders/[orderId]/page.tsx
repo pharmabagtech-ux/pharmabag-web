@@ -168,7 +168,7 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
             <div className="lg:col-span-2 space-y-8">
               <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-6 sm:mb-8">
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Order #{order.orderNumber ?? order.id.slice(-8)}</h1>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Order #{order.orderNumber ?? (order.id || "").toString().slice(0, 8).toUpperCase()}</h1>
                   <div className="flex items-center gap-2 text-gray-400">
                     <Calendar className="w-4 h-4" />
                     <span className="text-sm font-bold">{orderDate}</span>

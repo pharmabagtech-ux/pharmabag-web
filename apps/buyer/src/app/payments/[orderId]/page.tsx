@@ -94,7 +94,7 @@ export default function PaymentIdPage({ params }: { params: { orderId: string } 
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Order Payment</h1>
-                  <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Order #{params.orderId.slice(-8)}</p>
+                  <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Order #{params.orderId?.slice(0, 8).toUpperCase()}</p>
                 </div>
               </div>
 

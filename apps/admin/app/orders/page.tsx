@@ -170,7 +170,7 @@ export default function AdminOrdersPage() {
                     className="hover:bg-accent/30 transition-colors cursor-pointer group"
                     onClick={() => router.push(`/orders/${o.id}`)}
                   >
-                    <td className="px-5 py-4 max-w-[120px] break-words"><span className="font-mono text-xs font-medium text-foreground group-hover:text-primary transition-colors">{(o.orderId || o.id || o._id || "").slice(0, 8)}…</span></td>
+                    <td className="px-5 py-4 max-w-[120px] break-words"><span className="font-mono text-xs font-medium text-foreground group-hover:text-primary transition-colors">{(o.orderId || o.id || o._id || "").slice(0, 8).toUpperCase()}</span></td>
                     <td className="px-5 py-4 max-w-[150px] break-words text-sm text-muted-foreground">{o.buyer?.phone || o.address?.phone || "—"}</td>
                     <td className="px-5 py-4 whitespace-nowrap"><span className="font-mono text-xs text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded">{(o.items?.[0]?.product?.seller?.id || o.items?.[0]?.seller?.id || o.sellerId || "—").slice(0, 8)}</span></td>
                     <td className="px-5 py-4 whitespace-nowrap"><span className="font-mono text-xs text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded">{(o.buyer?.id || o.buyerId || "—").slice(0, 8)}</span></td>
