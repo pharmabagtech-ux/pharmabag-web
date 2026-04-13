@@ -136,7 +136,7 @@ export default function SellerDashboard() {
               <table className="w-full" aria-label="Recent orders">
                 <thead>
                   <tr className="border-b border-border/50">
-                    {["Order #","Buyer","Amount","Status","Action"].map(h=>(
+                    {["Order #","Amount","Status","Action"].map(h=>(
                       <th key={h} scope="col" className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
@@ -145,10 +145,7 @@ export default function SellerDashboard() {
                   {sellerOrders.map(o=>(
                     <tr key={o.orderId || o.id} className="hover:bg-accent/30 transition-colors">
                       <td className="px-5 py-4"><span className="font-mono text-xs font-medium text-foreground">{(o.orderId || o.id || "").slice(0, 8).toUpperCase() || "—"}</span></td>
-                      <td className="px-5 py-4">
-                        <div className="text-sm font-medium text-foreground">{o.address?.name || o.buyerName || o.buyer?.name || "—"}</div>
-                        <div className="text-xs text-muted-foreground">{o.address?.phone || o.buyerPhone || o.buyer?.phone || ""}</div>
-                      </td>
+
                       <td className="px-5 py-4 text-sm font-semibold text-foreground">{formatCurrency(o.sellerTotal ?? o.totalAmount ?? o.total ?? 0)}</td>
                       <td className="px-5 py-4"><OrderStatusBadge status={o.orderStatus || o.status}/></td>
                       <td className="px-5 py-4">

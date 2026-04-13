@@ -336,8 +336,8 @@ export default function CheckoutPage() {
                       <ShieldCheck className={`w-5 h-5 ${paymentMethod === 'CASH_ON_DELIVERY' ? 'text-lime-600' : 'text-gray-400'}`} />
                     </div>
                     <div>
-                      <p className={`font-bold leading-tight ${paymentMethod === 'CASH_ON_DELIVERY' ? 'text-gray-900' : 'text-gray-600'}`}>Cash on Delivery</p>
-                      <p className="text-xs font-medium text-gray-400 mt-0.5">Pay when you receive</p>
+                      <p className={`font-bold leading-tight ${paymentMethod === 'CASH_ON_DELIVERY' ? 'text-gray-900' : 'text-gray-600'}`}>Prepaid</p>
+                      <p className="text-xs font-medium text-gray-400 mt-0.5">UPI or Bank Transfer</p>
                     </div>
                   </div>
                   {paymentMethod === 'CASH_ON_DELIVERY' && <CheckCircle2 className="w-6 h-6 text-lime-500" />}

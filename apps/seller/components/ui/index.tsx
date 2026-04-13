@@ -44,6 +44,7 @@ export function OrderStatusBadge({ status }: { status: OrderStatus }) {
     PLACED:{label:"Placed",variant:"warning"}, ACCEPTED:{label:"Accepted",variant:"info"},
     PAYMENT_RECEIVED:{label:"Paid",variant:"success"},
     DISPATCHED_FROM_SELLER:{label:"Dispatched",variant:"info"},
+    READY_TO_SHIP:{label:"Ready to Ship",variant:"info"},
     RECEIVED_AT_WAREHOUSE:{label:"At Warehouse",variant:"purple"},
     SHIPPED:{label:"Shipped",variant:"info"}, OUT_FOR_DELIVERY:{label:"Out for Delivery",variant:"purple"},
     DELIVERED:{label:"Delivered",variant:"success"},

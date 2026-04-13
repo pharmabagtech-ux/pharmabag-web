@@ -21,13 +21,17 @@ export default function OrderCard({ orderId, date, status, total, itemCount }: O
         return { cls: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: CheckCircle2 };
       case 'PAYMENT_RECEIVED':
         return { cls: 'bg-purple-100 text-purple-700 border-purple-200', icon: Package };
+      case 'READY_TO_SHIP':
+        return { cls: 'bg-sky-100 text-sky-700 border-sky-200', icon: Package };
       case 'PENDING': 
       case 'PLACED':
         return { cls: 'bg-amber-100 text-amber-700 border-amber-200', icon: Clock };
       case 'SHIPPED': 
-        return { cls: 'bg-sky-100 text-sky-700 border-sky-200', icon: Truck };
+        return { cls: 'bg-blue-100 text-blue-700 border-blue-200', icon: Truck };
       case 'CANCELLED':
         return { cls: 'bg-red-100 text-red-700 border-red-200', icon: AlertCircle };
+      case 'RETURNED':
+        return { cls: 'bg-pink-100 text-pink-700 border-pink-200', icon: AlertCircle };
       default: 
         return { cls: 'bg-gray-100 text-gray-700 border-gray-200', icon: Package };
     }

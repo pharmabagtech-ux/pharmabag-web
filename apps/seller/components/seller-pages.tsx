@@ -45,7 +45,7 @@ function OrderTable({ orders, showConfirm = false, updateFn }: { orders: any[]; 
   return (
     <div className="overflow-x-auto">
       <table className="w-full" aria-label="Seller orders">
-        <thead><tr className="border-b border-border/50 bg-muted/20">{["Order #","Buyer","Items","Amount","Payment","Status","Action"].map(h=><th key={h} scope="col" className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>)}</tr></thead>
+        <thead><tr className="border-b border-border/50 bg-muted/20">{["Order #","Items","Amount","Payment","Status","Action"].map(h=><th key={h} scope="col" className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>)}</tr></thead>
         <tbody className="divide-y divide-border/30">
           {orders.map((o: any, i: number) => (
             <motion.tr key={o.orderId || o.id} initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} transition={{delay:i*0.03}} className="hover:bg-accent/30 transition-colors">
@@ -58,10 +58,7 @@ function OrderTable({ orders, showConfirm = false, updateFn }: { orders: any[]; 
                 return (
                   <>
                     <td className="px-5 py-4"><span className="font-mono text-xs text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded">{displayId}</span></td>
-                    <td className="px-5 py-4">
-                      <div className="text-sm font-medium text-foreground">{displayBuyerName}</div>
-                      <div className="text-xs text-muted-foreground">{displayBuyerContact}</div>
-                    </td>
+
                     <td className="px-5 py-4 text-xs text-muted-foreground">{order.items?.length ?? 0} items</td>
                     <td className="px-5 py-4 text-sm font-semibold text-foreground">{formatCurrency(order.sellerTotal ?? order.totalAmount ?? order.total ?? 0)}</td>
                     <td className="px-5 py-4"><Badge variant={String(order.paymentStatus || "PENDING").toUpperCase()==="PAID"||String(order.paymentStatus).toUpperCase()==="SUCCESS"?"success":String(order.paymentStatus).toUpperCase()==="PENDING"?"warning":"error"}>{order.paymentStatus||"PENDING"}</Badge></td>
