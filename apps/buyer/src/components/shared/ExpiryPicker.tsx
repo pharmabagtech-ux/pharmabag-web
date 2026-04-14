@@ -33,6 +33,13 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
   };
 
   const [internalDate, setInternalDate] = useState(getInitialDate());
+  const [typedMonth, setTypedMonth] = useState(SHORT_MONTHS[internalDate.getMonth()]);
+  const [typedYear, setTypedYear] = useState(internalDate.getFullYear().toString());
+
+  useEffect(() => {
+    setTypedMonth(SHORT_MONTHS[internalDate.getMonth()]);
+    setTypedYear(internalDate.getFullYear().toString());
+  }, [internalDate]);
 
   useEffect(() => {
     if (value) {
@@ -77,7 +84,7 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
   const yearLabel = internalDate.getFullYear();
 
   return (
-    <div className={`space-y-1 relative ${className || ''}`} ref={containerRef}>
+    <div className={`space-y-1 relative ${isOpen ? 'z-50' : 'z-10'} ${className || ''}`} ref={containerRef}>
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label} {required && <span className="text-red-500">*</span>}
@@ -116,7 +123,26 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
                 <button type="button" onClick={() => updateDate(internalDate.getMonth() - 1 < 0 ? 11 : internalDate.getMonth() - 1, internalDate.getMonth() - 1 < 0 ? internalDate.getFullYear() - 1 : internalDate.getFullYear())} className="p-1 hover:bg-white rounded-lg shadow-sm">
                   <ChevronUp className="h-4 w-4 text-gray-400" />
                 </button>
-                <span className="text-lg font-bold text-gray-900 select-none tabular-nums">{monthLabel}</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={typedMonth}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setTypedMonth(val);
+                    const monthIdx = SHORT_MONTHS.findIndex(m => m.toLowerCase() === val.toLowerCase());
+                    if (monthIdx !== -1) {
+                      updateDate(monthIdx, internalDate.getFullYear());
+                      return;
+                    }
+                    const num = parseInt(val);
+                    if (!isNaN(num) && num >= 1 && num <= 12) {
+                      updateDate(num - 1, internalDate.getFullYear());
+                    }
+                  }}
+                  onBlur={() => setTypedMonth(SHORT_MONTHS[internalDate.getMonth()])}
+                  className="w-16 bg-transparent text-center text-lg font-bold text-gray-900 focus:outline-none tabular-nums"
+                />
                 <button type="button" onClick={() => updateDate(internalDate.getMonth() + 1 > 11 ? 0 : internalDate.getMonth() + 1, internalDate.getMonth() + 1 > 11 ? internalDate.getFullYear() + 1 : internalDate.getFullYear())} className="p-1 hover:bg-white rounded-lg shadow-sm">
                   <ChevronDown className="h-4 w-4 text-gray-400" />
                 </button>
@@ -130,7 +156,23 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
                 <button type="button" onClick={() => updateDate(internalDate.getMonth(), internalDate.getFullYear() - 1)} className="p-1 hover:bg-white rounded-lg shadow-sm">
                   <ChevronUp className="h-4 w-4 text-gray-400" />
                 </button>
-                <span className="text-lg font-bold text-gray-900 select-none tabular-nums">{yearLabel}</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={typedYear}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setTypedYear(val);
+                    if (val.length === 4) {
+                      const num = parseInt(val);
+                      if (!isNaN(num)) {
+                        updateDate(internalDate.getMonth(), num);
+                      }
+                    }
+                  }}
+                  onBlur={() => setTypedYear(internalDate.getFullYear().toString())}
+                  className="w-20 bg-transparent text-center text-lg font-bold text-gray-900 focus:outline-none tabular-nums"
+                />
                 <button type="button" onClick={() => updateDate(internalDate.getMonth(), internalDate.getFullYear() + 1)} className="p-1 hover:bg-white rounded-lg shadow-sm">
                   <ChevronDown className="h-4 w-4 text-gray-400" />
                 </button>

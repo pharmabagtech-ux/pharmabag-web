@@ -37,6 +37,14 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
   };
 
   const [internalDate, setInternalDate] = useState(getInitialDate());
+  const [typedMonth, setTypedMonth] = useState(SHORT_MONTHS[internalDate.getMonth()]);
+  const [typedYear, setTypedYear] = useState(internalDate.getFullYear().toString());
+
+  // Update typed values when internalDate changes (e.g. via scroll or external value change)
+  useEffect(() => {
+    setTypedMonth(SHORT_MONTHS[internalDate.getMonth()]);
+    setTypedYear(internalDate.getFullYear().toString());
+  }, [internalDate]);
 
   // Update internal date if value changes from outside (e.g. form reset or initial load)
   useEffect(() => {
@@ -90,7 +98,7 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
   const yearLabel = internalDate.getFullYear();
 
   return (
-    <div className={cn("space-y-1.5 relative", className)} ref={containerRef}>
+    <div className={cn("space-y-1.5 relative", isOpen ? "z-[100]" : "z-10", className)} ref={containerRef}>
       {label && (
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
           {label} {required && <span className="text-red-500">*</span>}
@@ -152,9 +160,32 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
                     <ChevronUp className="h-4 w-4 text-slate-400 group-hover:text-primary" />
                   </button>
                   <div className="flex flex-col items-center select-none">
-                    <span className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">
-                      {monthLabel}
-                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={typedMonth}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setTypedMonth(val);
+                        
+                        // Try to parse as name
+                        const monthIdx = SHORT_MONTHS.findIndex(m => m.toLowerCase() === val.toLowerCase());
+                        if (monthIdx !== -1) {
+                          updateDate(monthIdx, internalDate.getFullYear());
+                          return;
+                        }
+
+                        // Try to parse as number
+                        const num = parseInt(val);
+                        if (!isNaN(num) && num >= 1 && num <= 12) {
+                          updateDate(num - 1, internalDate.getFullYear());
+                        }
+                      }}
+                      onBlur={() => {
+                        setTypedMonth(SHORT_MONTHS[internalDate.getMonth()]);
+                      }}
+                      className="w-20 bg-transparent text-center text-2xl font-black text-slate-900 dark:text-white tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-lg transition-all"
+                    />
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Month</span>
                   </div>
                   <button
@@ -179,9 +210,26 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
                     <ChevronUp className="h-4 w-4 text-slate-400 group-hover:text-primary" />
                   </button>
                   <div className="flex flex-col items-center select-none">
-                    <span className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">
-                      {yearLabel}
-                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={typedYear}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setTypedYear(val);
+                        
+                        if (val.length === 4) {
+                          const num = parseInt(val);
+                          if (!isNaN(num)) {
+                            updateDate(internalDate.getMonth(), num);
+                          }
+                        }
+                      }}
+                      onBlur={() => {
+                        setTypedYear(internalDate.getFullYear().toString());
+                      }}
+                      className="w-24 bg-transparent text-center text-2xl font-black text-slate-900 dark:text-white tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-lg transition-all"
+                    />
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Year</span>
                   </div>
                   <button

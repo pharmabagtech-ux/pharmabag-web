@@ -297,7 +297,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         )}
 
         {/* Basic Info */}
-        <div className="glass-card rounded-2xl p-6 space-y-4 relative z-10 transition-opacity duration-300">
+        <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[45] transition-opacity duration-300">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Product Name *" error={errors.product_name?.message} {...register("product_name")} disabled={!!selectedMasterId} />
@@ -309,7 +309,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         </div>
 
         {/* Categories */}
-        <div className="glass-card rounded-2xl p-6 space-y-4 relative z-10 transition-opacity duration-300">
+        <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[44] transition-opacity duration-300">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Categorization</h2>
           <div>
             <Controller
@@ -335,7 +335,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         </div>
 
         {/* Pricing & Stock */}
-        <div className="glass-card rounded-2xl p-6 space-y-4 transition-opacity duration-300">
+        <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[43] transition-opacity duration-300">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Pricing & Stock</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input 
@@ -405,7 +405,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         </div>
 
         {/* Discounts & Pricing Engine */}
-        <div className="glass-card rounded-2xl p-6 space-y-4 transition-opacity duration-300">
+        <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[42] transition-opacity duration-300">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Discount & Bonuses</h2>
           <Controller
             control={control}
@@ -423,7 +423,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         </div>
 
         {/* Images */}
-        <div className="glass-card rounded-2xl p-6 space-y-4 transition-opacity duration-300">
+        <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[41] transition-opacity duration-300">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Product Images</h2>
           <div>
             <Controller
@@ -438,7 +438,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
 
 
         {/* Submit */}
-        <div className="flex justify-end gap-3 sticky bottom-6 z-10 p-4 bg-background/80 backdrop-blur-xl border border-border rounded-2xl shadow-lg">
+        <div className="flex justify-end gap-3 sticky bottom-6 z-[100] p-4 bg-background/80 backdrop-blur-xl border border-border rounded-2xl shadow-lg">
           <Button type="button" variant="outline" onClick={() => router.push("/products")} disabled={isSubmitting}>Cancel</Button>
           <Button type="submit" loading={isSubmitting}>{isEditing ? "Update Product" : "Add Product"}</Button>
         </div>
