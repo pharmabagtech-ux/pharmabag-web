@@ -6,7 +6,7 @@ import {
   Store, Building2, FileText, CheckCircle2, AlertCircle, MapPin, 
   ArrowRight, ArrowLeft, Loader2, Upload, Shield, Phone, Mail 
 } from "lucide-react";
-import { Button, Input } from "@/components/ui";
+import { Button, Input, ExpiryPicker } from "@/components/ui";
 import { 
   useUpdateSellerProfile, 
   useVerifyPanGst, 
@@ -46,10 +46,10 @@ export default function SellerOnboardingPage() {
     panNumber: "",
     drugLicenseNumber: "",
     drugLicenseUrl: "",
-    drugLicenseExpiry: "",
+    drugLicenseExpiry: (() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; })(),
     drugLicenseNumber2: "",
     drugLicenseUrl2: "",
-    drugLicenseExpiry2: "",
+    drugLicenseExpiry2: (() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; })(),
     address: "",
     city: "",
     state: "",
@@ -346,11 +346,11 @@ export default function SellerOnboardingPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Input label="License Number 1 (Form 20B)" value={formData.drugLicenseNumber} onChange={(e) => updateField("drugLicenseNumber", e.target.value.toUpperCase())} placeholder="e.g. DL-MH-12345" className="h-14 rounded-2xl uppercase" error={errors.drugLicenseNumber} />
-                  <Input type="month" label="Expiry Date 1" value={formData.drugLicenseExpiry} onChange={(e) => updateField("drugLicenseExpiry", e.target.value)} className="h-14 rounded-2xl" error={errors.drugLicenseExpiry} />
+                  <ExpiryPicker label="Expiry Date 1" value={formData.drugLicenseExpiry} onChange={(val) => updateField("drugLicenseExpiry", val)} error={errors.drugLicenseExpiry} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Input label="License Number 2 (Form 21B)" value={formData.drugLicenseNumber2} onChange={(e) => updateField("drugLicenseNumber2", e.target.value.toUpperCase())} placeholder="e.g. DL-MH-12346" className="h-14 rounded-2xl uppercase" error={errors.drugLicenseNumber2} />
-                  <Input type="month" label="Expiry Date 2" value={formData.drugLicenseExpiry2} onChange={(e) => updateField("drugLicenseExpiry2", e.target.value)} className="h-14 rounded-2xl" error={errors.drugLicenseExpiry2} />
+                  <ExpiryPicker label="Expiry Date 2" value={formData.drugLicenseExpiry2} onChange={(val) => updateField("drugLicenseExpiry2", val)} error={errors.drugLicenseExpiry2} />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">

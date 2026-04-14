@@ -6,7 +6,7 @@ import { Plus, Trash2, ArrowLeft, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
-import { Button, Input, Textarea, Select } from "@/components/ui";
+import { Button, Input, Textarea, Select, ExpiryPicker } from "@/components/ui";
 import { ImageUploader } from "./ImageUploader";
 import { DiscountSelector } from "./DiscountSelector";
 import { CategorySelector } from "./CategorySelector";
@@ -46,7 +46,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
       stock: 0,
       min_order_qty: 1,
       max_order_qty: 100,
-      expire_date: "",
+      expire_date: (() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; })(),
       gst_percent: 12,
       image_list: [],
       custom_extra_fields: [],
@@ -352,7 +352,19 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
               error={errors.stock?.message} 
               {...register("stock", { valueAsNumber: true })} 
             />
-            <Input label="Expiry Date *" type="month" error={errors.expire_date?.message} {...register("expire_date")} />
+            <Controller
+              control={control}
+              name="expire_date"
+              render={({ field }) => (
+                <ExpiryPicker 
+                  label="Expiry Date" 
+                  required
+                  value={field.value} 
+                  onChange={field.onChange} 
+                  error={errors.expire_date?.message} 
+                />
+              )}
+            />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
             <div className="space-y-1">

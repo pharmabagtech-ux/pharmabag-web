@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { OrderStatus, ApprovalStatus, ProductStatus } from "@pharmabag/utils";
+export * from "./ExpiryPicker";
 
 /* Button */
 interface BtnProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

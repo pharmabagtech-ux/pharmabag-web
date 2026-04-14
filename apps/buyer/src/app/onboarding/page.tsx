@@ -9,6 +9,7 @@ import {
 import Navbar from '@/components/landing/Navbar';
 import LoginModal from '@/components/landing/LoginModal';
 import AuthGuard from '@/components/shared/AuthGuard';
+import { ExpiryPicker } from '@/components/shared/ExpiryPicker';
 import { useCreateBuyerProfile, useUpdateBuyerProfile, useVerifyPanGst, useBuyerProfile } from '@/hooks/useBuyerProfile';
 import { useUploadDrugLicense } from '@/hooks/useStorage';
 import { useToast } from '@/components/shared/Toast';
@@ -47,10 +48,10 @@ export default function OnboardingPage() {
     panNumber: '',
     drugLicenseNumber: '',
     drugLicenseUrl: '',
-    drugLicenseExpiry: '',
+    drugLicenseExpiry: (() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; })(),
     drugLicenseNumber2: '',
     drugLicenseUrl2: '',
-    drugLicenseExpiry2: '',
+    drugLicenseExpiry2: (() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; })(),
     address: '',
     city: '',
     state: '',
@@ -437,12 +438,11 @@ export default function OnboardingPage() {
                         {errors.drugLicenseNumber && <p className="text-xs text-red-500 mt-1">{errors.drugLicenseNumber}</p>}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date 1</label>
-                        <input
-                          type="month"
+                        <ExpiryPicker
+                          label="Expiry Date 1"
                           value={form.drugLicenseExpiry}
-                          onChange={(e) => updateField('drugLicenseExpiry', e.target.value)}
-                          className={`w-full px-4 py-3 rounded-xl border ${errors.drugLicenseExpiry ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50/50'} focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none transition-colors`}
+                          onChange={(val) => updateField('drugLicenseExpiry', val)}
+                          error={errors.drugLicenseExpiry}
                         />
                       </div>
                     </div>
@@ -460,12 +460,11 @@ export default function OnboardingPage() {
                         {errors.drugLicenseNumber2 && <p className="text-xs text-red-500 mt-1">{errors.drugLicenseNumber2}</p>}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date 2</label>
-                        <input
-                          type="month"
+                        <ExpiryPicker
+                          label="Expiry Date 2"
                           value={form.drugLicenseExpiry2}
-                          onChange={(e) => updateField('drugLicenseExpiry2', e.target.value)}
-                          className={`w-full px-4 py-3 rounded-xl border ${errors.drugLicenseExpiry2 ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50/50'} focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 outline-none transition-colors`}
+                          onChange={(val) => updateField('drugLicenseExpiry2', val)}
+                          error={errors.drugLicenseExpiry2}
                         />
                       </div>
                     </div>
