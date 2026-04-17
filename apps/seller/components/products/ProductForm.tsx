@@ -35,6 +35,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
   const { data: suggestions = [] } = useSuggestionSearch(searchQuery, "master");
 
   const { register, control, handleSubmit, setValue, getValues, formState: { errors, isSubmitting, isDirty }, watch } = useForm<FormValues>({
+    mode: "onChange",
     resolver: zodResolver(productFormSchema) as any,
     defaultValues: defaultValues || {
       product_name: "",
@@ -254,7 +255,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit, (validationErrors) => {
+      <form noValidate onSubmit={handleSubmit(onSubmit, (validationErrors) => {
         console.error("Form validation errors:", validationErrors);
         const firstError = Object.values(validationErrors)[0];
         const msg = (firstError as any)?.message || "Please fix the form errors";
@@ -422,19 +423,7 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
           />
         </div>
 
-        {/* Images */}
-        <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[41] transition-opacity duration-300">
-          <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Product Images</h2>
-          <div>
-            <Controller
-              control={control}
-              name="image_list"
-              render={({ field }: any) => (
-                <ImageUploader value={field.value} onChange={field.onChange} error={errors.image_list?.message} maxFiles={5} />
-              )}
-            />
-          </div>
-        </div>
+
 
 
         {/* Submit */}

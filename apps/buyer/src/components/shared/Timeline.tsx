@@ -9,6 +9,7 @@ interface TimelineStep {
   isCompleted: boolean;
   isActive: boolean;
   isError?: boolean;
+  action?: React.ReactNode;
 }
 
 const stepIcons = [Package, ThumbsUp, CreditCard, Truck, MapPin, CheckCircle2];
@@ -94,22 +95,27 @@ export default function Timeline({ steps }: { steps: TimelineStep[] }) {
 
               {/* Content */}
               <div className="flex flex-col justify-center min-h-[36px]">
-                <span className={`text-sm font-bold tracking-wide ${
-                  step.isError ? 'text-red-600' : step.isCompleted ? 'text-gray-900' : step.isActive ? 'text-lime-700' : 'text-gray-300'
-                }`}>
-                  {step.label}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-bold tracking-wide ${
+                    step.isError ? 'text-red-600' : step.isCompleted ? 'text-gray-900' : step.isActive ? 'text-lime-700' : 'text-gray-300'
+                  }`}>
+                    {step.label}
+                  </span>
+                </div>
                 {step.description && (
                   <span className={`text-[11px] mt-0.5 font-medium ${step.isError ? 'text-red-400' : 'text-gray-400'}`}>{step.description}</span>
                 )}
                 {step.isActive && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-[10px] font-bold text-lime-600 mt-1"
-                  >
-                    In Progress
-                  </motion.span>
+                  <div className="flex items-center gap-3 mt-1">
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-[10px] font-bold text-lime-600"
+                    >
+                      In Progress
+                    </motion.span>
+                    {step.action && <div>{step.action}</div>}
+                  </div>
                 )}
               </div>
             </motion.div>

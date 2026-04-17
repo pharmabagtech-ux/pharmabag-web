@@ -249,18 +249,6 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
                     <span className="font-black">PRO TIP:</span> Use your mouse wheel over the cards to rapidly change values.
                   </p>
                 </div>
-                
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextYear = new Date();
-                    nextYear.setFullYear(nextYear.getFullYear() + 1);
-                    updateDate(nextYear.getMonth(), nextYear.getFullYear());
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black uppercase tracking-wider hover:opacity-90 transition-opacity"
-                >
-                  Set to Next Year
-                </button>
               </div>
             </div>
           </motion.div>

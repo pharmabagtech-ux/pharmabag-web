@@ -65,6 +65,38 @@ export default function SellerOnboardingPage() {
   const [uploading2, setUploading2] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [uploadedFileName2, setUploadedFileName2] = useState("");
+  const [isFetchingPincode, setIsFetchingPincode] = useState(false);
+
+  // Auto-fill City/State from Pincode
+  const lastPincodeRef = useRef("");
+  useEffect(() => {
+    const pc = formData.pincode.trim();
+    if (pc.length === 6 && pc !== lastPincodeRef.current) {
+      lastPincodeRef.current = pc;
+      const fetchAddress = async () => {
+        setIsFetchingPincode(true);
+        try {
+          const res = await fetch(`https://api.postalpincode.in/pincode/${pc}`);
+          const data = await res.json();
+          if (data?.[0]?.Status === "Success") {
+            const po = data[0].PostOffice[0];
+            const city = po.District || po.Name;
+            const state = po.State;
+            setFormData(prev => ({ 
+              ...prev, 
+              city: prev.city || city || "", 
+              state: prev.state || state || "" 
+            }));
+          }
+        } catch (e) {
+          console.error("Pincode fetch failed", e);
+        } finally {
+          setIsFetchingPincode(false);
+        }
+      };
+      fetchAddress();
+    }
+  }, [formData.pincode]);
 
   // Sync existing data if any (for resuming)
   useEffect(() => {
@@ -118,7 +150,24 @@ export default function SellerOnboardingPage() {
             
             if (type === "GST") {
               updateField("companyName", res.legalName);
-              if (res.address) updateField("address", res.address);
+              if (res.address) {
+                updateField("address", res.address);
+                
+                // Try to extract city, state, pincode from GST address
+                const parts = res.address.split(',').map((s: string) => s.trim());
+                const pincodeMatch = res.address.match(/\b\d{6}\b/);
+                if (pincodeMatch) updateField('pincode', pincodeMatch[0]);
+
+                if (parts.length >= 2) {
+                  const state = parts[parts.length - 2];
+                  const city = parts[parts.length - 3];
+                  if (city && !formData.city) updateField('city', city);
+                  if (state && !formData.state) {
+                    const matchedState = INDIAN_STATES.find(s => s.toLowerCase() === state.toLowerCase());
+                    if (matchedState) updateField('state', matchedState);
+                  }
+                }
+              }
             }
             
             toast.success(`${res.message}: ${res.legalName}`);

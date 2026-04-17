@@ -179,17 +179,6 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
               </div>
             </div>
             <p className="text-[10px] text-gray-400 text-center mt-3 uppercase tracking-widest font-bold">Scroll over cards to change</p>
-            <button
-               type="button"
-               onClick={() => {
-                 const nextYear = new Date();
-                 nextYear.setFullYear(nextYear.getFullYear() + 1);
-                 updateDate(nextYear.getMonth(), nextYear.getFullYear());
-               }}
-               className="w-full mt-3 py-2 bg-emerald-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-600 transition-colors"
-            >
-              Set to Next Year
-            </button>
           </motion.div>
         )}
       </AnimatePresence>

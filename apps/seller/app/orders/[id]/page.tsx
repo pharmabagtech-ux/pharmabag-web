@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft, Package, Truck, CheckCircle2, Clock, XCircle,
-  Upload, FileText, User, MapPin, CreditCard, AlertTriangle,
+  ArrowLeft, Package,
+  Upload, FileText, CreditCard, AlertTriangle,
 } from "lucide-react";
 import { Button, Badge, OrderStatusBadge } from "@/components/ui";
 import { formatCurrency, formatDate } from "@pharmabag/utils";
@@ -15,33 +15,7 @@ import {
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 
-const STATUS_STEPS = [
-  { key: "PLACED", label: "Placed", icon: Clock },
-  { key: "ACCEPTED", label: "Accepted", icon: CheckCircle2 },
-  { key: "PAYMENT_RECEIVED", label: "Paid", icon: CreditCard },
-  { key: "READY_TO_SHIP", label: "Ready to Ship", icon: Package },
-  { key: "DISPATCHED_FROM_SELLER", label: "Dispatched", icon: Package },
-  { key: "RECEIVED_AT_WAREHOUSE", label: "At Warehouse", icon: MapPin },
-  { key: "SHIPPED", label: "Shipped", icon: Truck },
-  { key: "OUT_FOR_DELIVERY", label: "Out for Delivery", icon: Package },
-  { key: "DELIVERED", label: "Delivered", icon: CheckCircle2 },
-];
 
-function getStepIndex(status: string) {
-  const map: Record<string, number> = {
-    PLACED: 0, pending: 0,
-    ACCEPTED: 1, confirmed: 1, processing: 1,
-    PAYMENT_RECEIVED: 2,
-    READY_TO_SHIP: 3,
-    DISPATCHED_FROM_SELLER: 4,
-    RECEIVED_AT_WAREHOUSE: 5, WAREHOUSE: 5,
-    SHIPPED: 6, TRANSIT: 6, shipped: 6,
-    OUT_FOR_DELIVERY: 7,
-    DELIVERED: 8, delivered: 8,
-    CANCELLED: -1, cancelled: -1,
-  };
-  return map[status] ?? 0;
-}
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -69,8 +43,6 @@ export default function OrderDetailPage() {
   }
 
   const mainOrder = order.order || order.data || order;
-  const currentStep = getStepIndex(mainOrder.status);
-  const isCancelled = mainOrder.status === "CANCELLED" || mainOrder.status === "cancelled";
   const items: any[] = mainOrder.items ?? mainOrder.products ?? [];
 
   const handleAccept = () => {
@@ -132,43 +104,7 @@ export default function OrderDetailPage() {
         </div>
       </motion.div>
 
-      {/* Status Timeline */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-6">
-        <h2 className="font-semibold text-foreground mb-6">Order Status</h2>
-        {isCancelled ? (
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-            <XCircle className="h-5 w-5 text-red-500" />
-            <div>
-              <p className="text-sm font-semibold text-red-700 dark:text-red-400">Order Cancelled</p>
-              {mainOrder.cancellationReason && <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">Reason: {mainOrder.cancellationReason}</p>}
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between">
-            {STATUS_STEPS.map((step, i) => {
-              const Icon = step.icon;
-              const status = mainOrder.orderStatus || mainOrder.status;
-              const done = i <= getStepIndex(status);
-              const active = i === getStepIndex(status);
-              return (
-                <div key={step.key} className="flex flex-col items-center flex-1">
-                  <div className="flex items-center w-full">
-                    {i > 0 && <div className={cn("h-0.5 flex-1", done ? "bg-primary" : "bg-border")} />}
-                    <div className={cn("h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all",
-                      done ? "bg-primary border-primary text-white" : "bg-background border-border text-muted-foreground",
-                      active && "ring-4 ring-primary/20"
-                    )}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    {i < STATUS_STEPS.length - 1 && <div className={cn("h-0.5 flex-1", i < getStepIndex(status) ? "bg-primary" : "bg-border")} />}
-                  </div>
-                  <span className={cn("text-xs mt-2 text-center", done ? "text-foreground font-medium" : "text-muted-foreground")}>{step.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </motion.div>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Order Items */}
@@ -210,13 +146,7 @@ export default function OrderDetailPage() {
         {/* Sidebar Info */}
         <div className="space-y-4">
 
-          {/* Shipping Address */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card rounded-2xl p-5 space-y-3">
-            <h3 className="font-semibold text-sm text-foreground flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" />Delivery Address</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {mainOrder.address?.address || mainOrder.shippingAddress || mainOrder.deliveryAddress || mainOrder.buyer?.address || "Not specified"}
-            </p>
-          </motion.div>
+
 
           {/* Payment Info */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-2xl p-5 space-y-3">

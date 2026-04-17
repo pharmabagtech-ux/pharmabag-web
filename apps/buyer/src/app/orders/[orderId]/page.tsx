@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Package, Truck, ChevronLeft, Calendar, FileText, Loader2, AlertCircle, XCircle, CheckCircle2 } from 'lucide-react';
+import { Package, Truck, ChevronLeft, Calendar, FileText, Loader2, AlertCircle, XCircle, CheckCircle2, CreditCard } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import Timeline from '@/components/shared/Timeline';
@@ -46,7 +46,7 @@ function formatImageUrl(url: any): string | undefined {
   return `${cleanBase}${separator}${path}`;
 }
 
-function buildTimelineSteps(status: string | undefined) {
+function buildTimelineSteps(status: string | undefined, order?: any) {
   const normalized = normalizeStatus(status);
   
   if (normalized === "CANCELLED") {
@@ -68,6 +68,15 @@ function buildTimelineSteps(status: string | undefined) {
     description: idx <= activeIdx ? '' : 'Pending',
     isCompleted: idx <= activeIdx,
     isActive: idx === activeIdx + 1,
+    action: label === 'Paid' && idx === activeIdx + 1 && !order?.payments?.some((p: any) => p.proofUrl) ? (
+      <Link 
+        href={`/payments/${order.id}`} 
+        className="px-4 py-1.5 bg-lime-400 hover:bg-lime-500 text-gray-900 rounded-full text-[11px] font-black uppercase tracking-wider transition-all shadow-lg shadow-lime-200/50 flex items-center gap-1.5"
+      >
+        <CreditCard className="w-3.5 h-3.5" />
+        Pay Now
+      </Link>
+    ) : undefined
   }));
 }
 
@@ -121,7 +130,7 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
 
   const status = order.orderStatus || order.status;
   const badge = getStatusBadge(status);
-  const steps = buildTimelineSteps(status);
+  const steps = buildTimelineSteps(status, order);
   const orderItems = order.items ?? [];
   const totalAmount = order.totalAmount ?? order.total ?? order.amount ?? 0;
   const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
@@ -276,26 +285,28 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
                 </div>
                 <Timeline steps={steps} />
 
-                {normalizeStatus(status) === 'ACCEPTED' && !order.payments?.some((p: any) => p.proofUrl) && (
-                  <Link
-                    href={`/payments/${order.id}`}
-                    className="w-full mt-8 py-4 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-2xl font-bold transition-all shadow-lg shadow-lime-200/50 flex items-center justify-center gap-2"
-                  >
-                    <FileText className="w-5 h-5" />
-                    Pay Now
-                  </Link>
-                )}
-
-                {order.payments?.some((p: any) => p.proofUrl) && normalizeStatus(status) === 'ACCEPTED' && (
-                  <a
-                    href={order.payments.find((p: any) => p.proofUrl)?.proofUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full mt-8 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl font-bold transition-all border border-dashed border-gray-300 flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle2 className="w-5 h-5 text-gray-400" />
-                    Review Proof Uploaded
-                  </a>
+                {['PLACED', 'ACCEPTED'].includes(normalizeStatus(status)) && (
+                  <div className="mt-8">
+                    {!order.payments?.some((p: any) => p.proofUrl) ? (
+                      <Link
+                        href={`/payments/${order.id}`}
+                        className="w-full py-4 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-2xl font-bold transition-all shadow-lg shadow-lime-200/50 flex items-center justify-center gap-2"
+                      >
+                        <FileText className="w-5 h-5" />
+                        Pay Now
+                      </Link>
+                    ) : (
+                      <a
+                        href={order.payments.find((p: any) => p.proofUrl)?.proofUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-4 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-2xl font-bold transition-all border border-dashed border-gray-200 flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle2 className="w-5 h-5 text-gray-400" />
+                        Review Proof Uploaded
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
             )}
