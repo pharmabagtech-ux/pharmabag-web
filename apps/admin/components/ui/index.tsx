@@ -1,6 +1,7 @@
 "use client";
 import { forwardRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { Loader2, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { OrderStatus, ApprovalStatus, ProductStatus } from "@pharmabag/utils";
@@ -82,18 +83,30 @@ export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTML
 });
 Input.displayName = "Input";
 
-interface StatProps { title: string; value: string; change?: string; up?: boolean; icon: React.ElementType; iconClass?: string; delay?: number; alert?: boolean; }
-export function StatCard({ title, value, change, up, icon: Icon, iconClass="bg-primary/10 text-primary", delay=0, alert }: StatProps) {
+interface StatProps { title: string; value: string; change?: string; up?: boolean; icon: React.ElementType; iconClass?: string; delay?: number; alert?: boolean; href?: string; }
+export function StatCard({ title, value, change, up, icon: Icon, iconClass="bg-primary/10 text-primary", delay=0, alert, href }: StatProps) {
+  const CardContent = (
+    <div className={cn(
+      "glass-card rounded-2xl p-5 h-full transition-all duration-300", 
+      alert && "border-red-200 dark:border-red-800",
+      href && "hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 cursor-pointer active:scale-[0.98]"
+    )}>
+      <div className="flex items-start justify-between mb-4">
+        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center", iconClass)}><Icon className="h-4.5 w-4.5" aria-hidden/></div>
+      </div>
+      <p className="font-semibold text-2xl text-foreground">{value}</p>
+      {change&&<p className={cn("text-xs font-medium mt-1", up?"text-green-600":alert?"text-red-500":"text-muted-foreground")}>{change}</p>}
+    </div>
+  );
+
   return (
     <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay, duration:0.4 }}>
-      <div className={cn("glass-card rounded-2xl p-5 h-full", alert&&"border-red-200 dark:border-red-800")}>
-        <div className="flex items-start justify-between mb-4">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center", iconClass)}><Icon className="h-4.5 w-4.5" aria-hidden/></div>
-        </div>
-        <p className="font-semibold text-2xl text-foreground">{value}</p>
-        {change&&<p className={cn("text-xs font-medium mt-1", up?"text-green-600":alert?"text-red-500":"text-muted-foreground")}>{change}</p>}
-      </div>
+      {href ? (
+        <Link href={href} className="block h-full">
+          {CardContent}
+        </Link>
+      ) : CardContent}
     </motion.div>
   );
 }

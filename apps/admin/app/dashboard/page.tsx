@@ -97,17 +97,17 @@ export default function AdminDashboardPage() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard title="Total Users" value={formatCompact(stats.totalUsers)} change={`${stats.totalBuyers} buyers · ${stats.totalSellers} sellers`} icon={Users} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0} />
-        <StatCard title="Total Sellers" value={String(stats.totalSellers)} change={`${stats.blockedUsers} blocked`} icon={CheckCircle} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0.07} />
-        <StatCard title="Total Orders" value={formatCompact(stats.totalOrders)} change={`${stats.pendingOrders} pending`} icon={ShoppingBag} iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20" delay={0.14} />
-        <StatCard title="Platform Revenue" value={`₹${formatCompact(stats.totalRevenue)}`} change={`${stats.pendingPayments} pending payments`} icon={TrendingUp} iconClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20" delay={0.21} />
+        <StatCard title="Total Users" value={formatCompact(stats.totalUsers)} change={`${stats.totalBuyers} buyers · ${stats.totalSellers} sellers`} icon={Users} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20 href=/users" delay={0} href="/users" />
+        <StatCard title="Total Sellers" value={String(stats.totalSellers)} change={`${stats.blockedUsers} blocked`} icon={CheckCircle} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0.07} href="/users" />
+        <StatCard title="Total Orders" value={formatCompact(stats.totalOrders)} change={`${stats.pendingOrders} pending`} icon={ShoppingBag} iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20" delay={0.14} href="/orders" />
+        <StatCard title="Platform Revenue" value={`₹${formatCompact(stats.totalRevenue)}`} change={`${stats.pendingPayments} pending payments`} icon={TrendingUp} iconClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20" delay={0.21} href="/settlements" />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard title="Total Products" value={formatCompact(stats.totalProducts)} icon={Package} iconClass="bg-teal-50 text-teal-600 dark:bg-teal-900/20" delay={0.28} />
-        <StatCard title="Pending Orders" value={String(stats.pendingOrders)} change="Need processing" icon={Clock} iconClass="bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20" alert delay={0.35} />
-        <StatCard title="Pending Payments" value={String(stats.pendingPayments)} change="Awaiting verification" icon={AlertTriangle} iconClass="bg-red-50 text-red-500 dark:bg-red-900/20" alert delay={0.42} />
-        <StatCard title="Open Tickets" value={String(stats.openTickets)} change="Unresolved" icon={Flag} iconClass="bg-pink-50 text-pink-600 dark:bg-pink-900/20" alert delay={0.49} />
+        <StatCard title="Total Products" value={formatCompact(stats.totalProducts)} icon={Package} iconClass="bg-teal-50 text-teal-600 dark:bg-teal-900/20" delay={0.28} href="/products" />
+        <StatCard title="Pending Orders" value={String(stats.pendingOrders)} change="Need processing" icon={Clock} iconClass="bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20" alert delay={0.35} href="/orders" />
+        <StatCard title="Pending Payments" value={String(stats.pendingPayments)} change="Awaiting verification" icon={AlertTriangle} iconClass="bg-red-50 text-red-500 dark:bg-red-900/20" alert delay={0.42} href="/settlements" />
+        <StatCard title="Open Tickets" value={String(stats.openTickets)} change="Unresolved" icon={Flag} iconClass="bg-pink-50 text-pink-600 dark:bg-pink-900/20" alert delay={0.49} href="/tickets" />
       </div>
 
       {/* Recent orders table */}

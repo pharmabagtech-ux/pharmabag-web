@@ -380,12 +380,12 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                                   <button onClick={() => addToCart.mutate({ productId: l.id, quantity: listingCartItem.quantity + 1, replace: true })} className="w-10 h-full flex items-center justify-center hover:bg-gray-800 transition-colors"><Plus className="w-4 h-4" strokeWidth={3} /></button>
                                 </div>
                               ) : (
-                                <button 
-                                  onClick={() => addToCart.mutate({ 
-                                    productId: l.id, 
-                                    quantity: minQty, 
-                                    productName: product.name, 
-                                    price: l.price, 
+                                <button
+                                  onClick={() => addToCart.mutate({
+                                    productId: l.id,
+                                    quantity: minQty,
+                                    productName: product.name,
+                                    price: l.price,
                                     mrp: product.mrp,
                                     imageUrl: product.images?.[0]
                                   })}
