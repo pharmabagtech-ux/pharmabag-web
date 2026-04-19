@@ -365,17 +365,19 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                 </div>
               </div>
 
-              {/* Header Row (Desktop Only) */}
-              <div className="hidden lg:grid lg:grid-cols-12 gap-4 px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                <div className="col-span-1">Offer</div>
-                <div className="col-span-2 text-center">MRP</div>
-                <div className="col-span-2 text-center">Net Price</div>
-                <div className="col-span-2 text-center">Expiry</div>
-                <div className="col-span-2 text-center">Inventory</div>
-                <div className="col-span-3 text-right">Purchase</div>
-              </div>
+              <div className="w-full pb-4">
+                <div className="w-full">
+                  {/* Header Row (Desktop Only) */}
+                  <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-100/50">
+                    <div className="col-span-2">Offer</div>
+                    <div className="col-span-2 text-center">MRP</div>
+                    <div className="col-span-2 text-center">Net Price</div>
+                    <div className="col-span-2 text-center">Expiry</div>
+                    <div className="col-span-2 text-center">Inventory</div>
+                    <div className="col-span-2 text-right">Purchase</div>
+                  </div>
 
-              <div className="divide-y divide-gray-100/30">
+                  <div className="flex flex-col gap-2 lg:gap-0 lg:divide-y lg:divide-gray-100/30 w-full">
                 {listings.map((l: any, idx: number) => {
                   const listingInStock = (l.stock || 0) > 0;
                   const listingCartItem = cartData?.items?.find((item: any) => item.productId === l.id);
@@ -388,10 +390,77 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                   const discountTag = l.discountTag || (discountPercent ? `${discountPercent}% Off` : null);
 
                   return (
-                    <div key={l.id} className="grid grid-cols-1 lg:grid-cols-12 items-center gap-4 py-6 px-4 hover:bg-gray-50/50 transition-all rounded-2xl group">
+                    <div key={l.id} className="relative group w-full">
+                      
+                      {/* --- MOBILE LAYOUT (< lg) --- */}
+                      <div className="flex items-center lg:hidden w-full py-3 px-3 bg-[#f8fbfa] border border-gray-100 rounded-xl">
+                        
+                        {/* Pill */}
+                        <div className="w-[48px] flex-shrink-0">
+                          <div className="bg-teal-600 text-white text-[8px] font-black px-1 py-1 rounded-[6px] text-center w-full shadow-sm leading-tight">
+                            {discountTag || 'No Disc'}
+                          </div>
+                        </div>
+
+                        {/* Prices */}
+                        <div className="flex flex-col flex-1 px-3">
+                          <span className="text-[15px] font-black text-gray-900 leading-none truncate max-w-full">₹{l.price?.toLocaleString('en-IN')}</span>
+                          <span className="text-[8px] font-bold text-gray-400 mt-1 line-through truncate max-w-full">MRP ₹{mrp?.toLocaleString('en-IN')}</span>
+                        </div>
+
+                        {/* Rating & Stock */}
+                        <div className="flex flex-col items-center justify-center px-1 md:px-2 border-r border-gray-200 flex-shrink-0 min-w-[65px] md:min-w-[80px]">
+                          <div className="flex items-center gap-1 text-[10px] md:text-[11px] font-black text-lime-600 mb-1">
+                            <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-lime-500" /> 4.5
+                          </div>
+                          <span className="text-[8px] md:text-[9px] font-bold text-gray-500 whitespace-nowrap">{l.stock} in stock</span>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex-shrink-0 pl-2 md:pl-3">
+                          {listingInStock ? (
+                            (!listingCartItem || listingCartItem.quantity === 0) ? (
+                              <button 
+                                onClick={() => addToCart.mutate({ productId: l.id, quantity: minQty, productName: product.name, price: l.price, mrp: mrp, imageUrl: product.images?.[0] })} 
+                                className="w-[64px] md:w-[72px] h-[28px] md:h-[32px] rounded-[6px] bg-white border border-gray-200 flex items-center justify-center hover:bg-teal-50 transition-colors shadow-sm"
+                              >
+                                <span className="text-[18px] md:text-[20px] font-medium text-teal-600 leading-none mb-0.5 tracking-tighter">+</span>
+                              </button>
+                            ) : (
+                              <div className="w-[64px] md:w-[72px] h-[28px] md:h-[32px] flex items-center bg-slate-900 rounded-[6px] text-white shadow-md overflow-hidden">
+                                <button 
+                                  onMouseDown={(e) => { e.preventDefault(); if (listingCartItem.quantity > minQty) addToCart.mutate({ productId: l.id, quantity: listingCartItem.quantity - 1, replace: true }); else removeCartItem.mutate(listingCartItem.id); }} 
+                                  className="flex-1 h-full flex items-center justify-center hover:bg-white/20 active:bg-white/30 transition-colors"
+                                >
+                                  <span className="text-[14px] md:text-[16px] leading-none mb-[2px] font-medium">-</span>
+                                </button>
+                                <MarketplaceQtyInput 
+                                  initialQuantity={listingCartItem.quantity} stock={l.stock} minQty={minQty} 
+                                  onUpdate={(nextQty) => addToCart.mutate({ productId: l.id, quantity: nextQty, productName: product.name, price: l.price, mrp: mrp, imageUrl: product.images?.[0], replace: true })}
+                                  className="w-[20px] md:w-[24px] text-[10px] md:text-[11px] font-black text-white text-center bg-transparent outline-none selection:bg-slate-700"
+                                />
+                                <button 
+                                  onMouseDown={(e) => { e.preventDefault(); if (listingCartItem.quantity < l.stock) addToCart.mutate({ productId: l.id, quantity: listingCartItem.quantity + 1, replace: true }); }} 
+                                  className="flex-1 h-full flex items-center justify-center hover:bg-white/20 active:bg-white/30 transition-colors"
+                                >
+                                  <span className="text-[14px] md:text-[16px] leading-none mb-[1px] font-medium">+</span>
+                                </button>
+                              </div>
+                            )
+                          ) : (
+                              <div className="w-[64px] md:w-[72px] h-[28px] md:h-[32px] rounded-[6px] bg-gray-100 flex items-center justify-center">
+                                <span className="text-[9px] font-bold text-gray-400 uppercase">N/A</span>
+                              </div>
+                          )}
+                        </div>
+
+                      </div>
+
+                      {/* --- DESKTOP LAYOUT (lg+) --- */}
+                      <div className="hidden lg:grid grid-cols-12 items-center gap-4 py-6 px-4 hover:bg-gray-50/50 transition-all rounded-2xl">
                       
                       {/* 1. Discount Tag / Offer Column */}
-                      <div className="lg:col-span-1">
+                      <div className="col-span-2">
                         {discountTag ? (
                           <div className="bg-white border-2 border-gray-900 px-3 py-1.5 rounded-full text-[11px] font-black text-gray-900 whitespace-nowrap shadow-sm text-center">
                             {discountTag}
@@ -404,33 +473,30 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                       </div>
 
                       {/* 2. MRP */}
-                      <div className="lg:col-span-2 flex flex-col items-center">
-                        <span className="lg:hidden text-[10px] font-black text-gray-400 uppercase">MRP</span>
-                        <p className="text-[12px] font-bold text-gray-400 uppercase">MRP</p>
+                      <div className="col-span-2 flex flex-col items-center">
+                        <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-1">MRP</p>
                         <p className="text-[18px] font-black text-gray-500">₹{mrp?.toLocaleString('en-IN')}</p>
                       </div>
 
                       {/* 3. NET PRICE */}
-                      <div className="lg:col-span-2 flex flex-col items-center group-hover:scale-110 transition-transform">
-                        <span className="lg:hidden text-[10px] font-black text-teal-600 uppercase">Net Price</span>
-                        <p className="text-[12px] font-black text-gray-900 uppercase">Net Price</p>
+                      <div className="col-span-2 flex flex-col items-center group-hover:scale-110 transition-transform">
+                        <p className="text-[12px] font-black text-teal-600 uppercase tracking-widest mb-1">Net Price</p>
                         <p className="text-[22px] font-black text-gray-900 leading-none">₹{l.price?.toLocaleString('en-IN')}</p>
-                        <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase truncate">{l.seller?.companyName || 'Verified Seller'}</p>
+                        <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase truncate max-w-full px-2" title={l.seller?.companyName || 'Verified Seller'}>{l.seller?.companyName || 'Verified Seller'}</p>
                       </div>
 
                       {/* 4. EXPIRY */}
-                      <div className="lg:col-span-2 flex flex-col items-center">
-                         <span className="lg:hidden text-[10px] font-black text-gray-400 uppercase">Expiry</span>
-                         <p className="text-[14px] font-black text-gray-400 uppercase">Expiry</p>
+                      <div className="col-span-2 flex flex-col items-center">
+                         <p className="text-[12px] font-black text-gray-400 uppercase tracking-widest mb-1">Expiry</p>
                          <p className="text-[16px] font-black text-gray-700 mt-1">
                             {l.expiryDate ? new Date(l.expiryDate).toLocaleDateString('en-GB', { month: '2-digit', year: '2-digit' }) : 'N/A'}
                          </p>
                       </div>
 
                       {/* 5. Inventory (Stock/MOQ) */}
-                      <div className="lg:col-span-2 flex flex-col items-center">
-                        <p className={`text-[12px] font-black uppercase ${listingInStock ? 'text-gray-900' : 'text-rose-600'}`}>
-                           {listingInStock ? `${l.stock} In Stock` : 'Out of Stock'}
+                      <div className="col-span-2 flex flex-col items-center">
+                        <p className={`text-[12px] font-black uppercase ${listingInStock ? 'text-teal-600' : 'text-rose-600'}`}>
+                           {listingInStock ? `${l.stock} Units` : 'Out of Stock'}
                         </p>
                         <p className="text-[14px] font-black text-gray-900 uppercase mt-1">
                            MOQ {minQty}
@@ -438,9 +504,9 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                       </div>
 
                       {/* 6 & 7. Action Controls (Dynamic Selector) */}
-                      <div className="lg:col-span-3 flex items-center justify-center lg:justify-end gap-3 mt-4 lg:mt-0">
+                      <div className="col-span-2 flex items-center justify-end gap-3 mt-0">
                         {listingInStock ? (
-                          <div className="flex items-center gap-3 w-full lg:w-auto">
+                          <div className="flex items-center justify-end gap-3 w-full">
                             {(!listingCartItem || listingCartItem.quantity === 0) ? (
                               /* 1. standalone + button when not in cart or quantity is zero */
                               <button 
@@ -533,9 +599,12 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                         )}
                       </div>
                     </div>
+                    </div>
                   );
                 })}
               </div>
+              </div>
+            </div>
             </div>
           )}
 
@@ -741,12 +810,14 @@ function MarketplaceQtyInput({
   initialQuantity, 
   stock, 
   minQty, 
-  onUpdate 
+  onUpdate,
+  className
 }: { 
   initialQuantity: number; 
   stock: number; 
   minQty: number; 
   onUpdate: (qty: number) => void;
+  className?: string;
 }) {
   const [val, setVal] = useState<string>(String(initialQuantity));
 
@@ -782,7 +853,7 @@ function MarketplaceQtyInput({
     <input 
       type="text"
       inputMode="numeric"
-      className="flex-1 bg-transparent font-black text-lg text-slate-900 min-w-[40px] text-center outline-none selection:bg-slate-200"
+      className={className || "flex-1 bg-transparent font-black text-lg text-slate-900 min-w-[40px] text-center outline-none selection:bg-slate-200"}
       value={val}
       onChange={(e) => setVal(e.target.value.replace(/\D/g, ''))}
       onBlur={handleBlur}
