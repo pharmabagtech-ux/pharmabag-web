@@ -21,7 +21,8 @@ import Link from 'next/link';
 
 export default function ProductReviewsPage() {
   const { productId } = useParams() as { productId: string };
-  const { data: product, isLoading: isProductLoading } = useProductById(productId);
+  const { data: productRaw, isLoading: isProductLoading } = useProductById(productId);
+  const product = productRaw as any;
   const { data: reviewsData, isLoading: isReviewsLoading } = useProductReviews(productId);
   const createReview = useCreateReview();
 
