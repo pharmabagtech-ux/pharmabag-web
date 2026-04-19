@@ -238,7 +238,7 @@ export default function Navbar({
 
                 {/* Profile Dropdown */}
                 {isAuthenticated && (
-                  <div className="relative" ref={profileDropdownRef}>
+                  <div className="hidden lg:block relative" ref={profileDropdownRef}>
                     <button
                       onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                       className="p-1.5 text-gray-700 hover:text-sky-600 transition-colors"

@@ -367,14 +367,14 @@ export default function ProductDetailPage({ params }: { params: { productId: str
 
               <div className="w-full pb-4">
                 <div className="w-full">
-                  {/* Header Row (Desktop Only) */}
-                  <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-100/50">
-                    <div className="col-span-2">Offer</div>
-                    <div className="col-span-2 text-center">MRP</div>
-                    <div className="col-span-2 text-center">Net Price</div>
-                    <div className="col-span-2 text-center">Expiry</div>
-                    <div className="col-span-2 text-center">Inventory</div>
-                    <div className="col-span-2 text-right">Purchase</div>
+                  {/* Header Row */}
+                  <div className="grid grid-cols-6 lg:grid-cols-12 gap-1 sm:gap-4 px-1 sm:px-4 py-2 text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-tighter sm:tracking-widest mb-2 border-b border-gray-100/50">
+                    <div className="text-center lg:col-span-2">Offer</div>
+                    <div className="text-center lg:col-span-2">MRP</div>
+                    <div className="text-center lg:col-span-2">Net</div>
+                    <div className="text-center lg:col-span-2">Exp</div>
+                    <div className="text-center lg:col-span-2">Stock</div>
+                    <div className="text-right lg:col-span-2">Buy</div>
                   </div>
 
                   <div className="flex flex-col gap-2 lg:gap-0 lg:divide-y lg:divide-gray-100/30 w-full">
@@ -391,201 +391,83 @@ export default function ProductDetailPage({ params }: { params: { productId: str
 
                   return (
                     <div key={l.id} className="relative group w-full">
+                      <div className="grid grid-cols-6 lg:grid-cols-12 items-center gap-1 sm:gap-4 py-3 sm:py-6 px-1 sm:px-4 hover:bg-gray-50/50 transition-all rounded-xl sm:rounded-2xl border border-gray-100 sm:border-none">
                       
-                      {/* --- MOBILE LAYOUT (< lg) --- */}
-                      <div className="flex items-center lg:hidden w-full py-3 px-3 bg-[#f8fbfa] border border-gray-100 rounded-xl">
-                        
-                        {/* Pill */}
-                        <div className="w-[48px] flex-shrink-0">
-                          <div className="bg-teal-600 text-white text-[8px] font-black px-1 py-1 rounded-[6px] text-center w-full shadow-sm leading-tight">
-                            {discountTag || 'No Disc'}
-                          </div>
+                      {/* 1. Offer */}
+                      <div className="lg:col-span-2 flex justify-center">
+                        <div className="bg-teal-600 text-white px-1 sm:px-3 py-1 rounded-md sm:rounded-full text-[8px] sm:text-[11px] font-black whitespace-nowrap shadow-sm">
+                          {discountPercent ? `${Math.round(Number(discountPercent))}%` : '0%'}
                         </div>
-
-                        {/* Prices */}
-                        <div className="flex flex-col flex-1 px-3">
-                          <span className="text-[15px] font-black text-gray-900 leading-none truncate max-w-full">₹{l.price?.toLocaleString('en-IN')}</span>
-                          <span className="text-[8px] font-bold text-gray-400 mt-1 line-through truncate max-w-full">MRP ₹{mrp?.toLocaleString('en-IN')}</span>
-                        </div>
-
-                        {/* Rating & Stock */}
-                        <div className="flex flex-col items-center justify-center px-1 md:px-2 border-r border-gray-200 flex-shrink-0 min-w-[65px] md:min-w-[80px]">
-                          <div className="flex items-center gap-1 text-[10px] md:text-[11px] font-black text-lime-600 mb-1">
-                            <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-lime-500" /> 4.5
-                          </div>
-                          <span className="text-[8px] md:text-[9px] font-bold text-gray-500 whitespace-nowrap">{l.stock} in stock</span>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex-shrink-0 pl-2 md:pl-3">
-                          {listingInStock ? (
-                            (!listingCartItem || listingCartItem.quantity === 0) ? (
-                              <button 
-                                onClick={() => addToCart.mutate({ productId: l.id, quantity: minQty, productName: product.name, price: l.price, mrp: mrp, imageUrl: product.images?.[0] })} 
-                                className="w-[64px] md:w-[72px] h-[28px] md:h-[32px] rounded-[6px] bg-white border border-gray-200 flex items-center justify-center hover:bg-teal-50 transition-colors shadow-sm"
-                              >
-                                <span className="text-[18px] md:text-[20px] font-medium text-teal-600 leading-none mb-0.5 tracking-tighter">+</span>
-                              </button>
-                            ) : (
-                              <div className="w-[64px] md:w-[72px] h-[28px] md:h-[32px] flex items-center bg-slate-900 rounded-[6px] text-white shadow-md overflow-hidden">
-                                <button 
-                                  onMouseDown={(e) => { e.preventDefault(); if (listingCartItem.quantity > minQty) addToCart.mutate({ productId: l.id, quantity: listingCartItem.quantity - 1, replace: true }); else removeCartItem.mutate(listingCartItem.id); }} 
-                                  className="flex-1 h-full flex items-center justify-center hover:bg-white/20 active:bg-white/30 transition-colors"
-                                >
-                                  <span className="text-[14px] md:text-[16px] leading-none mb-[2px] font-medium">-</span>
-                                </button>
-                                <MarketplaceQtyInput 
-                                  initialQuantity={listingCartItem.quantity} stock={l.stock} minQty={minQty} 
-                                  onUpdate={(nextQty) => addToCart.mutate({ productId: l.id, quantity: nextQty, productName: product.name, price: l.price, mrp: mrp, imageUrl: product.images?.[0], replace: true })}
-                                  className="w-[20px] md:w-[24px] text-[10px] md:text-[11px] font-black text-white text-center bg-transparent outline-none selection:bg-slate-700"
-                                />
-                                <button 
-                                  onMouseDown={(e) => { e.preventDefault(); if (listingCartItem.quantity < l.stock) addToCart.mutate({ productId: l.id, quantity: listingCartItem.quantity + 1, replace: true }); }} 
-                                  className="flex-1 h-full flex items-center justify-center hover:bg-white/20 active:bg-white/30 transition-colors"
-                                >
-                                  <span className="text-[14px] md:text-[16px] leading-none mb-[1px] font-medium">+</span>
-                                </button>
-                              </div>
-                            )
-                          ) : (
-                              <div className="w-[64px] md:w-[72px] h-[28px] md:h-[32px] rounded-[6px] bg-gray-100 flex items-center justify-center">
-                                <span className="text-[9px] font-bold text-gray-400 uppercase">N/A</span>
-                              </div>
-                          )}
-                        </div>
-
-                      </div>
-
-                      {/* --- DESKTOP LAYOUT (lg+) --- */}
-                      <div className="hidden lg:grid grid-cols-12 items-center gap-4 py-6 px-4 hover:bg-gray-50/50 transition-all rounded-2xl">
-                      
-                      {/* 1. Discount Tag / Offer Column */}
-                      <div className="col-span-2">
-                        {discountTag ? (
-                          <div className="bg-white border-2 border-gray-900 px-3 py-1.5 rounded-full text-[11px] font-black text-gray-900 whitespace-nowrap shadow-sm text-center">
-                            {discountTag}
-                          </div>
-                        ) : (
-                          <div className="bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full text-[10px] font-black text-gray-400 uppercase text-center">
-                            No Disc
-                          </div>
-                        )}
                       </div>
 
                       {/* 2. MRP */}
-                      <div className="col-span-2 flex flex-col items-center">
-                        <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-1">MRP</p>
-                        <p className="text-[18px] font-black text-gray-500">₹{mrp?.toLocaleString('en-IN')}</p>
+                      <div className="lg:col-span-2 flex flex-col items-center">
+                        <p className="text-[10px] sm:text-[18px] font-bold text-gray-400 line-through">₹{mrp?.toLocaleString('en-IN')}</p>
                       </div>
 
                       {/* 3. NET PRICE */}
-                      <div className="col-span-2 flex flex-col items-center group-hover:scale-110 transition-transform">
-                        <p className="text-[12px] font-black text-teal-600 uppercase tracking-widest mb-1">Net Price</p>
-                        <p className="text-[22px] font-black text-gray-900 leading-none">₹{l.price?.toLocaleString('en-IN')}</p>
-                        <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase truncate max-w-full px-2" title={l.seller?.companyName || 'Verified Seller'}>{l.seller?.companyName || 'Verified Seller'}</p>
+                      <div className="lg:col-span-2 flex flex-col items-center">
+                        <p className="text-[12px] sm:text-[22px] font-black text-gray-900 leading-none">₹{l.price?.toLocaleString('en-IN')}</p>
+                        <p className="hidden sm:block text-[9px] font-bold text-gray-400 mt-1 uppercase truncate max-w-full px-2">{l.seller?.companyName || 'Verified Seller'}</p>
                       </div>
 
                       {/* 4. EXPIRY */}
-                      <div className="col-span-2 flex flex-col items-center">
-                         <p className="text-[12px] font-black text-gray-400 uppercase tracking-widest mb-1">Expiry</p>
-                         <p className="text-[16px] font-black text-gray-700 mt-1">
+                      <div className="lg:col-span-2 flex flex-col items-center">
+                         <p className="text-[10px] sm:text-[16px] font-black text-gray-700">
                             {l.expiryDate ? new Date(l.expiryDate).toLocaleDateString('en-GB', { month: '2-digit', year: '2-digit' }) : 'N/A'}
                          </p>
                       </div>
 
-                      {/* 5. Inventory (Stock/MOQ) */}
-                      <div className="col-span-2 flex flex-col items-center">
-                        <p className={`text-[12px] font-black uppercase ${listingInStock ? 'text-teal-600' : 'text-rose-600'}`}>
-                           {listingInStock ? `${l.stock} Units` : 'Out of Stock'}
+                      {/* 5. Stock */}
+                      <div className="lg:col-span-2 flex flex-col items-center">
+                        <p className={`text-[10px] sm:text-[12px] font-black uppercase ${listingInStock ? 'text-teal-600' : 'text-rose-600'}`}>
+                           {l.stock}
                         </p>
-                        <p className="text-[14px] font-black text-gray-900 uppercase mt-1">
+                        <p className="text-[7px] sm:text-[14px] font-black text-gray-400 uppercase">
                            MOQ {minQty}
                         </p>
                       </div>
 
-                      {/* 6 & 7. Action Controls (Dynamic Selector) */}
-                      <div className="col-span-2 flex items-center justify-end gap-3 mt-0">
+                      {/* 6. Purchase */}
+                      <div className="lg:col-span-2 flex items-center justify-end gap-1">
                         {listingInStock ? (
-                          <div className="flex items-center justify-end gap-3 w-full">
+                          <div className="flex items-center justify-end w-full">
                             {(!listingCartItem || listingCartItem.quantity === 0) ? (
-                              /* 1. standalone + button when not in cart or quantity is zero */
                               <button 
-                                onClick={() => {
-                                  addToCart.mutate({ 
-                                    productId: l.id, 
-                                    quantity: minQty, 
-                                    productName: product.name,
-                                    price: l.price,
-                                    mrp: mrp,
-                                    imageUrl: product.images?.[0]
-                                  });
-                                }}
-                                className="w-full lg:w-[144px] h-12 bg-white border-2 border-slate-200 text-slate-900 rounded-xl flex items-center justify-center hover:border-teal-500 hover:text-teal-600 transition-all active:scale-95 shadow-sm group/add"
-                                title={`Add minimum ${minQty} units`}
+                                onClick={() => addToCart.mutate({ productId: l.id, quantity: minQty, productName: product.name, price: l.price, mrp: mrp, imageUrl: product.images?.[0] })}
+                                className="w-full sm:w-[144px] h-8 sm:h-12 bg-white border border-slate-200 text-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center hover:border-teal-500 transition-all shadow-sm"
                               >
-                                <Plus className="w-6 h-6 group-hover/add:scale-125 transition-transform" strokeWidth={3} />
+                                <Plus className="w-4 h-4 sm:w-6 sm:h-6" strokeWidth={3} />
                               </button>
                             ) : (
-                              /* 2. Full selector with Trash when in cart */
-                              <div className="flex items-center gap-2">
-                                <div className="flex items-center bg-white border-2 border-slate-200 rounded-xl p-1 h-12 shadow-sm w-full lg:w-36">
+                              <div className="flex items-center gap-1 sm:gap-2 w-full">
+                                <div className="flex items-center bg-slate-900 rounded-lg sm:rounded-xl p-0.5 h-8 sm:h-12 shadow-sm w-full">
                                   <button 
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      if (listingCartItem.quantity > minQty) {
-                                        addToCart.mutate({ productId: l.id, quantity: listingCartItem.quantity - 1, replace: true });
-                                      } else {
-                                        // If at MOQ, clicking minus removes
-                                        removeCartItem.mutate(listingCartItem.id);
-                                      }
-                                    }}
-                                    className="w-10 h-full flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors"
+                                    onMouseDown={(e) => { e.preventDefault(); if (listingCartItem.quantity > minQty) addToCart.mutate({ productId: l.id, quantity: listingCartItem.quantity - 1, replace: true }); else removeCartItem.mutate(listingCartItem.id); }}
+                                    className="flex-1 h-full flex items-center justify-center text-white"
                                   >
-                                    <Minus className="w-4 h-4" strokeWidth={3} />
+                                    <Minus className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={3} />
                                   </button>
                                   
                                   <MarketplaceQtyInput 
                                     initialQuantity={listingCartItem.quantity}
                                     stock={l.stock}
                                     minQty={minQty}
-                                    onUpdate={(nextQty) => {
-                                       addToCart.mutate({ 
-                                          productId: l.id, 
-                                          quantity: nextQty, 
-                                          productName: product.name,
-                                          price: l.price,
-                                          mrp: mrp,
-                                          imageUrl: product.images?.[0],
-                                          replace: true 
-                                        });
-                                    }}
+                                    onUpdate={(nextQty) => addToCart.mutate({ productId: l.id, quantity: nextQty, productName: product.name, price: l.price, mrp: mrp, imageUrl: product.images?.[0], replace: true })}
+                                    className="w-4 sm:w-10 text-[10px] sm:text-lg font-black text-white text-center bg-transparent outline-none"
                                   />
                                   
                                   <button 
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      if (listingCartItem.quantity < l.stock) {
-                                        addToCart.mutate({ productId: l.id, quantity: listingCartItem.quantity + 1, replace: true });
-                                      } else {
-                                        toast(`Maximum stock reached (${l.stock})`, 'error');
-                                      }
-                                    }}
-                                    className={`w-10 h-full flex items-center justify-center transition-colors ${listingCartItem.quantity >= l.stock ? 'opacity-20 cursor-not-allowed' : 'text-slate-900 hover:bg-slate-50 rounded-lg'}`}
-                                    disabled={listingCartItem.quantity >= l.stock}
+                                    onMouseDown={(e) => { e.preventDefault(); if (listingCartItem.quantity < l.stock) addToCart.mutate({ productId: l.id, quantity: listingCartItem.quantity + 1, replace: true }); }}
+                                    className="flex-1 h-full flex items-center justify-center text-white"
                                   >
-                                    <Plus className="w-4 h-4" strokeWidth={3} />
+                                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={3} />
                                   </button>
                                 </div>
-
-                                {/* Trash/Delete Button */}
+                                
                                 <button 
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    // Bypassing any blurring issues, strictly remove the cart item
-                                    removeCartItem.mutate(listingCartItem.id);
-                                  }}
-                                  className="w-12 h-12 bg-rose-50 border border-rose-100 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-100 hover:text-rose-600 transition-all active:scale-95 shadow-sm"
-                                  title="Remove from Bag"
+                                  onMouseDown={(e) => { e.preventDefault(); removeCartItem.mutate(listingCartItem.id); }}
+                                  className="hidden sm:flex w-12 h-12 bg-rose-50 border border-rose-100 text-rose-500 rounded-xl items-center justify-center"
                                 >
                                   <Trash2 className="w-5 h-5" />
                                 </button>
@@ -593,9 +475,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
                             )}
                           </div>
                         ) : (
-                          <div className="h-12 flex items-center px-8 bg-gray-100 text-gray-400 rounded-xl font-black text-[11px] uppercase tracking-widest italic">
-                             Currently Unavailable
-                          </div>
+                          <span className="text-[8px] text-rose-500 font-bold uppercase">N/A</span>
                         )}
                       </div>
                     </div>
