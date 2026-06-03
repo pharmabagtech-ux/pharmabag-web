@@ -11,12 +11,20 @@ export function useUploadPaymentProofFile() {
 
 export function useUploadKycDocument() {
   return useMutation({
-    mutationFn: (file: File) => uploadKycDocument(file),
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return uploadKycDocument(formData);
+    },
   });
 }
 
 export function useUploadDrugLicense() {
   return useMutation({
-    mutationFn: (file: File) => uploadDrugLicense(file),
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return uploadDrugLicense(formData);
+    },
   });
 }
