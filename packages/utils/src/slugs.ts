@@ -3,11 +3,10 @@
  */
 export function generateProductSlug(name: string, id: string): string {
   if (!name) return id;
-  const slug = name
+  return name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
-  return `${slug}-${id}`;
 }
 
 /**
