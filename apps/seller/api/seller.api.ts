@@ -480,3 +480,41 @@ export async function getBuyerProfile(buyerId: string) {
   const { data } = await apiClient.get<any>(`/buyers/${buyerId}`);
   return data.data ?? data;
 }
+
+// ─── Seller Bulk CSV Upload ────────────────────────────
+
+export interface BulkUploadResult {
+  successCount: number;
+  skippedCount: number;
+  skipped: Array<{
+    row: number;
+    name: string;
+    reason: 'missing stock or price' | 'product not in catalog' | 'already listed' | 'failed to create listing';
+  }>;
+}
+
+export async function downloadBulkTemplate(): Promise<void> {
+  const response = await apiClient.get('/products/bulk-csv/template', {
+    responseType: 'blob',
+    timeout: 0,
+  });
+  const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'pharmabag-product-template.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}
+
+export async function uploadBulkCsv(file: File): Promise<BulkUploadResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await apiClient.post<{ data: BulkUploadResult }>(
+    '/products/bulk-csv/upload',
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 0 },
+  );
+  return response.data.data;
+}
