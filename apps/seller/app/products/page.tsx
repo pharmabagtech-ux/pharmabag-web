@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Eye, Upload } from "lucide-react";
 import { Button, Input, Badge, ApprovalBadge, Skeleton, Pagination } from "@/components/ui";
 import { formatCurrency } from "@pharmabag/utils";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,9 @@ export default function ProductsPage() {
           <div className="flex items-center justify-between">
             <div><h1 className="font-semibold text-2xl text-foreground">Products</h1><p className="text-sm text-muted-foreground mt-0.5">Manage your product listings</p></div>
             <div className="flex items-center gap-3">
+              <Link href="/products/bulk-upload">
+                <Button variant="secondary" leftIcon={<Upload className="h-4 w-4"/>}>Bulk Upload</Button>
+              </Link>
               <Link href="/products/requests">
                 <Button variant="secondary" leftIcon={<FileText className="h-4 w-4"/>}>Request Product</Button>
               </Link>
