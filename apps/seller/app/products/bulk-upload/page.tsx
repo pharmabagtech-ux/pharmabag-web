@@ -29,11 +29,19 @@ export default function BulkUploadPage() {
 
   const handleUpload = async () => {
     if (!file) { toast.error('Please select a CSV file first'); return; }
-    const result = await uploadCsv.mutateAsync(file);
-    setResults(result);
-    setFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    toast.success(`${result.successCount} products uploaded`);
+    try {
+      const result = await uploadCsv.mutateAsync(file);
+      setResults(result);
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (result.successCount > 0) {
+        toast.success(`${result.successCount} product${result.successCount === 1 ? '' : 's'} uploaded`);
+      } else {
+        toast.error('No products were uploaded — check the skipped rows below');
+      }
+    } catch {
+      // handled by useUploadBulkCsv onError
+    }
   };
 
   const handleReset = () => { setResults(null); setFile(null); };
