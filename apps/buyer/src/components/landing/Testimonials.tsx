@@ -12,26 +12,26 @@ const TESTIMONIALS: Testimonial[] = [
   {
     id: 1,
     quote:
-      "This is your Testimonial section paragraph. It's a great place to tell users. This is your Testimonial section paragraph. It's a great place to tell users",
-    name: 'Alex Smith',
-    role: 'Medicine Retailer',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
+      "Since joining PharmaBag, sourcing medicines in bulk has become much faster and more transparent. The platform saves us hours every week by connecting us with trusted suppliers across India. We've expanded our product range while keeping procurement costs under control.",
+    name: 'Rajesh Agarwal',
+    role: 'Owner, Shree Balaji Pharma Distributors – Jaipur',
+    avatar: '/testimonials/rajesh-agarwal.png',
   },
   {
     id: 2,
     quote:
-      "This is your Testimonial section paragraph. It's a great place to tell users. This is your Testimonial section paragraph. It's a great place to tell users",
-    name: 'Drew Carlyle',
-    role: 'Shop Owner',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Drew',
+      "As an independent pharmacy owner, finding reliable wholesalers at competitive prices was always a challenge. PharmaBag has simplified the entire buying process. The ordering experience is smooth, deliveries are timely, and we've seen a noticeable improvement in inventory management.",
+    name: 'Priya Nair',
+    role: 'Owner, MedCare Pharmacy – Kochi',
+    avatar: '/testimonials/priya-nair.png',
   },
   {
     id: 3,
     quote:
-      "This is your Testimonial section paragraph. It's a great place to tell users. This is your Testimonial section paragraph. It's a great place to tell users",
-    name: 'Jane Doe',
-    role: 'Pharmacy Manager',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane',
+      "PharmaBag has become an important part of our procurement process. The wide selection of brands, competitive B2B pricing, and easy ordering system help us serve our retail partners more efficiently. It's a platform we rely on for consistent business growth.",
+    name: 'Amit Patel',
+    role: 'Director, Patel Healthcare Distributors – Ahmedabad',
+    avatar: '/testimonials/amit-patel.png',
   },
 ];
 
