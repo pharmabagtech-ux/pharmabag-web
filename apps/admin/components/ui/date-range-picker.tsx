@@ -56,6 +56,7 @@ export function DateRangePicker({
     { label: "Last 7 Days", getValue: () => ({ from: startOfDay(subDays(new Date(), 6)), to: endOfDay(new Date()) }) },
     { label: "Last 30 Days", getValue: () => ({ from: startOfDay(subDays(new Date(), 29)), to: endOfDay(new Date()) }) },
     { label: "This Month", getValue: () => ({ from: startOfMonth(new Date()), to: endOfMonth(new Date()) }) },
+    { label: "All Time", getValue: () => ({ from: startOfDay(new Date(2000, 0, 1)), to: endOfDay(new Date()) }) },
   ];
 
   return (
