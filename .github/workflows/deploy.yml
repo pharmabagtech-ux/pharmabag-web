@@ -1,69 +1,46 @@
-name: Build and Deploy Web Apps
+name: Deploy Frontend
 
 on:
   push:
-    branches: [main]
-
-env:
-  AWS_REGION: ap-south-1
-  ECR_REGISTRY: 318890247225.dkr.ecr.ap-south-1.amazonaws.com
-  EKS_CLUSTER: pharmabag-cluster
-  K8S_NAMESPACE: pharmabag
-  NEXT_PUBLIC_API_BASE_URL: https://api.pharmabag.in/api
-  NEXT_PUBLIC_API_URL: https://api.pharmabag.in/api
+    branches:
+      - main
 
 jobs:
-  build-and-deploy:
-    name: Build & Deploy ${{ matrix.app }}
+  deploy:
+    name: Deploy Pharmabag Web
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        app: [seller, buyer, admin]
-      fail-fast: false
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Sync Project to EC2
+        uses: burnett01/rsync-deployments@7.0.2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          switches: -avz --exclude=".git" --exclude="node_modules" --exclude=".next"
+          path: ./
+          remote_path: /home/ubuntu/project-pharmabag-web/pharmabag-web/
+          remote_host: ${{ secrets.SERVER_HOST }}
+          remote_user: ${{ secrets.SERVER_USER }}
+          remote_key: ${{ secrets.SERVER_SSH_KEY }}
 
-      - name: Login to ECR
-        run: |
-          aws ecr get-login-password --region $AWS_REGION | \
-            docker login --username AWS --password-stdin $ECR_REGISTRY
+      - name: Deploy Frontend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
 
-      - name: Set image tag
-        id: vars
-        run: echo "image_tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+            cd /home/ubuntu/project-pharmabag-web
 
-      - name: Build and push
-        run: |
-          IMAGE=$ECR_REGISTRY/pharmabag-${{ matrix.app }}
-          TAG=${{ steps.vars.outputs.image_tag }}
-          docker build \
-            --build-arg APP_NAME=${{ matrix.app }} \
-            --build-arg NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL \
-            --build-arg NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
-            -t $IMAGE:$TAG \
-            -t $IMAGE:latest .
-          docker push $IMAGE:$TAG
-          docker push $IMAGE:latest
+            echo "Building and deploying frontend containers..."
 
-      - name: Update kubeconfig
-        run: aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
+            docker compose up -d --build --remove-orphans
 
-      - name: Update deployment image
-        run: |
-          IMAGE=$ECR_REGISTRY/pharmabag-${{ matrix.app }}:${{ steps.vars.outputs.image_tag }}
-          kubectl set image deployment/pharmabag-${{ matrix.app }} \
-            pharmabag-${{ matrix.app }}=$IMAGE -n $K8S_NAMESPACE
+            echo "Cleaning up unused Docker images..."
 
-      - name: Wait for rollout
-        run: |
-          kubectl rollout status deployment/pharmabag-${{ matrix.app }} \
-            -n $K8S_NAMESPACE --timeout=5m
+            docker image prune -f
+
+            echo "✅ Pharmabag Web deployed successfully."
