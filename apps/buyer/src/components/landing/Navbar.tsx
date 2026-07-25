@@ -18,6 +18,8 @@ import {
   LifeBuoy,
   Filter,
   ChevronDown,
+  ShieldCheck,
+  Clock,
 } from "lucide-react";
 
 import CategoryMegaMenu from "@/components/landing/CategoryMegaMenu";
@@ -44,7 +46,24 @@ export default function Navbar({
   showUserActions?: boolean;
   onFilterClick?: () => void;
 }) {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
+
+  // Buyer KYC / verification status — mirrors checkout/page.tsx derivation
+  const bp = (user as any)?.buyerProfile;
+  const isVerified =
+    (user as any)?.status === "APPROVED" ||
+    bp?.verificationStatus === "VERIFIED" ||
+    (user as any)?.verificationStatus === "VERIFIED";
+  const isPending =
+    !isVerified &&
+    ((user as any)?.status === "PENDING" ||
+      bp?.verificationStatus === "PENDING" ||
+      (user as any)?.verificationStatus === "PENDING");
+  const verifyState: "verified" | "pending" | "unverified" = isVerified
+    ? "verified"
+    : isPending
+      ? "pending"
+      : "unverified";
   const queryClient = useQueryClient();
   const { data: cartData } = useCart();
   const { data: notificationsData } = useNotifications();
@@ -204,6 +223,40 @@ export default function Navbar({
 
             {showUserActions && isMounted && (
               <div className="flex items-center gap-1 sm:gap-2">
+                {/* Verify (KYC) — buyers only */}
+                {isAuthenticated && (
+                  <Link
+                    href={verifyState === "verified" ? "/profile" : "/onboarding"}
+                    title={
+                      verifyState === "verified"
+                        ? "Your account is verified"
+                        : verifyState === "pending"
+                          ? "Verification under review"
+                          : "Verify your account"
+                    }
+                    className={`flex items-center gap-1.5 rounded-full font-bold text-xs sm:text-sm transition-colors p-1.5 sm:px-3 sm:py-2 ${
+                      verifyState === "verified"
+                        ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                        : verifyState === "pending"
+                          ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                          : "bg-[#ddff85] text-gray-900 hover:bg-[#c9f260]"
+                    }`}
+                  >
+                    {verifyState === "pending" ? (
+                      <Clock className="w-4 h-4 sm:w-[18px] sm:h-[18px] flex-shrink-0" />
+                    ) : (
+                      <ShieldCheck className="w-4 h-4 sm:w-[18px] sm:h-[18px] flex-shrink-0" />
+                    )}
+                    <span className="hidden sm:inline">
+                      {verifyState === "verified"
+                        ? "Verified"
+                        : verifyState === "pending"
+                          ? "Pending"
+                          : "Verify"}
+                    </span>
+                  </Link>
+                )}
+
                 {/* Notification */}
                 <button
                   onClick={() => openDrawer('notifications')}
@@ -385,6 +438,28 @@ export default function Navbar({
               {isAuthenticated && (
                 <>
                   <div className="h-px bg-gray-100 my-4" />
+                  <Link
+                    href={verifyState === "verified" ? "/profile" : "/onboarding"}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl ${
+                      verifyState === "verified"
+                        ? "text-emerald-700 hover:bg-emerald-50"
+                        : verifyState === "pending"
+                          ? "text-amber-700 hover:bg-amber-50"
+                          : "text-gray-900 bg-[#ddff85] hover:bg-[#c9f260]"
+                    }`}
+                  >
+                    {verifyState === "pending" ? (
+                      <Clock className="w-4 h-4" />
+                    ) : (
+                      <ShieldCheck className="w-4 h-4" />
+                    )}
+                    {verifyState === "verified"
+                      ? "Verified"
+                      : verifyState === "pending"
+                        ? "Verification Pending"
+                        : "Verify Account"}
+                  </Link>
                   <Link
                     href="/profile"
                     onClick={() => setIsMobileMenuOpen(false)}
