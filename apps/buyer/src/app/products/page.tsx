@@ -447,7 +447,6 @@ function ProductsPageContent() {
                           },
                           {
                             onSuccess: () => {
-                              toast(`${product.name} added to bag!`, 'success');
                               cleanupPending();
                             },
                             onError: (err: any) => {

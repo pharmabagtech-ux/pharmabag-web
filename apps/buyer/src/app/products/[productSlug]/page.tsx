@@ -97,7 +97,6 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
         onSuccess: () => {
           setQuantity(finalQty);
           setAdded(true);
-          toast(`${product.name} updated in bag!`, 'success');
           setTimeout(() => setAdded(false), 2000);
         },
         onError: () => toast('Failed to update bag', 'error'),
