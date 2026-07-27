@@ -42,7 +42,6 @@ export default function WishlistPage() {
       gstPercent: product.gstPercent,
       imageUrl: product.images?.[0]
     }, {
-      onSuccess: () => toast('Added to bag', 'success'),
       onError: () => toast('Failed to add to bag', 'error'),
     });
   };

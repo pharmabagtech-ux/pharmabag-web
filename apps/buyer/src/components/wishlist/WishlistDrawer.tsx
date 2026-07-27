@@ -33,11 +33,7 @@ export default function WishlistDrawer({ isOpen, onClose }: { isOpen: boolean; o
       gstPercent: item.product?.gstPercent ?? item.gstPercent,
       imageUrl: item.product?.images?.[0] || item.imageUrl || item.image,
     };
-    addToCart.mutate(cartItem, {
-      onSuccess: () => {
-        toast('Added to bag', 'success');
-      },
-    });
+    addToCart.mutate(cartItem);
   };
 
   return (
