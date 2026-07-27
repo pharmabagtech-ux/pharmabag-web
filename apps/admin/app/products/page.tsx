@@ -8,6 +8,7 @@ import { formatCurrency, calculatePricing } from "@pharmabag/utils";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { useAdminProductsFiltered, useUpdateProductStatus, useDeleteProduct } from "@/hooks/useAdmin";
+import { SellersHoverCell, type SellerRow } from "@/components/products/SellersHoverCell";
 
 export default function AdminProductsPage() {
   const [search, setSearch] = useState("");
@@ -124,7 +125,34 @@ export default function AdminProductsPage() {
               <tbody className="divide-y divide-border/30">
                 {filtered.length === 0 ? (
                   <tr><td colSpan={12} className="py-12 text-center text-sm text-muted-foreground">No products found</td></tr>
-                ) : filtered.map((p: any, i: number) => (
+                ) : filtered.map((p: any, i: number) => {
+                  // Build the seller list for this catalog product (loaded inline
+                  // with the row, so the hover panel is instant). Falls back to the
+                  // row's own seller for products without a master-catalog link.
+                  const sellers: SellerRow[] = (p.masterProduct?.products ?? []).map((sp: any) => ({
+                    id: sp.id,
+                    companyName: sp.seller?.companyName ?? "—",
+                    phone: sp.seller?.user?.phone ?? null,
+                    city: sp.seller?.city ?? null,
+                    state: sp.seller?.state ?? null,
+                    mrp: sp.mrp,
+                    stock: (sp.batches ?? []).reduce((s: number, b: any) => s + (b.stock ?? 0), 0),
+                    isActive: sp.isActive,
+                    approvalStatus: sp.approvalStatus,
+                  }));
+                  if (sellers.length === 0 && p.seller) {
+                    sellers.push({
+                      id: p.id,
+                      companyName: p.seller.companyName ?? "—",
+                      phone: null, city: null, state: null,
+                      mrp: p.mrp,
+                      stock: (p.batches ?? []).reduce((s: number, b: any) => s + (b.stock ?? 0), 0),
+                      isActive: p.isActive,
+                      approvalStatus: p.approvalStatus,
+                    });
+                  }
+                  const sku = p.masterProduct?.sku ?? p.sku ?? null;
+                  return (
                   <motion.tr key={p.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="hover:bg-accent/30 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
@@ -136,10 +164,13 @@ export default function AdminProductsPage() {
                         ) : (
                           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-xl font-bold flex-shrink-0 text-primary" aria-hidden>{p.name?.[0]?.toUpperCase() ?? 'P'}</div>
                         )}
-                          <div className="max-w-[200px] min-w-[120px]">
-                            <div className="text-sm font-semibold text-foreground truncate" title={p.name}>{p.name}</div>
-                            <div className="text-xs text-muted-foreground truncate" title={p.chemicalComposition ?? ""}>{p.chemicalComposition ?? "—"}</div>
-                          </div>
+                          <SellersHoverCell sellers={sellers}>
+                            <div className="max-w-[200px] min-w-[120px]">
+                              <div className="text-sm font-semibold text-foreground truncate" title={p.name}>{p.name}</div>
+                              {sku && <div className="text-[11px] font-mono text-muted-foreground/70 truncate" title={sku}>SKU: {sku}</div>}
+                              <div className="text-xs text-muted-foreground truncate" title={p.chemicalComposition ?? ""}>{p.chemicalComposition ?? "—"}</div>
+                            </div>
+                          </SellersHoverCell>
                       </div>
                     </td>
                     <td className="px-5 py-4 text-sm text-muted-foreground">{p.manufacturer ?? "—"}</td>
@@ -175,7 +206,9 @@ export default function AdminProductsPage() {
                     <td className="px-5 py-4 text-sm text-muted-foreground">{p.minimumOrderQuantity ?? 1}</td>
                     <td className="px-5 py-4 text-sm text-muted-foreground">{p.maximumOrderQuantity ?? "—"}</td>
                     <td className="px-5 py-4 text-sm font-medium text-foreground">
-                      {p.masterProduct?._count?.products ? Math.max(1, p.masterProduct._count.products) : 1}
+                      <SellersHoverCell sellers={sellers}>
+                        <span className="underline decoration-dotted underline-offset-2">{Math.max(1, sellers.length)}</span>
+                      </SellersHoverCell>
                     </td>
 
                     <td className="px-5 py-4">
@@ -194,7 +227,8 @@ export default function AdminProductsPage() {
                       </div>
                     </td>
                   </motion.tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
