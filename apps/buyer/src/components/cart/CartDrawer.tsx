@@ -151,9 +151,9 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                           <button
                             onMouseDown={(e) => {
                               e.preventDefault();
-                              removeItem.mutate(item.id, {
-                                onSuccess: () => toast('Item removed from bag', 'info'),
-                              });
+                              // No success toast — the row disappears from the
+                              // bag, which is confirmation enough.
+                              removeItem.mutate(item.id);
                             }}
                             disabled={removeItem.isPending || syncCart.isPending}
                             className="text-gray-300 hover:text-red-500 transition-colors disabled:opacity-50"

@@ -404,7 +404,8 @@ function ProductsPageContent() {
                       if (quantity === null || quantity <= 0) {
                         if (cartItemObj) {
                           removeCartItem.mutate(cartItemObj.id, {
-                            onSuccess: () => toast(`${product.name} removed from bag`, 'success'),
+                            // No success toast — the bag badge and the card
+                            // already show the item has gone.
                             onError: () => toast('Failed to remove item', 'error')
                           });
                         }
