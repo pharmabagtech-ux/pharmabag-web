@@ -250,9 +250,18 @@ export default function SellerOnboardingPage() {
     const e: Record<string, string> = {};
     if (!formData.companyName.trim()) e.companyName = "Business name is required";
     
-    if (!formData.gstNumber.trim()) e.gstNumber = "GST number is required";
-    if (!gstVerified) e.gstNumber = "Please verify your GST number";
-    
+    // Either GST or PAN is enough — whichever is supplied must be verified.
+    const hasGst = !!formData.gstNumber.trim();
+    const hasPan = !!formData.panNumber.trim();
+
+    if (!hasGst && !hasPan) {
+      e.gstNumber = "Enter and verify either GST or PAN";
+      e.panNumber = "Enter and verify either GST or PAN";
+    } else if (!(hasGst && gstVerified) && !(hasPan && panVerified)) {
+      if (hasGst && !gstVerified) e.gstNumber = "Please verify your GST number";
+      if (hasPan && !panVerified) e.panNumber = "Please verify your PAN number";
+    }
+
     if (!formData.drugLicenseNumber.trim()) e.drugLicenseNumber = "Drug license 1 is required";
     if (!formData.drugLicenseNumber2.trim()) e.drugLicenseNumber2 = "Drug license 2 is required";
     if (!formData.drugLicenseUrl) e.drugLicenseUrl = "Please upload license 1 document";
