@@ -6,12 +6,14 @@ import Navbar from '@/components/landing/Navbar';
 import { SkeletonProfileHeader } from '@/components/shared/LoaderSkeleton';
 import { useBuyerProfile } from '@/hooks/useBuyerProfile';
 import { useAuth } from '@pharmabag/api-client';
+import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
 import Link from 'next/link';
 import AuthGuard from '@/components/shared/AuthGuard';
 
 export default function ProfilePage() {
   const { data: profile, isLoading, isError } = useBuyerProfile();
   const { user } = useAuth();
+  const { canPurchase, role } = usePurchaseAccess();
 
   if (isLoading) {
     return (
@@ -51,11 +53,35 @@ export default function ProfilePage() {
             <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center">
               <AlertCircle className="w-10 h-10 text-red-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Profile Not Found</h2>
-            <p className="text-gray-500">Please complete your onboarding to view your profile.</p>
-            <Link href="/onboarding" className="px-8 py-3 bg-lime-300 text-gray-900 rounded-2xl font-bold hover:bg-lime-400 transition-colors shadow-lg">
-              Go to Onboarding
-            </Link>
+            {/* A seller or admin signed into the storefront has no buyer profile
+                and never will — /buyers/profile answers 403, not 404. Sending
+                them to onboarding leads somewhere that cannot help them. */}
+            {!canPurchase ? (
+              <>
+                <h2 className="text-2xl font-bold text-gray-900">This page is for buyer accounts</h2>
+                <p className="text-gray-500 text-center max-w-md">
+                  {role === 'SELLER'
+                    ? 'You are signed in as a seller, so there is no buyer profile to show. Your business details live in the Seller Portal.'
+                    : 'You are signed in as an admin account, so there is no buyer profile to show.'}
+                </p>
+                {role === 'SELLER' && (
+                  <a
+                    href="https://seller.pharmabag.in"
+                    className="px-8 py-3 bg-lime-300 text-gray-900 rounded-2xl font-bold hover:bg-lime-400 transition-colors shadow-lg"
+                  >
+                    Go to Seller Portal
+                  </a>
+                )}
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-gray-900">Profile Not Found</h2>
+                <p className="text-gray-500">Please complete your onboarding to view your profile.</p>
+                <Link href="/onboarding" className="px-8 py-3 bg-lime-300 text-gray-900 rounded-2xl font-bold hover:bg-lime-400 transition-colors shadow-lg">
+                  Go to Onboarding
+                </Link>
+              </>
+            )}
           </motion.div>
         </div>
       </main>
