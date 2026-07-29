@@ -136,8 +136,8 @@ export default function OrderDetailPage() {
           </div>
           {/* Totals */}
           <div className="p-5 border-t border-border/50 space-y-2">
-            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{formatCurrency(mainOrder.totalAmount || mainOrder.subtotal ?? mainOrder.total ?? 0)}</span></div>
-            {mainOrder.gstAmount != null && <div className="flex justify-between text-sm"><span className="text-muted-foreground">GST</span><span className="text-foreground">{formatCurrency(mainOrder.gstAmount)}</span></div>}
+            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{formatCurrency(mainOrder.sellerTotal ?? mainOrder.subtotal ?? mainOrder.totalAmount ?? mainOrder.total ?? 0)}</span></div>
+            {(mainOrder.totalGstAmount ?? mainOrder.gstAmount) != null && <div className="flex justify-between text-sm"><span className="text-muted-foreground">GST</span><span className="text-foreground">{formatCurrency(mainOrder.totalGstAmount ?? mainOrder.gstAmount)}</span></div>}
             {mainOrder.shippingAmount != null && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Shipping</span><span className="text-foreground">{formatCurrency(mainOrder.shippingAmount)}</span></div>}
             <div className="flex justify-between text-base font-semibold pt-2 border-t border-border/30"><span>Total</span><span>{formatCurrency(mainOrder.totalAmount || mainOrder.finalAmount ?? mainOrder.total ?? 0)}</span></div>
           </div>
