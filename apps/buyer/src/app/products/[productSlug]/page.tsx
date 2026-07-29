@@ -93,6 +93,8 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
         price: sellingPrice,
         mrp: product.mrp,
         gstPercent: product.gstPercent,
+        discountType: (product as any).discountType,
+        discountMeta: (product as any).discountMeta,
         imageUrl: product.images?.[0]
       },
       {
@@ -445,7 +447,7 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
                           <div className="flex items-center justify-end w-full">
                             {(!listingCartItem || listingCartItem.quantity === 0) ? (
                               <button 
-                                onClick={() => addToCart.mutate({ productId: l.id, quantity: minQty, productName: product.name, price: l.price, mrp: mrp, gstPercent: product.gstPercent, imageUrl: product.images?.[0] })}
+                                onClick={() => addToCart.mutate({ productId: l.id, quantity: minQty, productName: product.name, price: l.price, mrp: mrp, gstPercent: product.gstPercent, imageUrl: product.images?.[0], discountType: l.discountType, discountMeta: l.discountMeta })}
                                 className="w-full sm:w-[144px] h-8 sm:h-12 bg-white border border-slate-200 text-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center hover:border-teal-500 transition-all shadow-sm"
                               >
                                 <Plus className="w-4 h-4 sm:w-6 sm:h-6" strokeWidth={3} />
@@ -464,7 +466,7 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
                                     initialQuantity={listingCartItem.quantity}
                                     stock={l.stock}
                                     minQty={minQty}
-                                    onUpdate={(nextQty) => addToCart.mutate({ productId: l.id, quantity: nextQty, productName: product.name, price: l.price, mrp: mrp, gstPercent: product.gstPercent, imageUrl: product.images?.[0], replace: true })}
+                                    onUpdate={(nextQty) => addToCart.mutate({ productId: l.id, quantity: nextQty, productName: product.name, price: l.price, mrp: mrp, gstPercent: product.gstPercent, imageUrl: product.images?.[0], discountType: l.discountType, discountMeta: l.discountMeta, replace: true })}
                                     className="w-4 sm:w-10 text-[10px] sm:text-lg font-black text-white text-center bg-transparent outline-none"
                                   />
                                   

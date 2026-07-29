@@ -442,6 +442,8 @@ function ProductsPageContent() {
                             price: computedSellingPrice,
                             mrp: product.mrp,
                             gstPercent: product.gstPercent,
+                            discountType: product.discountType,
+                            discountMeta: product.discountMeta,
                             imageUrl: image,
                             stock: product.stock,
                             moq: product.moq || product.minimumOrderQuantity || 1
