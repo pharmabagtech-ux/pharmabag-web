@@ -7,6 +7,7 @@ import { useCart, useUpdateCartItem, useRemoveCartItem, useSyncCart } from '@/ho
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
 import { priceCart } from '@/lib/pricing';
+import { formatSchemeTag } from '@/lib/offers';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
 import { useRouter } from 'next/navigation';
@@ -206,6 +207,28 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                           <span>{line.quantity} × ₹{line.unitPrice.toLocaleString('en-IN')} = ₹{line.lineSubtotal.toLocaleString('en-IN')}</span>
                           <span>GST {line.gstPercent}% ₹{line.gstAmount.toLocaleString('en-IN')}</span>
                         </div>
+                        {(() => {
+                          const scheme = formatSchemeTag(item.discountType, item.discountMeta);
+                          const itemMrp = item.mrp ?? item.product?.mrp;
+                          const saving = itemMrp && itemMrp > line.unitPrice
+                            ? Math.round((itemMrp - line.unitPrice) * line.quantity)
+                            : 0;
+                          if (!scheme && !saving) return null;
+                          return (
+                            <div className="mt-1 flex justify-end items-center gap-2 flex-wrap">
+                              {scheme && (
+                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-full">
+                                  {scheme}
+                                </span>
+                              )}
+                              {saving > 0 && (
+                                <span className="text-[10px] font-bold text-emerald-600">
+                                  Saved ₹{saving.toLocaleString('en-IN')} vs MRP ₹{itemMrp.toLocaleString('en-IN')}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </motion.div>
                   );

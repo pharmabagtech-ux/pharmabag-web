@@ -14,6 +14,7 @@ import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { useToast } from '@/components/shared/Toast';
 import { formatCurrency, generateProductSlug } from '@pharmabag/utils';
 import { priceCart } from '@/lib/pricing';
+import { formatSchemeTag } from '@/lib/offers';
 
 export default function CartPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -201,6 +202,11 @@ export default function CartPage() {
                                 <p className="text-[11px] text-gray-400">
                                   GST {line.gstPercent}% {formatCurrency(line.gstAmount)}
                                 </p>
+                                {formatSchemeTag(item.discountType, item.discountMeta) && (
+                                  <p className="text-[10px] font-bold text-teal-700 mt-0.5">
+                                    {formatSchemeTag(item.discountType, item.discountMeta)}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
