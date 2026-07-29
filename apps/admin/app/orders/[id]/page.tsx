@@ -10,6 +10,7 @@ import { Button, Badge, Modal, Input, Skeleton } from "@/components/ui";
 import { formatCurrency } from "@pharmabag/utils";
 import { cn } from "@/lib/utils";
 import { useOrderById, useUpdateAdminOrderStatus, useCancelOrder } from "@/hooks/useAdmin";
+import { SellerHoverCard } from "@/components/orders/SellerHoverCard";
 import toast from "react-hot-toast";
 
 const ORDER_STATUSES = [
@@ -167,7 +168,8 @@ export default function OrderDetailPage() {
               ) : items.map((item: any, i: number) => {
                 const itemImage = item.product?.images?.[0] || item.image;
                 return (
-                <div key={item.id || i} className="px-6 py-4 flex items-center gap-4">
+                <SellerHoverCard key={item.id || i} seller={item.seller}>
+                <div className="px-6 py-4 flex items-center gap-4 hover:bg-muted/40 transition-colors">
                   {itemImage ? (
                     <div className="h-12 w-12 rounded-xl overflow-hidden border border-border flex-shrink-0">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -179,6 +181,12 @@ export default function OrderDetailPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{item.product?.name ?? item.productName ?? "Product"}</p>
                     <p className="text-xs text-muted-foreground">{item.product?.manufacturer ?? item.manufacturer ?? "—"} · Qty: {item.quantity ?? 1}</p>
+                    {item.seller && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Seller: <span className="text-foreground font-medium">{item.seller.companyName ?? "—"}</span>
+                        {item.seller.user?.phone && <span className="font-mono"> · {item.seller.user.phone}</span>}
+                      </p>
+                    )}
                     {item.discountType && <p className="text-xs text-primary mt-0.5">Discount: {item.discountType} {item.discountValue ? `(${item.discountValue})` : ""}</p>}
                   </div>
                   <div className="text-right flex-shrink-0">
@@ -188,6 +196,7 @@ export default function OrderDetailPage() {
                     )}
                   </div>
                 </div>
+                </SellerHoverCard>
                 );
               })}
             </div>
