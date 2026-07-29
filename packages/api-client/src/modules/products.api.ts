@@ -113,13 +113,11 @@ export async function getProducts(params?: {
     };
   } catch (err) {
     console.warn('[Products] Failed to fetch products:', (err as any)?.response?.status, (err as any)?.message);
-    // Return empty products on error - this is a read-only endpoint
-    return {
-      data: [],
-      total: 0,
-      page: params?.page ?? 1,
-      limit: params?.limit ?? 24,
-    };
+    // Rethrow rather than returning an empty list. Swallowing the error made a
+    // failed request — an API restart, a timeout, a network blip — render as an
+    // empty grid, indistinguishable from a search that genuinely matched
+    // nothing. Callers surface a real error state instead.
+    throw err;
   }
 }
 
