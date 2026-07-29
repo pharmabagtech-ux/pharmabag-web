@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/shared/AuthGuard';
 import { useAuth } from '@pharmabag/api-client';
+import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
 
 type PaymentMethod = 'BANK_TRANSFER' | 'UPI' | 'COD' | 'CREDIT';
 
@@ -42,6 +43,7 @@ export default function CheckoutPage() {
   const { data: cartData, isLoading: isCartLoading } = useCart();
   const { data: profileData } = useBuyerProfile();
   const { toast } = useToast();
+  const { canPurchase, reason } = usePurchaseAccess();
   const createOrder = useCreateOrder();
   const createPaymentMut = useCreatePayment();
   const clearCart = useClearCart();
@@ -93,6 +95,11 @@ export default function CheckoutPage() {
   const total = Math.round(subtotal + shipping + gst);
 
   const handlePlaceOrder = () => {
+    if (!canPurchase) {
+      toast(reason, 'error');
+      return;
+    }
+
     if (!address.name || !address.phone || !address.address || !address.city || !address.state || !address.pincode) {
       toast('Please fill in all delivery details', 'error');
       return;
@@ -421,9 +428,16 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <button 
+              {!canPurchase && (
+                <p className="text-sm text-gray-600 bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-3 text-center">
+                  {reason}
+                </p>
+              )}
+
+              <button
                 onClick={handlePlaceOrder}
-                disabled={createOrder.isPending || items.length === 0}
+                disabled={createOrder.isPending || items.length === 0 || !canPurchase}
+                title={!canPurchase ? reason : undefined}
                 className="w-full h-12 sm:h-14 md:h-16 bg-lime-300 hover:bg-lime-400 disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400 text-gray-900 rounded-xl sm:rounded-2xl text-base sm:text-lg md:text-xl font-black transition-all active:scale-95 flex items-center justify-center gap-3"
               >
                 {createOrder.isPending ? (

@@ -11,7 +11,7 @@ import AuthGuard from '@/components/shared/AuthGuard';
 import EmptyState from '@/components/shared/EmptyState';
 import { SkeletonCard } from '@/components/shared/LoaderSkeleton';
 import { useWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
-import { useAddToCart } from '@/hooks/useCart';
+import { useGuardedAddToCart } from '@/hooks/usePurchaseAccess';
 import { useToast } from '@/components/shared/Toast';
 import { formatCurrency, generateProductSlug } from '@pharmabag/utils';
 
@@ -19,7 +19,7 @@ export default function WishlistPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const { data: wishlist, isLoading, isError } = useWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
-  const addToCart = useAddToCart();
+  const addToCart = useGuardedAddToCart();
   const { toast } = useToast();
 
   const items = wishlist?.items ?? [];

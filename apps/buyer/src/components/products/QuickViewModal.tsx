@@ -10,7 +10,8 @@ import { useToast } from '@/components/shared/Toast';
 import { ShareButton } from '@/components/shared/ShareButton';
 import { NotifyStockAlertModal } from '@/components/shared/NotifyStockAlertModal';
 import { CustomOrderModal } from '@/components/shared/CustomOrderModal';
-import { useAddToCart, useCart } from '@/hooks/useCart';
+import { useCart } from '@/hooks/useCart';
+import { useGuardedAddToCart } from '@/hooks/usePurchaseAccess';
 import { useProductById } from '@/hooks/useProducts';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, generateProductSlug } from '@pharmabag/utils';
 import type { Product } from '@pharmabag/utils';
@@ -32,7 +33,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
   const displayProduct = fullProduct || (product as any);
   const listings = displayProduct?.listings || [];
   const { toast } = useToast();
-  const addToCart = useAddToCart();
+  const addToCart = useGuardedAddToCart();
   const { data: cartData } = useCart();
   const { data: config } = usePlatformConfig();
   const minOrderAmount = config?.min_order_amount ?? 20000;
