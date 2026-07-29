@@ -26,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/shared/AuthGuard';
 import { useAuth } from '@pharmabag/api-client';
 import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
+import { priceCart } from '@/lib/pricing';
 
 type PaymentMethod = 'BANK_TRANSFER' | 'UPI' | 'COD' | 'CREDIT';
 
@@ -79,20 +80,9 @@ export default function CheckoutPage() {
 
   const cart = (cartData as any)?.data || cartData || { items: [], total: 0 };
   const items = cart.items ?? [];
-  const subtotal = Math.round(cart.total ?? 0);
-  const shippingThreshold = platformConfig?.shipping_threshold ?? 5000;
-  const shippingFee = platformConfig?.shipping_fee ?? 250;
-  const fallbackGst = platformConfig?.gst_rate ?? 12;
-  const shipping = subtotal > shippingThreshold ? 0 : shippingFee;
-  
-  let gst = 0;
-  items.forEach((item: any) => {
-    const price = item.product?.price ?? item.price ?? 0;
-    const itemGstPercent = item.product?.gstPercent ?? item.gstPercent ?? fallbackGst;
-    gst += (price * item.quantity) * (itemGstPercent / 100);
-  });
-  gst = Math.round(gst);
-  const total = Math.round(subtotal + shipping + gst);
+  // Shared with the bag, /cart and the order page so all four agree.
+  const pricing = priceCart(items, platformConfig);
+  const { subtotal, shipping, total } = pricing;
 
   const handlePlaceOrder = () => {
     if (!canPurchase) {
@@ -389,9 +379,10 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-6 mb-10 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                {items.map((item: any) => {
+                {items.map((item: any, index: number) => {
                   const img = item.product?.images?.[0] || item.imageUrl || item.image || item.productImage || '/products/pharma_bottle.png';
                   const name = item.product?.name || item.productName || item.name || 'Product';
+                  const line = pricing.lines[index];
                   return (
                     <div key={item.id} className="flex gap-4">
                       <div className="w-16 h-16 bg-[#f1f6ea] rounded-2xl flex-shrink-0 relative overflow-hidden">
@@ -399,8 +390,15 @@ export default function CheckoutPage() {
                       </div>
                       <div className="flex-1">
                         <p className="font-bold text-gray-900 leading-tight line-clamp-1">{name}</p>
-                        <p className="text-sm font-medium text-gray-400 mt-1">Qty: {item.quantity} • ₹{item.price}</p>
+                        {/* Per-item breakup, so the total reconciles with the line items */}
+                        <p className="text-sm font-medium text-gray-400 mt-1">
+                          {line.quantity} × ₹{line.unitPrice.toLocaleString('en-IN')} = ₹{line.lineSubtotal.toLocaleString('en-IN')}
+                        </p>
+                        <p className="text-xs font-medium text-gray-400">
+                          GST {line.gstPercent}% ₹{line.gstAmount.toLocaleString('en-IN')}
+                        </p>
                       </div>
+                      <p className="font-bold text-gray-900">₹{line.lineTotal.toLocaleString('en-IN')}</p>
                     </div>
                   );
                 })}
@@ -408,20 +406,12 @@ export default function CheckoutPage() {
 
               <div className="space-y-4 border-t border-gray-100 pt-8 mb-8">
                 <div className="flex justify-between text-gray-600 font-medium">
-                  <span>Subtotal</span>
-                  <span>₹{subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-gray-600 font-medium">
                   <div className="flex items-center gap-2">
                     <span>Shipping</span>
                     <Truck className="w-4 h-4 text-gray-400" />
                   </div>
                   <span>{shipping === 0 ? 'FREE' : `₹${shipping}`}</span>
                 </div>
-                  <div className="flex justify-between text-gray-600 font-medium">
-                    <span>GST</span>
-                    <span>₹{gst.toLocaleString()}</span>
-                  </div>
                 <div className="flex justify-between text-xl sm:text-2xl md:text-[28px] font-black text-gray-900 pt-4 border-t border-gray-100">
                   <span>Total</span>
                   <span>₹{total.toLocaleString()}</span>

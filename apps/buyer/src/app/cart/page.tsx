@@ -13,6 +13,7 @@ import { useCart, useUpdateCartItem, useRemoveCartItem, useClearCart } from '@/h
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { useToast } from '@/components/shared/Toast';
 import { formatCurrency, generateProductSlug } from '@pharmabag/utils';
+import { priceCart } from '@/lib/pricing';
 
 export default function CartPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -23,16 +24,14 @@ export default function CartPage() {
   const clearCart = useClearCart();
   const { toast } = useToast();
 
-  const gstRate = (config?.gst_rate ?? 12) / 100;
   const minOrderAmount = config?.min_order_amount ?? 20000;
 
   const items = cart?.items ?? [];
-  const subtotal = items.reduce((acc, item: any) => {
-    const price = item.product?.price ?? item.price;
-    return acc + (price || 0) * item.quantity;
-  }, 0);
-  const gst = Math.round(subtotal * gstRate);
-  const total = subtotal + gst;
+  // Priced the way the server will at checkout. This page previously applied a
+  // single flat GST rate to the whole subtotal, ignoring each product's own
+  // gstPercent, so it disagreed with both the bag and the resulting order.
+  const pricing = priceCart(items, config);
+  const { subtotal, shipping, total } = pricing;
   const isAboveMinimum = subtotal >= minOrderAmount;
   const remaining = minOrderAmount - subtotal;
 
@@ -116,9 +115,10 @@ export default function CartPage() {
                 )}
 
                 <AnimatePresence mode="popLayout">
-                  {items.map((item: any) => {
+                  {items.map((item: any, index: number) => {
                     const itemName = item.product?.name ?? item.productName ?? item.name ?? 'Product';
                     const itemPrice = item.product?.price ?? item.price;
+                    const line = pricing.lines[index];
                     const itemMrp = item.product?.mrp;
                     const itemImage = item.product?.images?.[0] ?? item.imageUrl ?? item.image;
 
@@ -190,10 +190,17 @@ export default function CartPage() {
 
                               {/* Price */}
                               <div className="text-right">
-                                <p className="font-bold text-gray-900">{formatCurrency((itemPrice || 0) * item.quantity)}</p>
+                                <p className="font-bold text-gray-900">{formatCurrency(line.lineTotal)}</p>
                                 {itemMrp && itemMrp > itemPrice && (
                                   <p className="text-xs text-gray-400 line-through">{formatCurrency(itemMrp * item.quantity)}</p>
                                 )}
+                                {/* Per-item breakup, so the total reconciles with the line items */}
+                                <p className="text-[11px] text-gray-400 mt-0.5">
+                                  {line.quantity} × {formatCurrency(line.unitPrice)} = {formatCurrency(line.lineSubtotal)}
+                                </p>
+                                <p className="text-[11px] text-gray-400">
+                                  GST {line.gstPercent}% {formatCurrency(line.gstAmount)}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -211,16 +218,14 @@ export default function CartPage() {
 
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm text-gray-500">
-                      <span>Subtotal ({items.length} items)</span>
-                      <span className="font-medium">{formatCurrency(subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-gray-500">
-                      <span>GST ({config?.gst_rate ?? 12}%)</span>
-                      <span className="font-medium">{formatCurrency(gst)}</span>
+                      <span>Items</span>
+                      <span className="font-medium">{items.length}</span>
                     </div>
                     <div className="flex justify-between text-sm text-gray-500">
                       <span>Delivery</span>
-                      <span className="font-medium text-emerald-600">Free</span>
+                      <span className="font-medium">
+                        {shipping > 0 ? formatCurrency(shipping) : <span className="text-emerald-600">Free</span>}
+                      </span>
                     </div>
                     <div className="border-t border-gray-100 pt-3 flex justify-between">
                       <span className="font-bold text-gray-900">Total</span>
