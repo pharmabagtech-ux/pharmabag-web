@@ -5,6 +5,7 @@ import { ShoppingCart, X, Plus, Minus, Trash2, Loader2, ShoppingBag } from 'luci
 import EmptyState from '@/components/shared/EmptyState';
 import { useCart, useUpdateCartItem, useRemoveCartItem, useSyncCart } from '@/hooks/useCart';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
+import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
 import { useRouter } from 'next/navigation';
@@ -50,6 +51,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
   const removeItem = useRemoveCartItem();
   const syncCart = useSyncCart();
   const { toast } = useToast();
+  const { canPurchase, reason } = usePurchaseAccess();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -223,8 +225,14 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                     <span>₹{total.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
+                {!canPurchase && (
+                  <p className="text-sm text-gray-600 bg-amber-50 border border-amber-200 rounded-2xl p-3 text-center">
+                    {reason}
+                  </p>
+                )}
                 <button
                   onClick={async () => {
+                    if (!canPurchase) return;
                     if (isAuthenticated) {
                       try {
                         await syncCart.mutateAsync();
@@ -237,8 +245,9 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                       window.dispatchEvent(new CustomEvent('open-login'));
                     }
                   }}
-                  disabled={syncCart.isPending}
-                  className="w-full py-4 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-2xl font-bold shadow-lg shadow-lime-200 transition-all block text-center disabled:opacity-50"
+                  disabled={syncCart.isPending || !canPurchase}
+                  title={!canPurchase ? reason : undefined}
+                  className="w-full py-4 bg-lime-300 hover:bg-lime-400 text-gray-900 rounded-2xl font-bold shadow-lg shadow-lime-200 transition-all block text-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-lime-300"
                 >
                   {syncCart.isPending ? 'Processing...' : 'Checkout Now'}
                 </button>

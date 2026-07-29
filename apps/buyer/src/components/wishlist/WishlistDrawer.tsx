@@ -5,14 +5,14 @@ import { Heart, X, Trash2, Loader2, ShoppingBag } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
 import { useWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useToast } from '@/components/shared/Toast';
-import { useAddToCart } from '@/hooks/useCart';
+import { useGuardedAddToCart } from '@/hooks/usePurchaseAccess';
 import { useAuth } from '@pharmabag/api-client';
 import { useRouter } from 'next/navigation';
 
 export default function WishlistDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { data: wishlist, isLoading, isError } = useWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
-  const addToCart = useAddToCart();
+  const addToCart = useGuardedAddToCart();
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const router = useRouter();

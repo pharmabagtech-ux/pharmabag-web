@@ -5,7 +5,8 @@ import { ChevronLeft, ChevronRight, Package, ShoppingBag, Star, Loader2, AlertCi
 import Navbar from '@/components/landing/Navbar';
 
 import { useProductById } from '@/hooks/useProducts';
-import { useAddToCart, useCart, useRemoveCartItem } from '@/hooks/useCart';
+import { useCart, useRemoveCartItem } from '@/hooks/useCart';
+import { useGuardedAddToCart } from '@/hooks/usePurchaseAccess';
 import { useProductReviews, useCreateReview } from '@/hooks/useReviews';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useToast } from '@/components/shared/Toast';
@@ -20,7 +21,7 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
   const productId = parseProductIdFromSlug(params.productSlug);
   const { data: productRaw, isLoading, isError } = useProductById(productId);
   const product = productRaw as any;
-  const addToCart = useAddToCart();
+  const addToCart = useGuardedAddToCart();
   const removeCartItem = useRemoveCartItem();
   const { data: cartData } = useCart();
   const { data: wishlistData } = useWishlist();

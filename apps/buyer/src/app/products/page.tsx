@@ -13,7 +13,8 @@ import { SkeletonCard } from '@/components/shared/LoaderSkeleton';
 import EmptyState from '@/components/shared/EmptyState';
 import { useProducts, useCategories, useManufacturers, useCities } from '@/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useAddToCart, useCart, useRemoveCartItem, useUpdateCartItem } from '@/hooks/useCart';
+import { useCart, useRemoveCartItem, useUpdateCartItem } from '@/hooks/useCart';
+import { useGuardedAddToCart } from '@/hooks/usePurchaseAccess';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useToast } from '@/components/shared/Toast';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, generateProductSlug } from '@pharmabag/utils';
@@ -69,7 +70,7 @@ function ProductsPageContent() {
     setPage(1);
   }, [searchParams]);
 
-  const addToCart = useAddToCart();
+  const addToCart = useGuardedAddToCart();
   const removeCartItem = useRemoveCartItem();
   const updateCartItem = useUpdateCartItem();
   const { toast } = useToast();
