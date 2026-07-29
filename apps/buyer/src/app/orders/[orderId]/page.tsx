@@ -11,6 +11,7 @@ import { useOrderById, useCancelOrder } from '@/hooks/useOrders';
 import { useClearCart } from '@/hooks/useCart';
 import AuthGuard from '@/components/shared/AuthGuard';
 import { generateProductSlug } from '@pharmabag/utils';
+import { priceLine } from '@/lib/pricing';
 
 const STATUS_ORDER = ['PLACED', 'ACCEPTED', 'PAYMENT_RECEIVED', 'READY_TO_SHIP', 'DISPATCHED_FROM_SELLER', 'RECEIVED_AT_WAREHOUSE', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
@@ -134,6 +135,14 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
   const steps = buildTimelineSteps(status, order);
   const orderItems = order.items ?? [];
   const totalAmount = order.totalAmount ?? order.total ?? order.amount ?? 0;
+
+  // The order total is authoritative (the server charged it). Showing each
+  // line's own GST is what makes it reconcile — previously the page showed a
+  // GST-inclusive total beside GST-exclusive item lines, so it looked wrong.
+  const itemLines = orderItems.map((item: any) => priceLine(item));
+  const linesTotal = itemLines.reduce((sum: number, l: any) => sum + l.lineTotal, 0);
+  // Shipping belongs to no line; derive it rather than guess, so the figures add up.
+  const shipping = Math.max(0, Math.round(totalAmount - linesTotal));
   const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
   const ship = order.shippingAddress || {};
   const flattenStr = (val: any) => {
@@ -211,9 +220,9 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
                 <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl md:rounded-[40px] border border-white/40 shadow-xl">
                   <h2 className="text-xl font-bold text-gray-900 mb-6">Order Items</h2>
                   <div className="space-y-4">
-                    {orderItems.map((item: any) => {
+                    {orderItems.map((item: any, index: number) => {
                       const itemName = item.product?.name ?? item.productName ?? item.name ?? 'Product';
-                      const itemTotal = item.totalPrice ?? item.total ?? (item.price || item.unitPrice || 0) * (item.quantity || 1);
+                      const line = itemLines[index];
                       
                       // Find best candidate for product image
                       const rawImage = 
@@ -245,19 +254,33 @@ export default function OrderIdPage({ params }: { params: { orderId: string } })
                               </div>
                               <div>
                                 <p className="font-bold text-gray-900 line-clamp-1">{itemName}</p>
+                                {/* Per-item breakup, so the total reconciles with the line items */}
                                 <div className="flex items-center gap-2 mt-0.5">
-                                  <span className="text-xs text-gray-400 font-bold">Qty: {item.quantity || 1}</span>
-                                  <span className="text-[10px] text-gray-300">•</span>
-                                  <span className="text-xs text-gray-400 font-bold">₹{(item.price || item.unitPrice || (itemTotal / (item.quantity || 1))).toLocaleString('en-IN')}/unit</span>
+                                  <span className="text-xs text-gray-400 font-bold">
+                                    {line.quantity} × ₹{line.unitPrice.toLocaleString('en-IN')} = ₹{line.lineSubtotal.toLocaleString('en-IN')}
+                                  </span>
                                 </div>
+                                <span className="text-xs text-gray-400 font-bold">
+                                  GST {line.gstPercent}% ₹{line.gstAmount.toLocaleString('en-IN')}
+                                </span>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="font-bold text-gray-900 tracking-tight">₹{itemTotal.toLocaleString('en-IN')}</p>
+                              <p className="font-bold text-gray-900 tracking-tight">₹{line.lineTotal.toLocaleString('en-IN')}</p>
                             </div>
                           </Link>
                       );
                     })}
+                    {shipping > 0 && (
+                      <div className="flex items-center justify-between pt-2">
+                        <span className="text-sm font-bold text-gray-500">Shipping</span>
+                        <span className="font-bold text-gray-900 tracking-tight">₹{shipping.toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                      <span className="font-bold text-gray-900">Total</span>
+                      <span className="text-lg font-bold text-gray-900 tracking-tight">₹{totalAmount.toLocaleString('en-IN')}</span>
+                    </div>
                   </div>
                 </div>
               )}

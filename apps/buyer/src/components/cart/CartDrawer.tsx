@@ -6,6 +6,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import { useCart, useUpdateCartItem, useRemoveCartItem, useSyncCart } from '@/hooks/useCart';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
+import { priceCart } from '@/lib/pricing';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
 import { useRouter } from 'next/navigation';
@@ -55,18 +56,13 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
-  const fallbackGst = config?.gst_rate ?? 12;
   const items = cart?.items ?? [];
-  
-  let subtotal = 0;
-  
-  items.forEach((item: any) => {
-    const price = item.product?.price ?? item.price ?? 0;
-    subtotal += price * item.quantity;
-  });
-  
-  subtotal = Math.round(subtotal);
-  const total = subtotal;
+
+  // Priced exactly as the server will at checkout — the bag used to omit GST
+  // entirely, so it quoted a lower total than the order the buyer received.
+  const pricing = priceCart(items, config);
+  const { shipping, total } = pricing;
+  const lineFor = (index: number) => pricing.lines[index];
 
   return (
     <AnimatePresence>
@@ -127,9 +123,9 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                   actionHref="/"
                 />
               ) : (
-                items.map((item: any) => {
+                items.map((item: any, index: number) => {
                   const itemName = item.product?.name ?? item.productName ?? item.name ?? 'Product';
-                  const itemPrice = item.product?.price ?? item.price ?? 0;
+                  const line = lineFor(index);
                   const itemImage = item.product?.images?.[0] || item.imageUrl || item.image || '/products/pharma_bottle.png';
                   
                   return (
@@ -203,7 +199,12 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                               <Plus className="w-3 h-3" />
                             </button>
                           </div>
-                          <p className="font-bold text-gray-900 tracking-tight">₹{Math.round(itemPrice * item.quantity).toLocaleString('en-IN')}</p>
+                          <p className="font-bold text-gray-900 tracking-tight">₹{line.lineTotal.toLocaleString('en-IN')}</p>
+                        </div>
+                        {/* Per-item breakup, so the total reconciles with the line items */}
+                        <div className="mt-1 flex justify-end gap-3 text-[11px] text-gray-400">
+                          <span>{line.quantity} × ₹{line.unitPrice.toLocaleString('en-IN')} = ₹{line.lineSubtotal.toLocaleString('en-IN')}</span>
+                          <span>GST {line.gstPercent}% ₹{line.gstAmount.toLocaleString('en-IN')}</span>
                         </div>
                       </div>
                     </motion.div>
@@ -216,10 +217,12 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
             {items.length > 0 && (
               <div className="p-4 sm:p-6 md:p-8 bg-gray-50/50 border-t border-gray-100 space-y-4 sm:space-y-6">
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm font-medium text-gray-500">
-                    <span>Subtotal</span>
-                    <span>₹{subtotal.toLocaleString('en-IN')}</span>
-                  </div>
+                  {shipping > 0 && (
+                    <div className="flex justify-between text-sm font-medium text-gray-500">
+                      <span>Shipping</span>
+                      <span>₹{shipping.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-gray-100">
                     <span>Total</span>
                     <span>₹{total.toLocaleString('en-IN')}</span>
