@@ -1,6 +1,7 @@
 "use client";
 import React, { useMemo } from "react";
 import { Select, Input, Badge } from "@/components/ui";
+import { BonusProductInput } from "./BonusProductInput";
 import type { DiscountFormDetails, DiscountType } from "@pharmabag/utils";
 import {
   calculatePricing,
@@ -111,11 +112,9 @@ export function DiscountSelector({ value, onChange, mrp, gstPercent, error }: Pr
 
         {showBonusName && (
           <div className="sm:col-span-2">
-            <Input
-              label="Bonus Product Name"
+            <BonusProductInput
               value={value.bonusProductName ?? ""}
-              onChange={(e) => onChange({ ...value, bonusProductName: e.target.value })}
-              placeholder="e.g Cetirizine 10mg"
+              onChange={(bonusProductName) => onChange({ ...value, bonusProductName })}
             />
           </div>
         )}
