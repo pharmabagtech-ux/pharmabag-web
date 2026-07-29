@@ -16,6 +16,7 @@ import { useState, useEffect } from 'react';
 import { CustomOrderModal } from '@/components/shared/CustomOrderModal';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, parseProductIdFromSlug } from '@pharmabag/utils';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
+import { formatSchemeTag } from '@/lib/offers';
 
 export default function ProductDetailPage({ params }: { params: { productSlug: string } }) {
   const productId = parseProductIdFromSlug(params.productSlug);
@@ -169,36 +170,11 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
   let computedPtr: number | undefined = (product as any).ptr;
   let discountDisplayTag = "";
 
-  // Rebuild exactly matching the required UI format (Matches the Card)
-  if ((product as any).discountType) {
-    const d = (product as any).discountMeta;
-    const type = (product as any).discountType;
-    if (type === "PTR_DISCOUNT" && (d?.discountPercent ?? 0) > 0) {
-      discountDisplayTag = `${d?.discountPercent}% Off`;
-    } else if (type === "SAME_PRODUCT_BONUS" && (d?.get ?? 0) > 0) {
-      discountDisplayTag = `(${d?.buy ?? 0}+${d?.get ?? 0}) Free`;
-    } else if (type === "PTR_PLUS_SAME_PRODUCT_BONUS") {
-      if ((d?.discountPercent ?? 0) > 0 && (d?.get ?? 0) > 0) {
-        discountDisplayTag = `${d?.discountPercent}% Off (${d?.buy ?? 0}+${d?.get ?? 0})`;
-      } else if ((d?.discountPercent ?? 0) > 0) {
-        discountDisplayTag = `${d?.discountPercent}% Off`;
-      } else if ((d?.get ?? 0) > 0) {
-        discountDisplayTag = `(${d?.buy ?? 0}+${d?.get ?? 0}) Free`;
-      }
-    } else if (type === "DIFFERENT_PRODUCT_BONUS" && (d?.get ?? 0) > 0) {
-      discountDisplayTag = `(${d?.buy ?? 0}+${d?.get ?? 0} ${d?.bonusProductName || ''}) Free`;
-    } else if (type === "PTR_PLUS_DIFFERENT_PRODUCT_BONUS") {
-      if ((d?.discountPercent ?? 0) > 0 && (d?.get ?? 0) > 0) {
-        discountDisplayTag = `${d?.discountPercent}% Off (${d?.buy ?? 0}+${d?.get ?? 0} ${d?.bonusProductName || ''})`;
-      } else if ((d?.discountPercent ?? 0) > 0) {
-        discountDisplayTag = `${d?.discountPercent}% Off`;
-      } else if ((d?.get ?? 0) > 0) {
-        discountDisplayTag = `(${d?.buy ?? 0}+${d?.get ?? 0} ${d?.bonusProductName || ''}) Free`;
-      }
-    } else if (type === "SPECIAL_PRICE") {
-      discountDisplayTag = `Special Price`;
-    }
-  }
+  // Same wording as the per-seller Marketplace Offers rows below — see lib/offers.ts
+  discountDisplayTag = formatSchemeTag(
+    (product as any).discountType,
+    (product as any).discountMeta,
+  );
 
   // Fallback to manual tag if still empty
   if (!discountDisplayTag) {
@@ -416,16 +392,24 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
                   const calculatedDiscount = mrp > l.price ? (((mrp - l.price) / mrp) * 100).toFixed(2) : null;
                   const discountPercent = l.discountMeta?.discountPercent || calculatedDiscount;
                   const discountTag = l.discountTag || (discountPercent ? `${discountPercent}% Off` : null);
+                  // This seller's actual scheme (PTR %, buy/get, bonus product).
+                  // It was always returned by the API but never shown — only the bare % badge was.
+                  const listingScheme = formatSchemeTag(l.discountType, l.discountMeta);
 
                   return (
                     <div key={l.id} className="relative group w-full">
                       <div className="grid grid-cols-6 lg:grid-cols-12 items-center gap-1 sm:gap-4 py-3 sm:py-6 px-1 sm:px-4 hover:bg-gray-50/50 transition-all rounded-xl sm:rounded-2xl border border-gray-100 sm:border-none">
                       
                       {/* 1. Offer */}
-                      <div className="lg:col-span-2 flex justify-center">
+                      <div className="lg:col-span-2 flex flex-col items-center gap-1">
                         <div className="bg-teal-600 text-white px-1 sm:px-3 py-1 rounded-md sm:rounded-full text-[8px] sm:text-[11px] font-black whitespace-nowrap shadow-sm">
                           {discountPercent ? `${Math.round(Number(discountPercent))}%` : '0%'}
                         </div>
+                        {listingScheme && (
+                          <p className="text-[8px] sm:text-[10px] font-bold text-teal-700 text-center leading-tight px-0.5">
+                            {listingScheme}
+                          </p>
+                        )}
                       </div>
 
                       {/* 2. MRP */}
