@@ -20,12 +20,14 @@ interface Props {
   error?: string;
 }
 
+// The three "different product" / bonus-only schemes were removed on request.
+// No listing used them: of 279 listings, all were PTR_DISCOUNT (197) or
+// PTR_PLUS_SAME_PRODUCT_BONUS (82), so nothing is left holding a value that can
+// no longer be selected. The pricing engine still understands them, so they can
+// be reinstated by restoring the lines below.
 const DISCOUNT_OPTIONS: { label: string; value: string }[] = [
   { label: "PTR Discount Only", value: "ptr_discount" },
   { label: "PTR Discount + Same Product Bonus", value: "ptr_discount_and_same_product_bonus" },
-  { label: "PTR Discount + Different Product Bonus", value: "ptr_discount_and_different_product_bonus" },
-  { label: "Same Product Bonus (Buy X Get Y)", value: "same_product_bonus" },
-  { label: "Different Product Bonus", value: "different_product_bonus" },
   { label: "Special / Fixed Price", value: "special_price" },
 ];
 
