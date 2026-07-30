@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2, ArrowLeft, Search } from "lucide-react";
@@ -16,6 +16,7 @@ import {
   productFormSchema,
   type ProductFormValues,
   calculatePricing,
+  formatCurrency,
   VALID_GST_PERCENTAGES,
 } from "@pharmabag/utils";
 import { useCreateSellerProduct, useUpdateSellerProduct, useSuggestionSearch } from "@/hooks/useSeller";
@@ -66,26 +67,50 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
   const watchMinMoq = watch("min_order_qty");
   const watchStock = watch("stock");
   const watchMaxMoq = watch("max_order_qty");
-  const lastMrpRef = useRef<number>(0);
+  const lastMinMoqRef = useRef<number>(0);
 
-  // Real-time synchronization when MRP changes
+  const MIN_ORDER_VALUE = 20000;
+  const watchDiscount = watch("discount_form_details");
+
+  // What the buyer actually pays per unit, after PTR, any scheme and GST.
+  // The order minimum must be met by this, not by the MRP: a 10% PTR discount
+  // on a 100 MRP leaves 71.90 payable, so 200 units is only 14,380 and falls
+  // short of the 20,000 minimum.
+  const finalPerUnitPrice = useMemo(() => {
+    if (!watchMrp || watchMrp <= 0) return 0;
+    if (!VALID_GST_PERCENTAGES.includes(watchGst as any)) return 0;
+    try {
+      return calculatePricing(watchMrp, watchGst, {
+        type: watchDiscount?.type,
+        discountPercent: watchDiscount?.discountPercent,
+        buy: watchDiscount?.buy,
+        get: watchDiscount?.get,
+        bonusProductName: watchDiscount?.bonusProductName,
+        specialPrice: watchDiscount?.specialPrice,
+      }).perPtrWithGst;
+    } catch {
+      return 0;
+    }
+  }, [watchMrp, watchGst, watchDiscount]);
+
+  // Fall back to MRP only while the final price cannot be computed yet.
+  const priceForMoq = finalPerUnitPrice > 0 ? finalPerUnitPrice : watchMrp;
+  const minRequiredMoq = priceForMoq > 0 ? Math.ceil(MIN_ORDER_VALUE / priceForMoq) : 0;
+  const minOrderValue = minRequiredMoq * priceForMoq;
+
+  // Re-sync whenever the required minimum moves - any change to MRP, GST,
+  // discount type, PTR percentage or scheme quantities.
   useEffect(() => {
-    if (!watchMrp || watchMrp <= 0) return;
+    if (minRequiredMoq <= 0) return;
 
-    const minRequiredMoq = Math.ceil(20000 / watchMrp);
-
-    // Only auto-sync values when MRP changes
-    const isPriceChanged = watchMrp !== lastMrpRef.current;
-
-    if (isPriceChanged) {
-      // Sync both to the minimum required for the new price
+    if (minRequiredMoq !== lastMinMoqRef.current) {
       setValue("min_order_qty", minRequiredMoq, { shouldDirty: true, shouldValidate: true });
       if (watchStock < minRequiredMoq) {
         setValue("stock", minRequiredMoq, { shouldDirty: true, shouldValidate: true });
       }
-      lastMrpRef.current = watchMrp;
+      lastMinMoqRef.current = minRequiredMoq;
     }
-  }, [watchMrp, setValue, watchStock]);
+  }, [minRequiredMoq, setValue, watchStock]);
 
   // Reset active index when suggestions change
   useEffect(() => {
@@ -400,7 +425,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
             <Input 
               label="Current Stock *" 
               type="number" 
-              min={watchMrp > 0 ? Math.ceil(20000 / watchMrp) : 1}
+              min={minRequiredMoq > 0 ? minRequiredMoq : 1}
               error={errors.stock?.message} 
               {...register("stock", { valueAsNumber: true })} 
             />
@@ -423,13 +448,13 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
               <Input 
                 label="Minimum Order Qty *" 
                 type="number" 
-                min={watchMrp > 0 ? Math.ceil(20000 / watchMrp) : 1}
+                min={minRequiredMoq > 0 ? minRequiredMoq : 1}
                 error={errors.min_order_qty?.message} 
                 {...register("min_order_qty", { valueAsNumber: true })} 
               />
-              {watchMrp > 0 && (
+              {minRequiredMoq > 0 && (
                 <p className="text-[10px] text-muted-foreground px-1">
-                  Min. {Math.ceil(20000 / watchMrp)} units (₹20k min)
+                  Min. {minRequiredMoq} units ({formatCurrency(minOrderValue)} order value)
                 </p>
               )}
             </div>
