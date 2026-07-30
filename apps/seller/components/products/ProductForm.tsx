@@ -19,10 +19,11 @@ import {
   VALID_GST_PERCENTAGES,
 } from "@pharmabag/utils";
 import { useCreateSellerProduct, useUpdateSellerProduct, useSuggestionSearch } from "@/hooks/useSeller";
+import { CompetitionPanel } from "./CompetitionPanel";
 
 type FormValues = ProductFormValues;
 
-export function ProductForm({ defaultValues, productId }: { defaultValues?: Partial<FormValues>; productId?: string }) {
+export function ProductForm({ defaultValues, productId, masterProductId }: { defaultValues?: Partial<FormValues>; productId?: string; masterProductId?: string | null }) {
   const router = useRouter();
   const createProduct = useCreateSellerProduct();
   const updateProduct = useUpdateSellerProduct();
@@ -32,6 +33,8 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedMasterId, setSelectedMasterId] = useState<string | null>(null);
+  // Adding: whatever was picked from Quick Search. Editing: the listing's own master.
+  const competitionMasterId = selectedMasterId ?? masterProductId ?? null;
   const [activeIndex, setActiveIndex] = useState(-1);
   const suggestionRef = useRef<HTMLDivElement>(null);
   const { data: suggestions = [] } = useSuggestionSearch(searchQuery, "master");
@@ -331,6 +334,13 @@ export function ProductForm({ defaultValues, productId }: { defaultValues?: Part
             <p className="text-xs text-muted-foreground">Select from suggestions to auto-fill product details, or enter manually below.</p>
           </div>
         )}
+
+        {/* What other sellers already charge for this product, so the price
+            below can be set against the market rather than blind. */}
+        <CompetitionPanel
+          masterProductId={competitionMasterId}
+          currentProductId={productId}
+        />
 
         {/* Basic Info */}
         <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[45] transition-opacity duration-300">

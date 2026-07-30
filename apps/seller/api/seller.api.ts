@@ -58,6 +58,18 @@ export async function updateSellerProduct(productId: string, input: Partial<Prod
   };
 }
 
+/**
+ * Fetch a MASTER product with every seller listing on it.
+ *
+ * Used by the competition panel so a seller can see what others already offer
+ * for the same product before setting their own price. This is the same public
+ * endpoint the buyer storefront reads, so it needs no special permission.
+ */
+export async function getMasterProductWithListings(masterProductId: string) {
+  const { data } = await apiClient.get<{ data: any }>(`/products/${masterProductId}`);
+  return data.data;
+}
+
 export async function getSellerProductById(productId: string) {
   const { data } = await apiClient.get<{ data: Product }>(`/products/${productId}`);
   const product = data.data;

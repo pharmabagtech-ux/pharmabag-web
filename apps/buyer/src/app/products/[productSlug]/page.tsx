@@ -16,7 +16,7 @@ import { useState, useEffect } from 'react';
 import { CustomOrderModal } from '@/components/shared/CustomOrderModal';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, parseProductIdFromSlug } from '@pharmabag/utils';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
-import { formatSchemeTag } from '@/lib/offers';
+import { formatSchemeTag } from '@pharmabag/utils';
 
 export default function ProductDetailPage({ params }: { params: { productSlug: string } }) {
   const productId = parseProductIdFromSlug(params.productSlug);
@@ -172,7 +172,8 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
   let computedPtr: number | undefined = (product as any).ptr;
   let discountDisplayTag = "";
 
-  // Same wording as the per-seller Marketplace Offers rows below — see lib/offers.ts
+  // Same wording as the per-seller Marketplace Offers rows below and the
+  // seller portal's competition panel — see packages/utils/src/offers.ts
   discountDisplayTag = formatSchemeTag(
     (product as any).discountType,
     (product as any).discountMeta,

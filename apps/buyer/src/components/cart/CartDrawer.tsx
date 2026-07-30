@@ -7,7 +7,7 @@ import { useCart, useUpdateCartItem, useRemoveCartItem, useSyncCart } from '@/ho
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
 import { priceCart } from '@/lib/pricing';
-import { formatSchemeTag } from '@/lib/offers';
+import { formatSchemeTag } from '@pharmabag/utils';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
 import { useRouter } from 'next/navigation';
