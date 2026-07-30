@@ -51,7 +51,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
       sub_categories: [],
       stock: 0,
       min_order_qty: 1,
-      max_order_qty: 100,
+      max_order_qty: 100000,
       expire_date: (() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; })(),
       gst_percent: 12,
       image_list: [],
