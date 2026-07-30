@@ -167,7 +167,14 @@ export default function AdminSettlementsPage() {
       setModalOpen(false);
     } catch (err: any) {
       console.error("[Settlement] Finalize error:", err);
-      toast.error(err.message || "Failed to complete settlement transaction", { id: loadingId });
+      // Prefer the server's explanation. err.message on an axios error is only
+      // "Request failed with status code 400", which told the admin nothing —
+      // the real reason ("Settlement is already paid") is in the response body.
+      // The plain err.message is kept last so locally thrown errors still show.
+      toast.error(
+        err?.response?.data?.message || err?.message || "Failed to complete settlement transaction",
+        { id: loadingId },
+      );
     }
   };
 
