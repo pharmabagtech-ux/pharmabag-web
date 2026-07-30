@@ -411,8 +411,29 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
           </div>
         </div>
 
-        {/* Pricing & Stock */}
+        {/* Discounts & Pricing Engine */}
         <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[43] transition-opacity duration-300">
+          <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Discount & Bonuses</h2>
+          <Controller
+            control={control}
+            name="discount_form_details"
+            render={({ field }: any) => (
+              <DiscountSelector
+                value={field.value}
+                onChange={field.onChange}
+                mrp={watchMrp}
+                gstPercent={watchGst}
+                error={(errors.discount_form_details as any)?.message || (errors.discount_form_details as any)?.discountPercent?.message || (errors.discount_form_details as any)?.buy?.message || (errors.discount_form_details as any)?.bonusProductName?.message || (errors.discount_form_details as any)?.specialPrice?.message}
+              />
+            )}
+          />
+        </div>
+
+
+
+
+        {/* Pricing & Stock */}
+        <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[42] transition-opacity duration-300">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Pricing & Stock</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input 
@@ -480,27 +501,6 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
             />
           </div>
         </div>
-
-        {/* Discounts & Pricing Engine */}
-        <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[42] transition-opacity duration-300">
-          <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Discount & Bonuses</h2>
-          <Controller
-            control={control}
-            name="discount_form_details"
-            render={({ field }: any) => (
-              <DiscountSelector
-                value={field.value}
-                onChange={field.onChange}
-                mrp={watchMrp}
-                gstPercent={watchGst}
-                error={(errors.discount_form_details as any)?.message || (errors.discount_form_details as any)?.discountPercent?.message || (errors.discount_form_details as any)?.buy?.message || (errors.discount_form_details as any)?.bonusProductName?.message || (errors.discount_form_details as any)?.specialPrice?.message}
-              />
-            )}
-          />
-        </div>
-
-
-
 
         {/* Submit */}
         <div className="flex justify-end gap-3 sticky bottom-6 z-[100] p-4 bg-background/80 backdrop-blur-xl border border-border rounded-2xl shadow-lg">
