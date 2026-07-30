@@ -145,10 +145,15 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
     if (suggestion.chemicalCombination) {
       setValue("chemical_combination", suggestion.chemicalCombination, { shouldDirty: true });
     }
-    if (suggestion.gstPercent !== undefined) {
-      setValue("gst_percent", suggestion.gstPercent, { shouldDirty: true });
+    // The catalogue returns null for both of these on most master products, and
+    // `!== undefined` let null through: GST became null, the select fell back to
+    // displaying "0%", and the pricing preview silently stopped rendering,
+    // because null is not one of the valid slabs it checks for.
+    // Only overwrite the form when the suggestion carries a usable value.
+    if (VALID_GST_PERCENTAGES.includes(suggestion.gstPercent as any)) {
+      setValue("gst_percent", suggestion.gstPercent as number, { shouldDirty: true });
     }
-    if (suggestion.mrp !== undefined) {
+    if (typeof suggestion.mrp === "number" && suggestion.mrp > 0) {
       setValue("product_price", suggestion.mrp, { shouldDirty: true });
     }
     if (suggestion.categoryId) {
