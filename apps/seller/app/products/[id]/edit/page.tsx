@@ -28,8 +28,9 @@ export default function EditProductPage() {
               <Button onClick={() => router.push("/products")} leftIcon={<ArrowLeft className="h-4 w-4" />}>Go back to Products</Button>
             </div>
           ) : (
-            <ProductForm 
-              productId={product.id} 
+            <ProductForm
+              productId={product.id}
+              masterProductId={(product as any).masterProductId}
               defaultValues={{
                 sku: product.sku || "",
                 product_name: product.name,

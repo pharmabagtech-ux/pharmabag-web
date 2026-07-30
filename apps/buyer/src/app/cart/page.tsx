@@ -14,7 +14,7 @@ import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { useToast } from '@/components/shared/Toast';
 import { formatCurrency, generateProductSlug } from '@pharmabag/utils';
 import { priceCart } from '@/lib/pricing';
-import { formatSchemeTag } from '@/lib/offers';
+import { formatSchemeTag } from '@pharmabag/utils';
 
 export default function CartPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);

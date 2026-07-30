@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sendOtp, verifyOtp, getCurrentUser } from "@/api/auth.api";
 import {
   getSellerDashboard, getSellerProducts, getSellerOrders, getSellerSettlements,
-  getSellerSettlementSummary, requestSellerPayout, createSellerProduct, updateSellerProduct, deleteSellerProduct,
+  getSellerSettlementSummary, getMasterProductWithListings, requestSellerPayout, createSellerProduct, updateSellerProduct, deleteSellerProduct,
   updateSellerOrderStatus, getSellerProfile, updateSellerProfile, getSellerProductById,
   getCategories, toggleVacationMode, getSellerTickets, getSellerTicketById, createSellerTicket, addTicketMessage,
   getSellerOrderById, acceptSellerOrder, rejectSellerOrder, uploadOrderInvoice,
@@ -305,5 +305,16 @@ export function useUploadKycDocument() {
 export function useUploadDrugLicense() {
   return useMutation({
     mutationFn: (formData: FormData) => uploadDrugLicense(formData),
+  });
+}
+
+/** Listings from other sellers for the same master product (competition panel). */
+export function useMasterProductWithListings(masterProductId?: string | null) {
+  return useQuery({
+    queryKey: ["master-product-listings", masterProductId],
+    queryFn: () => getMasterProductWithListings(masterProductId as string),
+    enabled: !!masterProductId,
+    staleTime: 60_000,
+    retry: 1,
   });
 }

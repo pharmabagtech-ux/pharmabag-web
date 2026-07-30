@@ -1,11 +1,12 @@
 /**
- * Formats a seller's discount scheme into the short tag the storefront shows
+ * Formats a seller's discount scheme into the short tag shown across the apps
  * (e.g. "10% Off (20+2 3-Nite Vag Capsule)").
  *
- * This logic already existed inline on the product detail page but only ever
- * ran for the top-level product, so the Marketplace Offers rows — which are
- * per-seller listings, each with its own scheme — showed nothing but a bare
- * percentage. Extracted here so both use exactly the same wording.
+ * Shared by the buyer storefront's Marketplace Offers rows and the seller
+ * portal's competition panel, so a scheme reads identically wherever it
+ * appears. Keeping one implementation matters: the wording previously existed
+ * only for the top-level product and the per-seller rows showed a bare
+ * percentage instead.
  */
 
 export type DiscountMeta = {
