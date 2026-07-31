@@ -5,55 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import PremiumProductCard from '@/components/shared/PremiumProductCard';
 import { getFeaturedProducts } from '@pharmabag/api-client';
-import { calculatePricing, formatSchemeTag, VALID_GST_PERCENTAGES } from '@pharmabag/utils';
+import { formatSchemeTag } from '@pharmabag/utils';
 import { useCart, useAddToCart, useUpdateCartItem, useRemoveCartItem } from '@/hooks/useCart';
+import { listingNetRate } from '@/lib/pricing';
 import { useToast } from '@/components/shared/Toast';
 
 interface ProductCarouselProps {
   reverse?: boolean;
   slot?: 'HOMEPAGE_CAROUSEL' | 'LOGIN_CAROUSEL';
-}
-
-const BACKEND_TO_FORM_TYPE: Record<string, string> = {
-  PTR_DISCOUNT: 'ptr_discount',
-  SAME_PRODUCT_BONUS: 'same_product_bonus',
-  PTR_PLUS_SAME_PRODUCT_BONUS: 'ptr_discount_and_same_product_bonus',
-  DIFFERENT_PRODUCT_BONUS: 'different_product_bonus',
-  PTR_PLUS_DIFFERENT_PRODUCT_BONUS: 'ptr_discount_and_different_product_bonus',
-  SPECIAL_PRICE: 'special_price',
-};
-
-/**
- * The net rate the card shows, GST-exclusive, matching what the API charges:
- * PTR, less the discount, less the share of the order that arrives free.
- *
- * The featured endpoint returns the raw listing and no computed price, unlike
- * the storefront grid, so it is worked out here. Falls back to the MRP when it
- * cannot be computed, which is what every other surface does.
- */
-function netRate(product: any): number {
-  const mrp = Number(product?.mrp) || 0;
-  const gst = Number(product?.gstPercent);
-  if (!mrp) return 0;
-  if (!VALID_GST_PERCENTAGES.includes(gst as any)) return mrp;
-
-  try {
-    const meta = product?.discountMeta ?? {};
-    const p = calculatePricing(mrp, gst as any, {
-      type: (BACKEND_TO_FORM_TYPE[product?.discountType ?? ''] ?? 'ptr_discount') as any,
-      discountPercent: meta?.discountPercent,
-      buy: meta?.buy,
-      get: meta?.get,
-      bonusProductName: meta?.bonusProductName,
-      specialPrice: meta?.specialPrice,
-    });
-    const buy = Number(meta?.buy) || 0;
-    const get = Number(meta?.get) || 0;
-    const bonusFraction = buy > 0 && get > 0 ? get / (buy + get) : 0;
-    return Math.round(p.finalPtr * (1 - bonusFraction) * 100) / 100;
-  } catch {
-    return mrp;
-  }
 }
 
 export default function ProductCarousel({ reverse = false, slot = 'HOMEPAGE_CAROUSEL' }: ProductCarouselProps) {
@@ -104,7 +63,7 @@ export default function ProductCarousel({ reverse = false, slot = 'HOMEPAGE_CARO
           {scrollProducts.map((product, index) => {
             const image = product.images?.[0]?.url || product.image || '/products/pharma_bottle.png';
             const moq = product.moq || product.minimumOrderQuantity || 1;
-            const price = netRate(product);
+            const price = listingNetRate(product);
             const targetId = product.id;
             const cartItemObj = cartData?.items?.find((i: any) => i.productId === targetId);
 
