@@ -12,6 +12,8 @@
  * gstPercent, then free shipping above a threshold.
  */
 
+import { calculatePricing, formatSchemeTag, VALID_GST_PERCENTAGES } from '@pharmabag/utils';
+
 export const PRICING_DEFAULTS = {
   gstPercentFallback: 12,
   shippingThreshold: 5000,
@@ -94,5 +96,86 @@ export function priceCart(items: any[], config?: PricingConfig): PricedCart {
     gstAmount,
     shipping,
     total: subtotal + gstAmount + shipping,
+  };
+}
+
+/**
+ * The same figures the seller sees in their Pricing Preview, for the buyer:
+ * PTR, the discount off it, the scheme, GST and the rate actually charged.
+ *
+ * The money is anchored to `line`, which comes from the server's own unit
+ * price, so the breakdown can never disagree with the total. Only the
+ * derivation above the net rate is recomputed here, and any of it that cannot
+ * be worked out (a catalogue item with no seller, so no MRP and no GST slab)
+ * is simply left out rather than guessed.
+ */
+export type PriceExplanation = {
+  mrp: number | null;
+  ptr: number | null;
+  discountPercent: number;
+  discountValue: number;
+  finalPtr: number | null;
+  scheme: string;
+  /** ex-GST rate the buyer is charged per unit — free goods already applied */
+  netRate: number;
+  quantity: number;
+  lineSubtotal: number;
+  gstPercent: number;
+  gstAmount: number;
+  lineTotal: number;
+};
+
+const BACKEND_TO_FORM_TYPE: Record<string, string> = {
+  PTR_DISCOUNT: 'ptr_discount',
+  SAME_PRODUCT_BONUS: 'same_product_bonus',
+  PTR_PLUS_SAME_PRODUCT_BONUS: 'ptr_discount_and_same_product_bonus',
+  DIFFERENT_PRODUCT_BONUS: 'different_product_bonus',
+  PTR_PLUS_DIFFERENT_PRODUCT_BONUS: 'ptr_discount_and_different_product_bonus',
+  SPECIAL_PRICE: 'special_price',
+};
+
+export function explainLine(item: any, line: PricedLine): PriceExplanation {
+  const mrpRaw = item?.mrp ?? item?.product?.mrp ?? null;
+  const mrp = typeof mrpRaw === 'number' && mrpRaw > 0 ? mrpRaw : null;
+  const discountType: string | undefined = item?.discountType ?? item?.product?.discountType;
+  const meta = item?.discountMeta ?? item?.product?.discountMeta ?? {};
+
+  let ptr: number | null = null;
+  let finalPtr: number | null = null;
+  let discountPercent = 0;
+  let discountValue = 0;
+
+  if (mrp !== null && VALID_GST_PERCENTAGES.includes(line.gstPercent as any)) {
+    try {
+      const p = calculatePricing(mrp, line.gstPercent as any, {
+        type: (BACKEND_TO_FORM_TYPE[discountType ?? ''] ?? 'ptr_discount') as any,
+        discountPercent: meta?.discountPercent,
+        buy: meta?.buy,
+        get: meta?.get,
+        bonusProductName: meta?.bonusProductName,
+        specialPrice: meta?.specialPrice,
+      });
+      ptr = p.ptr;
+      finalPtr = p.finalPtr;
+      discountPercent = p.discountPercent;
+      discountValue = p.discountValue;
+    } catch {
+      // an unmapped slab must not take the bag down; the rows just do not show
+    }
+  }
+
+  return {
+    mrp,
+    ptr,
+    discountPercent,
+    discountValue,
+    finalPtr,
+    scheme: formatSchemeTag(discountType, meta),
+    netRate: line.unitPrice,
+    quantity: line.quantity,
+    lineSubtotal: line.lineSubtotal,
+    gstPercent: line.gstPercent,
+    gstAmount: line.gstAmount,
+    lineTotal: line.lineTotal,
   };
 }
