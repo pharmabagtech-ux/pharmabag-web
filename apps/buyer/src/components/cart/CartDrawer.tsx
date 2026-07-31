@@ -6,8 +6,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import { useCart, useUpdateCartItem, useRemoveCartItem, useSyncCart } from '@/hooks/useCart';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
-import { priceCart } from '@/lib/pricing';
-import { formatSchemeTag } from '@pharmabag/utils';
+import { priceCart, explainLine } from '@/lib/pricing';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
 import { useRouter } from 'next/navigation';
@@ -43,6 +42,15 @@ function QuantityInput({ value, max, min, onUpdate, disabled }: { value: number;
       onKeyDown={(e) => e.key === 'Enter' && (e.target as any).blur()}
       className="w-12 bg-white border border-gray-100 rounded-lg text-sm font-black text-gray-900 text-center outline-none hover:border-gray-300 focus:border-lime-500 focus:ring-1 focus:ring-lime-100 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
     />
+  );
+}
+
+function BreakupRow({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <span className="text-gray-500">{label}</span>
+      <span className={tone ?? 'text-gray-700'}>{value}</span>
+    </div>
   );
 }
 
@@ -202,29 +210,44 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                           </div>
                           <p className="font-bold text-gray-900 tracking-tight">₹{line.lineTotal.toLocaleString('en-IN')}</p>
                         </div>
-                        {/* Per-item breakup, so the total reconciles with the line items */}
-                        <div className="mt-1 flex justify-end gap-3 text-[11px] text-gray-400">
-                          <span>{line.quantity} × ₹{line.unitPrice.toLocaleString('en-IN')} = ₹{line.lineSubtotal.toLocaleString('en-IN')}</span>
-                          <span>GST {line.gstPercent}% ₹{line.gstAmount.toLocaleString('en-IN')}</span>
-                        </div>
+                        {/* How the price was reached - the same figures the
+                            seller sees in their pricing preview. Each row only
+                            appears when the value behind it exists. */}
                         {(() => {
-                          const scheme = formatSchemeTag(item.discountType, item.discountMeta);
-                          const itemMrp = item.mrp ?? item.product?.mrp;
-                          const saving = itemMrp && itemMrp > line.unitPrice
-                            ? Math.round((itemMrp - line.unitPrice) * line.quantity)
+                          const x = explainLine(item, line);
+                          const money = (n: number) =>
+                            `₹${n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                          const saving = x.mrp && x.mrp > x.netRate
+                            ? Math.round((x.mrp - x.netRate) * x.quantity)
                             : 0;
-                          if (!scheme && !saving) return null;
                           return (
-                            <div className="mt-1 flex justify-end items-center gap-2 flex-wrap">
-                              {scheme && (
-                                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-full">
-                                  {scheme}
-                                </span>
+                            <div className="mt-2 rounded-lg bg-gray-50 px-2.5 py-2 text-[11px] space-y-1">
+                              {x.mrp !== null && <BreakupRow label="MRP" value={money(x.mrp)} />}
+                              {x.ptr !== null && <BreakupRow label="PTR" value={money(x.ptr)} />}
+                              {x.discountPercent > 0 && (
+                                <BreakupRow
+                                  label={`Discount (${x.discountPercent}%)`}
+                                  value={`-${money(x.discountValue)}`}
+                                  tone="text-emerald-600 font-semibold"
+                                />
                               )}
+                              {x.finalPtr !== null && x.discountPercent > 0 && (
+                                <BreakupRow label="Final PTR" value={money(x.finalPtr)} />
+                              )}
+                              {x.scheme && (
+                                <BreakupRow label="Scheme" value={x.scheme} tone="text-teal-700 font-semibold" />
+                              )}
+                              <BreakupRow label="Net Rate / unit" value={money(x.netRate)} tone="text-gray-900 font-semibold" />
+                              <BreakupRow label={`${x.quantity} × ${money(x.netRate)}`} value={money(x.lineSubtotal)} />
+                              <BreakupRow label={`GST (${x.gstPercent}%)`} value={money(x.gstAmount)} />
+                              <div className="flex justify-between gap-3 border-t border-gray-200 pt-1 mt-1">
+                                <span className="font-semibold text-gray-800">Buyer Pays</span>
+                                <span className="font-bold text-gray-900">{money(x.lineTotal)}</span>
+                              </div>
                               {saving > 0 && (
-                                <span className="text-[10px] font-bold text-emerald-600">
-                                  Saved ₹{saving.toLocaleString('en-IN')} vs MRP ₹{itemMrp.toLocaleString('en-IN')}
-                                </span>
+                                <p className="text-[10px] font-bold text-emerald-600 pt-0.5 text-right">
+                                  You save ₹{saving.toLocaleString('en-IN')} vs MRP
+                                </p>
                               )}
                             </div>
                           );
