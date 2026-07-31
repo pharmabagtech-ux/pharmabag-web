@@ -99,12 +99,24 @@ const config: Config = {
           from: { height: "var(--radix-collapsible-content-height)" },
           to: { height: "0" },
         },
+        // The featured strip scrolls three copies of the list, so one third of
+        // the track is a seamless loop.
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-33.3333%)" },
+        },
+        "marquee-reverse": {
+          from: { transform: "translateX(-33.3333%)" },
+          to: { transform: "translateX(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "collapsible-down": "collapsible-down 0.2s ease-out",
         "collapsible-up": "collapsible-up 0.2s ease-out",
+        marquee: "marquee 60s linear infinite",
+        "marquee-reverse": "marquee-reverse 60s linear infinite",
       },
     },
   },
