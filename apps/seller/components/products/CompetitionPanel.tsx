@@ -73,22 +73,22 @@ export function CompetitionPanel({
       </div>
 
       <div className="divide-y divide-border/40">
-        {others.map((l) => {
+        {others.map((l, index) => {
           const scheme = formatSchemeTag(l.discountType, l.discountMeta);
           const mrp = Number(l.mrp) || 0;
           const net = Number(l.price) || 0;
           const isLowest = lowest !== null && net === lowest;
-          const seller = l.seller || {};
 
           return (
             <div key={l.id} className="px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-2 items-center">
               <div className="col-span-2 sm:col-span-1 min-w-0">
+                {/* Competitors are shown as Seller 1, Seller 2 and so on. The
+                    prices are the point of this panel; who is charging them is
+                    not a seller's business, and the trading name and city
+                    together identify a rival outright. */}
                 <p className="text-sm font-semibold text-foreground truncate">
-                  {seller.companyName || "Seller"}
+                  Seller {index + 1}
                 </p>
-                {seller.city && (
-                  <p className="text-xs text-muted-foreground truncate">{seller.city}</p>
-                )}
               </div>
 
               <div>
