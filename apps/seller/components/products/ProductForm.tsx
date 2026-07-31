@@ -34,8 +34,9 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedMasterId, setSelectedMasterId] = useState<string | null>(null);
+  // The catalogue entry this listing is tied to.
   // Adding: whatever was picked from Quick Search. Editing: the listing's own master.
-  const competitionMasterId = selectedMasterId ?? masterProductId ?? null;
+  const linkedMasterId = selectedMasterId ?? masterProductId ?? null;
   const [activeIndex, setActiveIndex] = useState(-1);
   const suggestionRef = useRef<HTMLDivElement>(null);
   const { data: suggestions = [] } = useSuggestionSearch(searchQuery, "master");
@@ -368,7 +369,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         {/* What other sellers already charge for this product, so the price
             below can be set against the market rather than blind. */}
         <CompetitionPanel
-          masterProductId={competitionMasterId}
+          masterProductId={linkedMasterId}
           currentProductId={productId}
         />
 
@@ -376,11 +377,11 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[45] transition-opacity duration-300">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="SKU (Optional)" error={errors.sku?.message} {...register("sku")} disabled={!!selectedMasterId} />
-            <Input label="Product Name *" error={errors.product_name?.message} {...register("product_name")} disabled={!!selectedMasterId} />
-            <Input label="Company / Manufacturer *" error={errors.company_name?.message} {...register("company_name")} disabled={!!selectedMasterId} />
+            <Input label="SKU (Optional)" error={errors.sku?.message} {...register("sku")} disabled={!!linkedMasterId} />
+            <Input label="Product Name *" error={errors.product_name?.message} {...register("product_name")} disabled={!!linkedMasterId} />
+            <Input label="Company / Manufacturer *" error={errors.company_name?.message} {...register("company_name")} disabled={!!linkedMasterId} />
             <div className="md:col-span-1">
-              <Textarea label="Chemical Combination" error={errors.chemical_combination?.message} {...register("chemical_combination")} disabled={!!selectedMasterId} />
+              <Textarea label="Chemical Combination" error={errors.chemical_combination?.message} {...register("chemical_combination")} disabled={!!linkedMasterId} />
             </div>
           </div>
         </div>
