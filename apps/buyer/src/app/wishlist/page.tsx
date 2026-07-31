@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ShoppingBag, Trash2, Package, ArrowRight } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Heart } from 'lucide-react';
 import Navbar from '@/components/landing/Navbar';
 import LoginModal from '@/components/landing/LoginModal';
 import AuthGuard from '@/components/shared/AuthGuard';
@@ -13,7 +12,9 @@ import { SkeletonCard } from '@/components/shared/LoaderSkeleton';
 import { useWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useGuardedAddToCart } from '@/hooks/usePurchaseAccess';
 import { useToast } from '@/components/shared/Toast';
-import { formatCurrency, generateProductSlug } from '@pharmabag/utils';
+import { formatSchemeTag, generateProductSlug } from '@pharmabag/utils';
+import PremiumProductCard from '@/components/shared/PremiumProductCard';
+import { listingNetRate } from '@/lib/pricing';
 
 export default function WishlistPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -21,6 +22,7 @@ export default function WishlistPage() {
   const removeFromWishlist = useRemoveFromWishlist();
   const addToCart = useGuardedAddToCart();
   const { toast } = useToast();
+  const router = useRouter();
 
   const items = wishlist?.items ?? [];
 
@@ -31,16 +33,26 @@ export default function WishlistPage() {
     });
   };
 
-  const handleAddToCart = (item: any) => {
+  const handleAddToCart = (item: any, quantity?: number) => {
     const product = item.product || {};
+    const image =
+      (typeof product.images?.[0] === 'string'
+        ? product.images[0]
+        : (product.images?.[0] as any)?.url) || '/products/pharma_bottle.png';
     addToCart.mutate({
       productId: item.productId,
-      quantity: product.moq || product.minimumOrderQuantity || 1,
+      quantity: quantity ?? (product.moq || product.minimumOrderQuantity || 1),
       productName: product.name,
-      price: product.price || product.mrp || 0,
+      price: product.price || listingNetRate(product) || product.mrp || 0,
       mrp: product.mrp || 0,
       gstPercent: product.gstPercent,
-      imageUrl: product.images?.[0]
+      // Carried through so the bag can show the full price breakup for
+      // anything saved and then added from here.
+      discountType: product.discountType,
+      discountMeta: product.discountMeta,
+      stock: product.stock,
+      moq: product.moq || product.minimumOrderQuantity || 1,
+      imageUrl: image,
     }, {
       onError: () => toast('Failed to add to bag', 'error'),
     });
@@ -88,8 +100,19 @@ export default function WishlistPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence mode="popLayout">
-                {items.map((item) => {
-                  const product = item.product;
+                {items.map((item: any) => {
+                  const product = item.product ?? {};
+                  const image =
+                    (typeof product.images?.[0] === 'string'
+                      ? product.images[0]
+                      : (product.images?.[0] as any)?.url) || '/products/pharma_bottle.png';
+                  const moq = product.moq || product.minimumOrderQuantity || 1;
+                  // Saved items carry the raw listing, so the rate is derived
+                  // the same way the featured strip derives it.
+                  const price = product.price || listingNetRate(product) || product.mrp || 0;
+                  const openProduct = () =>
+                    router.push(`/products/${generateProductSlug(product?.name || 'Product', item.productId)}`);
+
                   return (
                     <motion.div
                       key={item.id}
@@ -97,71 +120,32 @@ export default function WishlistPage() {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.9 }}
-                      className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden group"
                     >
-                      {/* Product Image */}
-                      <Link href={`/products/${generateProductSlug(product?.name || 'Product', item.productId)}`} className="block relative h-48 bg-gray-50 overflow-hidden">
-                        {product?.images?.[0] ? (
-                          <Image
-                            src={(typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as any)?.url) || '/products/pharma_bottle.png'}
-                            alt={product.name}
-                            fill
-                            className="object-contain group-hover:scale-105 transition-transform duration-300"
-                            sizes="(max-width: 768px) 50vw, 25vw"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-12 h-12 text-gray-300" />
-                          </div>
-                        )}
-                      </Link>
-
-                      {/* Product Info */}
-                      <div className="p-5 space-y-3">
-                        <Link href={`/products/${generateProductSlug(product?.name || 'Product', item.productId)}`}>
-                          <h3 className="font-semibold text-gray-900 line-clamp-2 hover:text-emerald-600 transition-colors">
-                            {product?.name ?? 'Product'}
-                          </h3>
-                        </Link>
-
-                        {product?.manufacturer && (
-                          <p className="text-xs text-gray-500">{product.manufacturer}</p>
-                        )}
-
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-lg font-bold text-gray-900">
-                            {formatCurrency(product?.price ?? 0)}
-                          </span>
-                          {product?.mrp && product.mrp > (product.price ?? 0) && (
-                            <span className="text-sm text-gray-400 line-through">
-                              {formatCurrency(product.mrp)}
-                            </span>
-                          )}
-                        </div>
-
-                        {product?.stock !== undefined && product.stock <= 0 && (
-                          <p className="text-xs text-red-500 font-medium">Out of stock</p>
-                        )}
-
-                        {/* Actions */}
-                        <div className="flex gap-2 pt-2">
-                          <button
-                            onClick={() => handleAddToCart(item)}
-                            disabled={addToCart.isPending || (product?.stock !== undefined && product.stock <= 0)}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 text-white text-sm font-semibold rounded-xl hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                          >
-                            <ShoppingBag className="w-4 h-4" />
-                            Add to Bag
-                          </button>
-                          <button
-                            onClick={() => handleRemove(item.productId)}
-                            disabled={removeFromWishlist.isPending}
-                            className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
+                      <PremiumProductCard
+                        name={product?.name ?? 'Product'}
+                        price={price}
+                        mrp={product.mrp}
+                        image={image}
+                        moq={moq}
+                        stock={product.stock ?? 999}
+                        discountTag={formatSchemeTag(product.discountType, product.discountMeta)}
+                        productId={item.productId}
+                        // A saved item is a seller's listing, so it always has a
+                        // seller; without this every figure renders as N/A.
+                        product={{ ...product, sellerCount: 1, bestListingId: item.productId }}
+                        // The ribbon is already filled here, and clearing it is
+                        // what "remove from wishlist" means on this page.
+                        isBookmarked
+                        onBookmark={(bookmarked) => {
+                          if (!bookmarked) handleRemove(item.productId);
+                        }}
+                        isLoadingCart={addToCart.isPending}
+                        onCartChange={(quantity) => {
+                          if (quantity && quantity > 0) handleAddToCart(item, quantity);
+                        }}
+                        onQuickView={openProduct}
+                        onClick={openProduct}
+                      />
                     </motion.div>
                   );
                 })}

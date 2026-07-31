@@ -134,6 +134,40 @@ const BACKEND_TO_FORM_TYPE: Record<string, string> = {
   SPECIAL_PRICE: 'special_price',
 };
 
+/**
+ * The GST-exclusive rate the buyer is charged for a raw listing: PTR, less the
+ * discount, less the share of the order that arrives free.
+ *
+ * The storefront grid gets this figure from the API. The featured strip and the
+ * wishlist get the listing itself and no price, so they work it out here, the
+ * same way calculateNetUnitPrice does on the server. Falls back to the MRP when
+ * it cannot be computed, as every other surface does.
+ */
+export function listingNetRate(product: any): number {
+  const mrp = Number(product?.mrp) || 0;
+  const gst = Number(product?.gstPercent);
+  if (!mrp) return 0;
+  if (!VALID_GST_PERCENTAGES.includes(gst as any)) return mrp;
+
+  try {
+    const meta = product?.discountMeta ?? {};
+    const p = calculatePricing(mrp, gst as any, {
+      type: (BACKEND_TO_FORM_TYPE[product?.discountType ?? ''] ?? 'ptr_discount') as any,
+      discountPercent: meta?.discountPercent,
+      buy: meta?.buy,
+      get: meta?.get,
+      bonusProductName: meta?.bonusProductName,
+      specialPrice: meta?.specialPrice,
+    });
+    const buy = Number(meta?.buy) || 0;
+    const get = Number(meta?.get) || 0;
+    const bonusFraction = buy > 0 && get > 0 ? get / (buy + get) : 0;
+    return Math.round(p.finalPtr * (1 - bonusFraction) * 100) / 100;
+  } catch {
+    return mrp;
+  }
+}
+
 export function explainLine(item: any, line: PricedLine): PriceExplanation {
   const mrpRaw = item?.mrp ?? item?.product?.mrp ?? null;
   const mrp = typeof mrpRaw === 'number' && mrpRaw > 0 ? mrpRaw : null;
