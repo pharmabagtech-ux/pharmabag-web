@@ -17,6 +17,7 @@ import {
   type ProductFormValues,
   calculatePricing,
   formatCurrency,
+  minimumOrderQuantity,
   VALID_GST_PERCENTAGES,
 } from "@pharmabag/utils";
 import { useCreateSellerProduct, useUpdateSellerProduct, useSuggestionSearch } from "@/hooks/useSeller";
@@ -70,7 +71,6 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
   const watchMaxMoq = watch("max_order_qty");
   const lastMinMoqRef = useRef<number>(0);
 
-  const MIN_ORDER_VALUE = 20000;
   const watchDiscount = watch("discount_form_details");
 
   // What the buyer actually pays per unit, after PTR, the discount, any bonus
@@ -98,17 +98,9 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
 
   // Fall back to MRP only while the final price cannot be computed yet.
   const priceForMoq = finalPerUnitPrice > 0 ? finalPerUnitPrice : watchMrp;
-  const rawMinMoq = priceForMoq > 0 ? Math.ceil(MIN_ORDER_VALUE / priceForMoq) : 0;
-
-  // A scheme is sold in whole lots, so the minimum is rounded up to one:
-  // buy 7 get 5 with a raw minimum of 69 becomes 70, ten complete lots of 7.
-  // Only a real scheme has a lot - buy defaults to 1 with no free units, and
-  // rounding to a multiple of 1 is a no-op, so plain PTR listings keep the
-  // exact figure.
-  const schemeLot = (watchDiscount?.get ?? 0) > 0 ? (watchDiscount?.buy ?? 0) : 0;
-  const minRequiredMoq = schemeLot > 1 && rawMinMoq > 0
-    ? Math.ceil(rawMinMoq / schemeLot) * schemeLot
-    : rawMinMoq;
+  // Shared with the form's own validator, so the quantity offered here can
+  // never be one the schema then rejects.
+  const minRequiredMoq = minimumOrderQuantity(watchMrp, watchGst, watchDiscount);
   const minOrderValue = minRequiredMoq * priceForMoq;
 
   // Re-sync whenever the required minimum moves - any change to MRP, GST,

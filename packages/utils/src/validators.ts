@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { VALID_GST_PERCENTAGES } from './pricing';
+import { VALID_GST_PERCENTAGES, calculatePricing } from './pricing';
 
 /**
  * Validate an Indian phone number (10 digits, optionally prefixed with +91).
@@ -92,6 +92,44 @@ export const discountFormDetailsSchema = z.object({
   specialPrice: z.number().min(0).optional(),
 });
 
+export const MIN_ORDER_VALUE = 20000;
+
+/**
+ * The smallest order the 20,000 rule allows, in units.
+ *
+ * Must agree with the seller product form to the unit, or the form offers a
+ * quantity its own validator then rejects. Two things it has to honour: the
+ * buyer's real rate per unit received (free goods included, NOT the rate per
+ * billed unit), and whole scheme lots.
+ */
+export function minimumOrderQuantity(
+  mrp: number,
+  gstPercent: number,
+  discount?: { type?: string; discountPercent?: number; buy?: number; get?: number; specialPrice?: number },
+): number {
+  if (!mrp || mrp <= 0) return 0;
+
+  let perUnit = mrp;
+  if (VALID_GST_PERCENTAGES.includes(gstPercent as any)) {
+    try {
+      perUnit = calculatePricing(mrp, gstPercent, {
+        type: (discount?.type as any) ?? 'ptr_discount',
+        discountPercent: discount?.discountPercent,
+        buy: discount?.buy,
+        get: discount?.get,
+        specialPrice: discount?.specialPrice,
+      }).effectivePerUnit;
+    } catch {
+      perUnit = mrp;
+    }
+  }
+  if (!perUnit || perUnit <= 0) perUnit = mrp;
+
+  const raw = Math.ceil(MIN_ORDER_VALUE / perUnit);
+  const lot = (discount?.get ?? 0) > 0 ? (discount?.buy ?? 0) : 0;
+  return lot > 1 ? Math.ceil(raw / lot) * lot : raw;
+}
+
 export const productFormSchema = z.object({
   sku: z.string().optional(),
   product_name: z.string().min(2, 'Product name must be at least 2 characters'),
@@ -173,18 +211,29 @@ export const productFormSchema = z.object({
   message: 'Special price is required',
   path: ['discount_form_details', 'specialPrice'],
 }).refine((data) => {
-  // Enforce ₹20,000 minimum order value rule: MRP * MOQ >= 20,000
-  const minRequiredMoq = Math.ceil(20000 / data.product_price);
-  return data.min_order_qty >= minRequiredMoq;
+  const d = data.discount_form_details;
+  // A fixed price at or above the MRP is not a price, it is an overcharge:
+  // 900 against a 700 MRP bills the buyer 1,008 once GST is added.
+  if (d.type === 'special_price' && typeof d.specialPrice === 'number' && data.product_price > 0) {
+    if (d.specialPrice >= data.product_price) return false;
+  }
+  return true;
 }, (data) => ({
-  message: `Minimum order quantity must be at least ${Math.ceil(20000 / data.product_price)} to meet the ₹20,000 requirement.`,
+  message: `Special price must be lower than the MRP of ₹${data.product_price}.`,
+  path: ['discount_form_details', 'specialPrice'],
+})).refine((data) => {
+  // 20,000 minimum order VALUE, priced off what the buyer actually pays.
+  const minRequiredMoq = minimumOrderQuantity(data.product_price, data.gst_percent, data.discount_form_details);
+  return minRequiredMoq === 0 || data.min_order_qty >= minRequiredMoq;
+}, (data) => ({
+  message: `Minimum order quantity must be at least ${minimumOrderQuantity(data.product_price, data.gst_percent, data.discount_form_details)} to meet the ₹${MIN_ORDER_VALUE.toLocaleString('en-IN')} requirement.`,
   path: ['min_order_qty'],
 })).refine((data) => {
-  // Enforce ₹20,000 minimum rule for stock too for consistency
-  const minRequiredMoq = Math.ceil(20000 / data.product_price);
-  return data.stock >= minRequiredMoq;
+  // Stock has to be able to satisfy one minimum order.
+  const minRequiredMoq = minimumOrderQuantity(data.product_price, data.gst_percent, data.discount_form_details);
+  return minRequiredMoq === 0 || data.stock >= minRequiredMoq;
 }, (data) => ({
-  message: `Current stock must be at least ${Math.ceil(20000 / data.product_price)} units to meet the ₹20,000 requirement.`,
+  message: `Current stock must be at least ${minimumOrderQuantity(data.product_price, data.gst_percent, data.discount_form_details)} units to meet the ₹${MIN_ORDER_VALUE.toLocaleString('en-IN')} requirement.`,
   path: ['stock'],
 }));
 
