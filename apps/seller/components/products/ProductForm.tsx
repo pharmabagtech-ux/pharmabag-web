@@ -73,10 +73,12 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
   const MIN_ORDER_VALUE = 20000;
   const watchDiscount = watch("discount_form_details");
 
-  // What the buyer actually pays per unit, after PTR, any scheme and GST.
-  // The order minimum must be met by this, not by the MRP: a 10% PTR discount
-  // on a 100 MRP leaves 71.90 payable, so 200 units is only 14,380 and falls
-  // short of the 20,000 minimum.
+  // What the buyer actually pays per unit, after PTR, the discount, any bonus
+  // scheme and GST. The order minimum must be met by this, not by the MRP: a
+  // 10% PTR discount on a 100 MRP leaves 71.90 payable, so 200 units is only
+  // 14,380 and falls short of the 20,000 minimum. Free goods count too - on a
+  // buy-7-get-5 the buyer is billed for 7 but receives 12, so the rate per unit
+  // received is what the order value has to be built from.
   const finalPerUnitPrice = useMemo(() => {
     if (!watchMrp || watchMrp <= 0) return 0;
     if (!VALID_GST_PERCENTAGES.includes(watchGst as any)) return 0;
@@ -88,7 +90,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         get: watchDiscount?.get,
         bonusProductName: watchDiscount?.bonusProductName,
         specialPrice: watchDiscount?.specialPrice,
-      }).perPtrWithGst;
+      }).effectivePerUnit;
     } catch {
       return 0;
     }

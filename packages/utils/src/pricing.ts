@@ -90,6 +90,15 @@ export interface PricingOutput {
   finalUserBuy: number;
   /** Final order value = same as finalUserBuy */
   finalOrderValue: number;
+  /**
+   * What the buyer actually pays for one unit, free goods included:
+   * finalUserBuy / totalUnits. perPtrWithGst is the rate per PAID unit, so on a
+   * buy-7-get-5 the buyer pays for 7 but carries away 12 and the real rate is
+   * far lower. This is the figure the API charges (calculateNetUnitPrice
+   * applies the same bonus fraction), so it is the one to price minimums and
+   * order values off.
+   */
+  effectivePerUnit: number;
   /** Buy quantity */
   buy: number;
   /** Get (bonus) quantity */
@@ -187,6 +196,12 @@ export function calculatePricing(
     ? (buy + get)
     : buy;
 
+  // Spread the bill across everything the buyer receives, not only what they
+  // are billed for. Mirrors the API's net unit price to the paisa.
+  const effectivePerUnit = totalUnits > 0
+    ? round2(finalUserBuy / totalUnits)
+    : perPtrWithGst;
+
   return {
     mrp,
     gstPercent,
@@ -197,6 +212,7 @@ export function calculatePricing(
     discountValue,
     gstValue,
     perPtrWithGst,
+    effectivePerUnit,
     itemsToPayFor,
     totalUnits,
     finalUserBuy,

@@ -158,7 +158,7 @@ export function DiscountSelector({ value, onChange, mrp, gstPercent, error }: Pr
               <span className="font-medium">{formatCurrency(pricing.gstValue)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Per Unit:</span>
+              <span className="text-muted-foreground">Per Billed Unit:</span>
               <span className="font-semibold">{formatCurrency(pricing.perPtrWithGst)}</span>
             </div>
             {pricing.get > 0 && (
@@ -169,7 +169,7 @@ export function DiscountSelector({ value, onChange, mrp, gstPercent, error }: Pr
             )}
             <div className="flex justify-between col-span-2 sm:col-span-3 border-t border-primary/10 pt-1 mt-1">
               <span className="text-muted-foreground font-medium">Buyer Pays:</span>
-              <span className="font-bold text-primary">{formatCurrency(pricing.finalUserBuy)} (for {pricing.totalUnits} units)</span>
+              <span className="font-bold text-primary">{formatCurrency(pricing.effectivePerUnit)} per unit</span>
             </div>
           </div>
         </div>
