@@ -7,6 +7,7 @@ import { useWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useToast } from '@/components/shared/Toast';
 import { useGuardedAddToCart } from '@/hooks/usePurchaseAccess';
 import { useAuth } from '@pharmabag/api-client';
+import { productSlug } from '@pharmabag/utils';
 import { useRouter } from 'next/navigation';
 
 export default function WishlistDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -28,6 +29,7 @@ export default function WishlistDrawer({ isOpen, onClose }: { isOpen: boolean; o
       productId: item.productId || item.product?.id || item.id,
       quantity: 1,
       productName: item.product?.name ?? item.productName ?? item.name,
+      slug: productSlug(item.product ?? item),
       price: item.product?.price ?? item.price ?? 0,
       mrp: item.product?.mrp ?? item.mrp ?? 0,
       gstPercent: item.product?.gstPercent ?? item.gstPercent,

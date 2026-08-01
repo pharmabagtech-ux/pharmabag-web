@@ -13,7 +13,7 @@ import { CustomOrderModal } from '@/components/shared/CustomOrderModal';
 import { useCart } from '@/hooks/useCart';
 import { useGuardedAddToCart } from '@/hooks/usePurchaseAccess';
 import { useProductById } from '@/hooks/useProducts';
-import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, generateProductSlug } from '@pharmabag/utils';
+import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, productSlug } from '@pharmabag/utils';
 import type { Product } from '@pharmabag/utils';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { effectiveMinQuantity, listingLotSize, stepQuantityByLot } from '@/lib/pricing';
@@ -80,6 +80,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                    <ShareButton 
                       productName={displayProduct.name}
                       productId={displayProduct.id}
+                      slug={displayProduct.slug}
                       productPrice={displayProduct.mrp}
                       className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"
                    />
@@ -213,6 +214,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                                        productId: listing.id, 
                                        quantity: minQty,
                                        productName: displayProduct.name,
+                                       slug: productSlug(displayProduct),
                                        price: listing.price,
                                        // This adds one seller's listing, so the
                                        // slab, MRP and scheme must all be that
@@ -299,7 +301,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                       </div>
                    </div>
                    <Link 
-                      href={`/products/${generateProductSlug(displayProduct.name, displayProduct.id)}`}
+                      href={`/products/${productSlug(displayProduct)}`}
                       onClick={onClose}
                       className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all ml-auto"
                    >

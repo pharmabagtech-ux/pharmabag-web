@@ -9,6 +9,8 @@ import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
 import { priceCart, explainLine, listingLotSize, stepQuantityByLot, snapQuantityToLot, effectiveMinQuantity } from '@/lib/pricing';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
+import { productSlug } from '@pharmabag/utils';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
@@ -143,6 +145,14 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                   const itemName = item.product?.name ?? item.productName ?? item.name ?? 'Product';
                   const line = lineFor(index);
                   const itemImage = item.product?.images?.[0] || item.imageUrl || item.image || '/products/pharma_bottle.png';
+                  // The bag showed the product but offered no way back to it.
+                  // Items added since the slug fix carry the API's own slug;
+                  // older ones fall back to deriving it from the name.
+                  const itemHref = `/products/${productSlug({
+                    slug: item.slug ?? item.product?.slug,
+                    name: itemName,
+                    id: item.productId,
+                  })}`;
                   
                   return (
                     <motion.div
@@ -153,16 +163,26 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                       exit={{ opacity: 0, x: -50 }}
                       className="flex gap-4"
                     >
-                      <div className="w-20 h-20 bg-[#f1f6ea] rounded-2xl flex-shrink-0 relative overflow-hidden">
+                      <Link
+                        href={itemHref}
+                        onClick={onClose}
+                        className="w-20 h-20 bg-[#f1f6ea] rounded-2xl flex-shrink-0 relative overflow-hidden block"
+                      >
                         <img 
                           src={itemImage} 
                           alt={itemName} 
                           className="w-full h-full object-contain p-2" 
                         />
-                      </div>
+                      </Link>
                       <div className="flex-1 flex flex-col justify-between">
                         <div className="flex justify-between">
-                          <h3 className="font-bold text-gray-900 leading-tight">{itemName}</h3>
+                          <Link
+                            href={itemHref}
+                            onClick={onClose}
+                            className="font-bold text-gray-900 leading-tight hover:text-lime-700 transition-colors"
+                          >
+                            <h3>{itemName}</h3>
+                          </Link>
                           <button
                             onMouseDown={(e) => {
                               e.preventDefault();

@@ -181,6 +181,7 @@ export default function PremiumProductCard({
           productPrice={Number(price)}
           productImage={image}
           productId={productId || ''}
+          slug={product?.slug}
           className="p-1 opacity-70 hover:opacity-100"
           onOpenChange={setIsMenuOpen}
         />

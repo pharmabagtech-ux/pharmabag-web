@@ -3,13 +3,16 @@
 import { Share2, Copy, MessageCircle, Mail, Check } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateProductSlug } from '@pharmabag/utils';
+import { productSlug } from '@pharmabag/utils';
 
 interface ShareButtonProps {
   productName: string;
   productPrice: number;
   productImage?: string;
   productId: string;
+  /** The slug the API stored. Shared links outlive the session, so prefer the
+   *  exact value over one derived from the name. */
+  slug?: string | null;
   discount?: number;
   className?: string;
   iconClassName?: string;
@@ -21,6 +24,7 @@ export function ShareButton({
   productPrice,
   productImage,
   productId,
+  slug,
   discount,
   className = '',
   iconClassName = 'w-[18px] h-[18px]',
@@ -48,7 +52,7 @@ export function ShareButton({
     };
   }, [showMenu, onOpenChange]);
 
-  const deepLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/products/${generateProductSlug(productName, productId)}`;
+  const deepLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/products/${productSlug({ slug, name: productName, id: productId })}`;
   const shareText = `Check out ${productName} at ₹${productPrice}${discount ? ` (${discount}% OFF)` : ''} on PharmaBag`;
 
   const handleNativeShare = async (e: React.MouseEvent) => {
