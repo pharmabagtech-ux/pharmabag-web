@@ -12,7 +12,7 @@
  * gstPercent, then free shipping above a threshold.
  */
 
-import { calculatePricing, formatSchemeQuantity, VALID_GST_PERCENTAGES } from '@pharmabag/utils';
+import { calculatePricing, formatSchemeQuantity, minimumOrderQuantity, VALID_GST_PERCENTAGES } from '@pharmabag/utils';
 
 export const PRICING_DEFAULTS = {
   gstPercentFallback: 12,
@@ -143,6 +143,30 @@ const BACKEND_TO_FORM_TYPE: Record<string, string> = {
  * same way calculateNetUnitPrice does on the server. Falls back to the MRP when
  * it cannot be computed, as every other surface does.
  */
+/**
+ * The smallest quantity of this listing a buyer may order.
+ *
+ * Uses the shared rule, so the figure a buyer is shown is the one the seller
+ * was shown when they set the listing up: priced on what the buyer actually
+ * pays per unit, and rounded up to a whole scheme lot. A buy-9-get-1 whose raw
+ * minimum is 31 asks for 36, four complete lots, not 31.
+ */
+export function listingMinOrderQuantity(listing: any, minOrderValue: number): number {
+  const meta = listing?.discountMeta ?? {};
+  return minimumOrderQuantity(
+    Number(listing?.mrp) || 0,
+    Number(listing?.gstPercent),
+    {
+      type: BACKEND_TO_FORM_TYPE[listing?.discountType ?? ''] ?? 'ptr_discount',
+      discountPercent: meta?.discountPercent,
+      buy: meta?.buy,
+      get: meta?.get,
+      specialPrice: meta?.specialPrice,
+    },
+    minOrderValue,
+  );
+}
+
 export function listingNetRate(product: any): number {
   const mrp = Number(product?.mrp) || 0;
   const gst = Number(product?.gstPercent);

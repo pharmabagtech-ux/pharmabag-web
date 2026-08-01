@@ -106,6 +106,7 @@ export function minimumOrderQuantity(
   mrp: number,
   gstPercent: number,
   discount?: { type?: string; discountPercent?: number; buy?: number; get?: number; specialPrice?: number },
+  minOrderValue: number = MIN_ORDER_VALUE,
 ): number {
   if (!mrp || mrp <= 0) return 0;
 
@@ -125,7 +126,7 @@ export function minimumOrderQuantity(
   }
   if (!perUnit || perUnit <= 0) perUnit = mrp;
 
-  const raw = Math.ceil(MIN_ORDER_VALUE / perUnit);
+  const raw = Math.ceil(minOrderValue / perUnit);
   const lot = (discount?.get ?? 0) > 0 ? (discount?.buy ?? 0) : 0;
   return lot > 1 ? Math.ceil(raw / lot) * lot : raw;
 }
