@@ -234,9 +234,6 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                               {x.finalPtr !== null && x.discountPercent > 0 && (
                                 <BreakupRow label="Final PTR" value={money(x.finalPtr)} />
                               )}
-                              {x.scheme && (
-                                <BreakupRow label="Scheme" value={x.scheme} tone="text-teal-700 font-semibold" />
-                              )}
                               <BreakupRow label="Net Rate / unit" value={money(x.netRate)} tone="text-gray-900 font-semibold" />
                               <BreakupRow label={`${x.quantity} × ${money(x.netRate)}`} value={money(x.lineSubtotal)} />
                               <BreakupRow label={`GST (${x.gstPercent}%)`} value={money(x.gstAmount)} />
