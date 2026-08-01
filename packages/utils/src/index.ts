@@ -76,5 +76,5 @@ export type { ProductFormValues } from './validators';
 export { generateProductSlug, parseProductIdFromSlug } from './slugs';
 
 // Discount scheme formatting (shared by buyer + seller)
-export { formatSchemeTag } from './offers';
+export { formatSchemeTag, formatSchemeQuantity } from './offers';
 export type { DiscountMeta } from './offers';
