@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Plus, Minus, Trash2, Loader2, ShoppingBag } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
-import { useCart, useUpdateCartItem, useRemoveCartItem, useSyncCart } from '@/hooks/useCart';
+import { useCart, useUpdateCartItem, useRemoveCartItem, useClearCart, useSyncCart } from '@/hooks/useCart';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
 import { priceCart, explainLine, listingLotSize, stepQuantityByLot, snapQuantityToLot, effectiveMinQuantity } from '@/lib/pricing';
@@ -61,6 +61,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
   const { data: config } = usePlatformConfig();
   const updateItem = useUpdateCartItem();
   const removeItem = useRemoveCartItem();
+  const clearCart = useClearCart();
   const syncCart = useSyncCart();
   const { toast } = useToast();
   const { canPurchase, reason } = usePurchaseAccess();
@@ -91,7 +92,10 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transitionEnd: { display: "none" } }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
+          // Below the navbar's z-50 (both Navbar and PremiumNavbar), so a
+          // click on "All Products" or any nav link while the bag is open
+          // reaches the link instead of just closing the drawer.
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
         />
       )}
       {isOpen && (
@@ -114,9 +118,24 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                   </span>
                 )}
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <X className="w-6 h-6 text-gray-400" />
-              </button>
+              <div className="flex items-center gap-1">
+                {items.length > 0 && (
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Remove all items from your bag?')) {
+                        clearCart.mutate();
+                      }
+                    }}
+                    disabled={clearCart.isPending || syncCart.isPending}
+                    className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 px-2"
+                  >
+                    Clear All
+                  </button>
+                )}
+                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <X className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
             </div>
 
             {/* Items */}
