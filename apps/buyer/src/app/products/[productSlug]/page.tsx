@@ -17,7 +17,7 @@ import { CustomOrderModal } from '@/components/shared/CustomOrderModal';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, parseProductIdFromSlug } from '@pharmabag/utils';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { formatSchemeTag } from '@pharmabag/utils';
-import { listingMinOrderQuantity, listingLotSize, stepQuantityByLot, snapQuantityToLot } from '@/lib/pricing';
+import { effectiveMinQuantity, listingLotSize, stepQuantityByLot, snapQuantityToLot } from '@/lib/pricing';
 
 export default function ProductDetailPage({ params }: { params: { productSlug: string } }) {
   const productId = parseProductIdFromSlug(params.productSlug);
@@ -390,8 +390,7 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
                   // ignored the scheme: a buy-9-get-1 asked for 31 loose units
                   // rather than 36, four whole lots, and disagreed with the
                   // figure the seller was shown when they set the listing up.
-                  const sellerMoq = l.moq || l.minimumOrderQuantity || 1;
-                  const minQty = Math.max(sellerMoq, listingMinOrderQuantity(l, minOrderAmount));
+                  const minQty = effectiveMinQuantity(l, minOrderAmount);
                   // A 4+1 is bought in fours - the free unit is not billed, so
                   // the step is the buy quantity, not buy + get.
                   const lot = listingLotSize(l);

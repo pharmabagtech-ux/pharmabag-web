@@ -20,6 +20,7 @@ import { useToast } from '@/components/shared/Toast';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, generateProductSlug } from '@pharmabag/utils';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
+import { effectiveMinQuantity } from '@/lib/pricing';
 
 function ProductsPageContent() {
   const searchParams = useSearchParams();
@@ -391,6 +392,11 @@ function ProductsPageContent() {
 
                     const computedSellingPrice = product.sellingPrice || product.ptr || product.price || product.mrp || 0;
 
+                    // The grid trusted the listing's stored MOQ, which is stale
+                    // on almost every listing — cards were adding quantities
+                    // that collected around half the minimum order value.
+                    const minQty = effectiveMinQuantity(product, minOrderAmount);
+
                     const handleCartChange = (quantity: number | null, activeId?: string) => {
                       const targetId = activeId || product.bestListingId;
                       if (!targetId) {
@@ -447,7 +453,7 @@ function ProductsPageContent() {
                             discountMeta: product.discountMeta,
                             imageUrl: image,
                             stock: product.stock,
-                            moq: product.moq || product.minimumOrderQuantity || 1
+                            moq: minQty
                           },
                           {
                             onSuccess: () => {
@@ -484,7 +490,7 @@ function ProductsPageContent() {
                           mrp={product.mrp}
                           image={image}
                           stock={product.hasSellers ? (product.stock ?? 999) : 0}
-                          moq={product.moq || product.minimumOrderQuantity || 1}
+                          moq={minQty}
                           ptr={product.ptr}
                           discountTag={computedDiscountTag}
                           cartQuantity={cartQuantityMap.get(product.id) ?? null}

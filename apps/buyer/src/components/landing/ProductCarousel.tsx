@@ -7,8 +7,9 @@ import PremiumProductCard from '@/components/shared/PremiumProductCard';
 import { getFeaturedProducts } from '@pharmabag/api-client';
 import { formatSchemeTag } from '@pharmabag/utils';
 import { useCart, useAddToCart, useUpdateCartItem, useRemoveCartItem } from '@/hooks/useCart';
-import { listingNetRate } from '@/lib/pricing';
+import { listingNetRate, effectiveMinQuantity } from '@/lib/pricing';
 import { useToast } from '@/components/shared/Toast';
+import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 
 interface ProductCarouselProps {
   reverse?: boolean;
@@ -21,6 +22,9 @@ export default function ProductCarousel({ reverse = false, slot = 'HOMEPAGE_CARO
   const [pending, setPending] = useState<Set<string>>(new Set());
   const router = useRouter();
   const { toast } = useToast();
+
+  const { data: config } = usePlatformConfig();
+  const minOrderAmount = config?.min_order_amount ?? 20000;
 
   const { data: cartData } = useCart();
   const addToCart = useAddToCart();
@@ -62,7 +66,7 @@ export default function ProductCarousel({ reverse = false, slot = 'HOMEPAGE_CARO
         >
           {scrollProducts.map((product, index) => {
             const image = product.images?.[0]?.url || product.image || '/products/pharma_bottle.png';
-            const moq = product.moq || product.minimumOrderQuantity || 1;
+            const moq = effectiveMinQuantity(product, minOrderAmount);
             const price = listingNetRate(product);
             const targetId = product.id;
             const cartItemObj = cartData?.items?.find((i: any) => i.productId === targetId);
