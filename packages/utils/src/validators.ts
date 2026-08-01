@@ -95,6 +95,51 @@ export const discountFormDetailsSchema = z.object({
 export const MIN_ORDER_VALUE = 20000;
 
 /**
+ * The rate the API actually bills for one unit received, GST included.
+ *
+ * `effectivePerUnit` describes the same thing but reaches it by another route:
+ * it rounds the final PTR, rounds the GST on it, rounds their sum, multiplies
+ * by the buy quantity and divides by the units received. The API instead
+ * applies bonus and discount to the PTR, rounds ONCE, and adds GST to that.
+ *
+ * The two land a fraction of a paisa apart, and always with the estimate ABOVE
+ * the amount billed, so a minimum priced off it collects slightly less than it
+ * promises. On Budecort 0.5mg Respule (MRP 25.58 @5%, 15% off, 3+1) the
+ * estimate is 13.05 against 13.041 billed, which asks for 1,533 units where
+ * 1,536 are needed and collects 19,992.
+ *
+ * Mirrors calculateNetUnitPrice in pharmabag-api/src/common/pricing/ptr.util.ts
+ * — keep the two in step.
+ */
+function billedPerUnitWithGst(
+  mrp: number,
+  gstPercent: number,
+  discount?: { type?: string; discountPercent?: number; buy?: number; get?: number; specialPrice?: number },
+): number {
+  const p = calculatePricing(mrp, gstPercent, {
+    type: (discount?.type as any) ?? 'ptr_discount',
+    discountPercent: discount?.discountPercent,
+    buy: discount?.buy,
+    get: discount?.get,
+    specialPrice: discount?.specialPrice,
+  });
+
+  // A fixed price replaces the PTR outright rather than reducing it, exactly
+  // as the API treats SPECIAL_PRICE.
+  const net =
+    p.discountType === 'special_price'
+      ? Math.round(p.finalPtr * 100) / 100
+      : Math.round(
+          p.ptr *
+            (p.buy > 0 && p.get > 0 ? 1 - p.get / (p.buy + p.get) : 1) *
+            (1 - p.discountPercent / 100) *
+            100,
+        ) / 100;
+
+  return net * (1 + gstPercent / 100);
+}
+
+/**
  * The smallest order the 20,000 rule allows, in units.
  *
  * Must agree with the seller product form to the unit, or the form offers a
@@ -113,13 +158,7 @@ export function minimumOrderQuantity(
   let perUnit = mrp;
   if (VALID_GST_PERCENTAGES.includes(gstPercent as any)) {
     try {
-      perUnit = calculatePricing(mrp, gstPercent, {
-        type: (discount?.type as any) ?? 'ptr_discount',
-        discountPercent: discount?.discountPercent,
-        buy: discount?.buy,
-        get: discount?.get,
-        specialPrice: discount?.specialPrice,
-      }).effectivePerUnit;
+      perUnit = billedPerUnitWithGst(mrp, gstPercent, discount);
     } catch {
       perUnit = mrp;
     }
