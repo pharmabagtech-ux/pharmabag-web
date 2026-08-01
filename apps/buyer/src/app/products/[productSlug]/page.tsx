@@ -17,7 +17,7 @@ import { CustomOrderModal } from '@/components/shared/CustomOrderModal';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, parseProductIdFromSlug } from '@pharmabag/utils';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { formatSchemeTag } from '@pharmabag/utils';
-import { listingMinOrderQuantity } from '@/lib/pricing';
+import { listingMinOrderQuantity, listingLotSize, stepQuantityByLot, snapQuantityToLot } from '@/lib/pricing';
 
 export default function ProductDetailPage({ params }: { params: { productSlug: string } }) {
   const productId = parseProductIdFromSlug(params.productSlug);
@@ -392,6 +392,9 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
                   // figure the seller was shown when they set the listing up.
                   const sellerMoq = l.moq || l.minimumOrderQuantity || 1;
                   const minQty = Math.max(sellerMoq, listingMinOrderQuantity(l, minOrderAmount));
+                  // A 4+1 is bought in fours - the free unit is not billed, so
+                  // the step is the buy quantity, not buy + get.
+                  const lot = listingLotSize(l);
                   
                   // Calculate or fetch discount for the pill
                   const mrp = l.mrp || product.mrp || l.price || 0;
@@ -460,7 +463,7 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
                               <div className="flex items-center gap-1 sm:gap-2 w-full">
                                 <div className="flex items-center bg-slate-900 rounded-lg sm:rounded-xl p-0.5 h-8 sm:h-12 shadow-sm w-full">
                                   <button 
-                                    onMouseDown={(e) => { e.preventDefault(); if (listingCartItem.quantity > minQty) addToCart.mutate({ productId: l.id, quantity: listingCartItem.quantity - 1, replace: true }); else removeCartItem.mutate(listingCartItem.id); }}
+                                    onMouseDown={(e) => { e.preventDefault(); const next = stepQuantityByLot(listingCartItem.quantity, -1, lot, minQty, l.stock); if (next > 0) addToCart.mutate({ productId: l.id, quantity: next, replace: true }); else removeCartItem.mutate(listingCartItem.id); }}
                                     className="flex-1 h-full flex items-center justify-center text-white"
                                   >
                                     <Minus className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={3} />
@@ -470,12 +473,13 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
                                     initialQuantity={listingCartItem.quantity}
                                     stock={l.stock}
                                     minQty={minQty}
+                                    lot={lot}
                                     onUpdate={(nextQty) => addToCart.mutate({ productId: l.id, quantity: nextQty, productName: product.name, price: l.price, mrp: mrp, gstPercent: l.gstPercent ?? product.gstPercent, imageUrl: product.images?.[0], discountType: l.discountType, discountMeta: l.discountMeta, moq: minQty, stock: l.stock, replace: true })}
                                     className="w-4 sm:w-10 text-[10px] sm:text-lg font-black text-white text-center bg-transparent outline-none"
                                   />
                                   
                                   <button 
-                                    onMouseDown={(e) => { e.preventDefault(); if (listingCartItem.quantity < l.stock) addToCart.mutate({ productId: l.id, quantity: listingCartItem.quantity + 1, replace: true }); }}
+                                    onMouseDown={(e) => { e.preventDefault(); const next = stepQuantityByLot(listingCartItem.quantity, 1, lot, minQty, l.stock); if (next !== listingCartItem.quantity) addToCart.mutate({ productId: l.id, quantity: next, replace: true }); }}
                                     className="flex-1 h-full flex items-center justify-center text-white"
                                   >
                                     <Plus className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={3} />
@@ -745,12 +749,14 @@ function MarketplaceQtyInput({
   initialQuantity, 
   stock, 
   minQty, 
+  lot = 1,
   onUpdate,
   className
 }: { 
   initialQuantity: number; 
   stock: number; 
   minQty: number; 
+  lot?: number;
   onUpdate: (qty: number) => void;
   className?: string;
 }) {
@@ -769,11 +775,10 @@ function MarketplaceQtyInput({
       num = 0;
     }
 
-    // Snap to valid range
-    let finalQty = num;
-    if (num > stock) finalQty = stock;
-    if (num < minQty) finalQty = 0;
-    if (num < 0) finalQty = 0;
+    // Snap to an allowed quantity: at or above the minimum, in whole lots and
+    // within stock. Rounds down, so a typed figure never quietly costs more
+    // than it asked for.
+    const finalQty = snapQuantityToLot(num, lot, minQty, stock);
     
     // If the snapped value is different from what was typed, update display
     setVal(String(finalQty));

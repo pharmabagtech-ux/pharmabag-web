@@ -6,7 +6,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import { useCart, useUpdateCartItem, useRemoveCartItem, useSyncCart } from '@/hooks/useCart';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
-import { priceCart, explainLine } from '@/lib/pricing';
+import { priceCart, explainLine, listingLotSize, stepQuantityByLot, snapQuantityToLot } from '@/lib/pricing';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
 import { useRouter } from 'next/navigation';
@@ -174,7 +174,12 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                             <button
                               onClick={() => {
                                 const moq = item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1;
-                                updateItem.mutate({ itemId: item.id, quantity: Math.max(moq, item.quantity - 1) });
+                                // Whole lots here too, so the bag cannot walk a
+                                // quantity off the boundary the offer row set.
+                                const lot = listingLotSize(item);
+                                const stock = item.stock ?? item.product?.stock ?? 9999;
+                                const next = stepQuantityByLot(item.quantity, -1, lot, moq, stock);
+                                updateItem.mutate({ itemId: item.id, quantity: next > 0 ? next : moq });
                               }}
                               disabled={updateItem.isPending || item.quantity <= (item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1) || syncCart.isPending}
                               className="text-gray-400 hover:text-gray-900 disabled:opacity-30"
@@ -188,7 +193,12 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                                 (item.maximumOrderQuantity || item.product?.maximumOrderQuantity) || (item.stock ?? item.product?.stock ?? 9999)
                               )}
                               min={item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1}
-                              onUpdate={(qty) => updateItem.mutate({ itemId: item.id, quantity: qty })}
+                              onUpdate={(qty) => {
+                                const moq = item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1;
+                                const stock = item.stock ?? item.product?.stock ?? 9999;
+                                const snapped = snapQuantityToLot(qty, listingLotSize(item), moq, stock);
+                                updateItem.mutate({ itemId: item.id, quantity: snapped > 0 ? snapped : moq });
+                              }}
                               disabled={updateItem.isPending || syncCart.isPending}
                             />
                             <button
@@ -196,8 +206,10 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                                 const stock = item.stock ?? item.product?.stock ?? 9999;
                                 const maxLimit = (item.maximumOrderQuantity || item.product?.maximumOrderQuantity) || stock;
                                 const max = Math.min(stock, maxLimit);
-                                if (item.quantity < max) {
-                                  updateItem.mutate({ itemId: item.id, quantity: item.quantity + 1 });
+                                const moq = item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1;
+                                const next = stepQuantityByLot(item.quantity, 1, listingLotSize(item), moq, max);
+                                if (next !== item.quantity) {
+                                  updateItem.mutate({ itemId: item.id, quantity: next });
                                 } else {
                                   toast(`Only ${max} units available in stock`, 'error');
                                 }

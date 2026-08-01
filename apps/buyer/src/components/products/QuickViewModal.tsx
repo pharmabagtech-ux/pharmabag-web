@@ -16,7 +16,7 @@ import { useProductById } from '@/hooks/useProducts';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, generateProductSlug } from '@pharmabag/utils';
 import type { Product } from '@pharmabag/utils';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
-import { listingMinOrderQuantity } from '@/lib/pricing';
+import { listingMinOrderQuantity, listingLotSize, stepQuantityByLot } from '@/lib/pricing';
 
 interface QuickViewModalProps {
   product: Product | null;
@@ -195,14 +195,14 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                                    <div className="flex items-center bg-gray-900 rounded-xl overflow-hidden h-10 text-white shadow-lg">
                                      <button 
                                        className="w-10 h-full flex items-center justify-center hover:bg-gray-800 transition-colors"
-                                       onClick={() => addToCart.mutate({ productId: listing.id, quantity: Math.max(0, cartItem.quantity - 1), replace: true })}
+                                       onClick={() => addToCart.mutate({ productId: listing.id, quantity: Math.max(0, stepQuantityByLot(cartItem.quantity, -1, listingLotSize(listing), minQty, listing.stock ?? 9999)), replace: true })}
                                      >
                                        -
                                      </button>
                                      <span className="px-3 font-black text-sm">{cartItem.quantity}</span>
                                      <button 
                                        className="w-10 h-full flex items-center justify-center hover:bg-gray-800 transition-colors"
-                                       onClick={() => addToCart.mutate({ productId: listing.id, quantity: cartItem.quantity + 1, replace: true })}
+                                       onClick={() => addToCart.mutate({ productId: listing.id, quantity: stepQuantityByLot(cartItem.quantity, 1, listingLotSize(listing), minQty, listing.stock ?? 9999), replace: true })}
                                      >
                                        +
                                      </button>
