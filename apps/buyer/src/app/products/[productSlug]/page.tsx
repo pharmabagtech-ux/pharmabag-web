@@ -17,6 +17,7 @@ import { CustomOrderModal } from '@/components/shared/CustomOrderModal';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, parseProductIdFromSlug } from '@pharmabag/utils';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { formatSchemeTag } from '@pharmabag/utils';
+import { listingMinOrderQuantity } from '@/lib/pricing';
 
 export default function ProductDetailPage({ params }: { params: { productSlug: string } }) {
   const productId = parseProductIdFromSlug(params.productSlug);
@@ -384,11 +385,13 @@ export default function ProductDetailPage({ params }: { params: { productSlug: s
                 {listings.map((l: any, idx: number) => {
                   const listingInStock = (l.stock || 0) > 0;
                   const listingCartItem = cartData?.items?.find((item: any) => item.productId === l.id);
-                  // MOQ = max(seller's MOQ, units needed to hit min order amount)
+                  // MOQ = max(seller's own MOQ, the shared minimum-order rule).
+                  // Dividing the floor by the ex-GST price and stopping there
+                  // ignored the scheme: a buy-9-get-1 asked for 31 loose units
+                  // rather than 36, four whole lots, and disagreed with the
+                  // figure the seller was shown when they set the listing up.
                   const sellerMoq = l.moq || l.minimumOrderQuantity || 1;
-                  const minQty = l.price > 0
-                    ? Math.max(sellerMoq, Math.ceil(minOrderAmount / l.price))
-                    : sellerMoq;
+                  const minQty = Math.max(sellerMoq, listingMinOrderQuantity(l, minOrderAmount));
                   
                   // Calculate or fetch discount for the pill
                   const mrp = l.mrp || product.mrp || l.price || 0;

@@ -16,6 +16,7 @@ import { useProductById } from '@/hooks/useProducts';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, generateProductSlug } from '@pharmabag/utils';
 import type { Product } from '@pharmabag/utils';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
+import { listingMinOrderQuantity } from '@/lib/pricing';
 
 interface QuickViewModalProps {
   product: Product | null;
@@ -156,7 +157,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                       const cartItem = cartData?.items?.find((item: any) => item.productId === listing.id);
                       const sellerMoq = listing.moq || listing.minimumOrderQuantity || 1;
                       const minQty = listing.price > 0
-                        ? Math.max(sellerMoq, Math.ceil(minOrderAmount / listing.price))
+                        ? Math.max(sellerMoq, listingMinOrderQuantity(listing, minOrderAmount))
                         : sellerMoq;
                       
                       return (
