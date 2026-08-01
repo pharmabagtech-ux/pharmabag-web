@@ -12,7 +12,7 @@ import { SkeletonCard } from '@/components/shared/LoaderSkeleton';
 import { useWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useGuardedAddToCart } from '@/hooks/usePurchaseAccess';
 import { useToast } from '@/components/shared/Toast';
-import { formatSchemeTag, generateProductSlug } from '@pharmabag/utils';
+import { formatSchemeTag, productSlug } from '@pharmabag/utils';
 import PremiumProductCard from '@/components/shared/PremiumProductCard';
 import { listingNetRate, effectiveMinQuantity } from '@/lib/pricing';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
@@ -47,6 +47,7 @@ export default function WishlistPage() {
       productId: item.productId,
       quantity: quantity ?? minQty,
       productName: product.name,
+      slug: productSlug({ ...product, id: product?.id ?? item.productId }),
       price: product.price || listingNetRate(product) || product.mrp || 0,
       mrp: product.mrp || 0,
       gstPercent: product.gstPercent,
@@ -115,7 +116,7 @@ export default function WishlistPage() {
                   // the same way the featured strip derives it.
                   const price = product.price || listingNetRate(product) || product.mrp || 0;
                   const openProduct = () =>
-                    router.push(`/products/${generateProductSlug(product?.name || 'Product', item.productId)}`);
+                    router.push(`/products/${productSlug({ ...product, id: product?.id ?? item.productId })}`);
 
                   return (
                     <motion.div

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import PremiumProductCard from '@/components/shared/PremiumProductCard';
 import { getFeaturedProducts } from '@pharmabag/api-client';
-import { formatSchemeTag } from '@pharmabag/utils';
+import { formatSchemeTag, productSlug } from '@pharmabag/utils';
 import { useCart, useAddToCart, useUpdateCartItem, useRemoveCartItem } from '@/hooks/useCart';
 import { listingNetRate, effectiveMinQuantity } from '@/lib/pricing';
 import { useToast } from '@/components/shared/Toast';
@@ -109,6 +109,7 @@ export default function ProductCarousel({ reverse = false, slot = 'HOMEPAGE_CARO
                     productId: targetId,
                     quantity,
                     productName: product.name,
+                    slug: productSlug(product),
                     price,
                     mrp: product.mrp,
                     gstPercent: product.gstPercent,

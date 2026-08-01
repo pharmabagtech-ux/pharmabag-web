@@ -17,7 +17,7 @@ import { useCart, useRemoveCartItem, useUpdateCartItem } from '@/hooks/useCart';
 import { useGuardedAddToCart } from '@/hooks/usePurchaseAccess';
 import { useWishlist, useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useToast } from '@/components/shared/Toast';
-import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, generateProductSlug } from '@pharmabag/utils';
+import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, productSlug } from '@pharmabag/utils';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { effectiveMinQuantity } from '@/lib/pricing';
@@ -401,7 +401,7 @@ function ProductsPageContent() {
                       const targetId = activeId || product.bestListingId;
                       if (!targetId) {
                         toast('Please select a seller to add this product to bag', 'error');
-                        router.push(`/products/${generateProductSlug(product.name, product.id)}`);
+                        router.push(`/products/${productSlug(product)}`);
                         return;
                       }
 
@@ -446,6 +446,10 @@ function ProductsPageContent() {
                             productId: targetId,
                             quantity,
                             productName: product.name,
+                            // So the bag can link back to the product. Derived
+                            // slugs disagree with the stored ones on any name
+                            // holding a decimal or a ratio.
+                            slug: productSlug(product),
                             price: computedSellingPrice,
                             mrp: product.mrp,
                             gstPercent: product.gstPercent,
@@ -500,7 +504,7 @@ function ProductsPageContent() {
                           onBookmark={handleBookmark}
                           isLoadingCart={pendingCartProducts.has(product.id)}
                           onQuickView={() => setQuickViewProduct(product)}
-                          onClick={() => router.push(`/products/${generateProductSlug(product.name, product.id)}`)}
+                          onClick={() => router.push(`/products/${productSlug(product)}`)}
                           onCartChange={handleCartChange}
                         />
                       </div>

@@ -73,7 +73,7 @@ export {
 
 export type { ProductFormValues } from './validators';
 // Slugs
-export { generateProductSlug, parseProductIdFromSlug } from './slugs';
+export { generateProductSlug, productSlug, parseProductIdFromSlug } from './slugs';
 
 // Discount scheme formatting (shared by buyer + seller)
 export { formatSchemeTag, formatSchemeQuantity } from './offers';
