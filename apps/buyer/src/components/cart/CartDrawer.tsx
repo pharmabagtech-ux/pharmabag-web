@@ -105,7 +105,14 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
           animate={{ x: 0 }}
           exit={{ x: '100%', transitionEnd: { display: "none" } }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed top-0 right-0 h-full w-[280px] sm:w-[320px] md:w-[400px] bg-white shadow-2xl z-[101] flex flex-col"
+          // The panel sits above the navbar (z-50) so its own controls stay
+          // clickable, but that also means it physically covers whatever
+          // part of the navbar falls under its footprint. The navbar floats
+          // near the top on lg+ screens and pinned to the bottom below that,
+          // so the panel is inset from whichever edge the navbar occupies -
+          // otherwise nav links or the mobile bottom-nav icons underneath it
+          // are unreachable while the bag is open.
+          className="fixed top-0 lg:top-28 bottom-24 lg:bottom-0 right-0 w-[280px] sm:w-[320px] md:w-[400px] bg-white shadow-2xl z-[101] flex flex-col"
         >
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 md:p-8 border-b border-gray-100">
