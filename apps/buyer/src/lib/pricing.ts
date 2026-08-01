@@ -167,6 +167,66 @@ export function listingMinOrderQuantity(listing: any, minOrderValue: number): nu
   );
 }
 
+/**
+ * How many units one lot of this listing's scheme contains.
+ *
+ * A buy-9-get-1 is sold in nines, so a buyer moves 36 -> 45 -> 54, never 37.
+ * Returns 1 when there is no scheme, which makes every helper below behave
+ * exactly as a plain +1 stepper.
+ */
+export function listingLotSize(listing: any): number {
+  const meta = listing?.discountMeta ?? {};
+  const buy = Number(meta?.buy) || 0;
+  const get = Number(meta?.get) || 0;
+  return buy > 1 && get > 0 ? buy : 1;
+}
+
+/**
+ * One step up or down, in whole lots.
+ *
+ * Returns 0 to mean "below the minimum, remove it", matching what the steppers
+ * already do at the minimum, and returns the current quantity unchanged when a
+ * step up would exceed stock.
+ */
+export function stepQuantityByLot(
+  current: number,
+  direction: 1 | -1,
+  lot: number,
+  minQty: number,
+  stock: number,
+): number {
+  const next = current + direction * lot;
+  if (next < minQty) return 0;
+  if (next > stock) return current;
+  return next;
+}
+
+/**
+ * The nearest allowed quantity at or below what was typed.
+ *
+ * Allowed quantities are minQty, minQty + lot, minQty + 2 x lot and so on -
+ * and since minQty is itself a whole number of lots, every one of them is a
+ * multiple of the lot. Rounds down so a typed value never silently costs more
+ * than intended, and steps back again if stock cannot cover the lot.
+ */
+export function snapQuantityToLot(
+  desired: number,
+  lot: number,
+  minQty: number,
+  stock: number,
+): number {
+  if (!Number.isFinite(desired) || desired <= 0 || desired < minQty) return 0;
+  if (lot <= 1) return Math.min(desired, stock);
+
+  const stepsWanted = Math.floor((desired - minQty) / lot);
+  let qty = minQty + stepsWanted * lot;
+  if (qty > stock) {
+    const stepsThatFit = Math.floor((stock - minQty) / lot);
+    qty = stepsThatFit >= 0 ? minQty + stepsThatFit * lot : 0;
+  }
+  return qty;
+}
+
 export function listingNetRate(product: any): number {
   const mrp = Number(product?.mrp) || 0;
   const gst = Number(product?.gstPercent);
