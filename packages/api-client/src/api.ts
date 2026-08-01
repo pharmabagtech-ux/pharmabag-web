@@ -136,6 +136,17 @@ api.interceptors.response.use(
 
     // If 401 and we haven't already retried
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // A guest hitting an auth-required endpoint (e.g. /notifications, which
+      // polls in the background for every visitor) always 401s - that's
+      // expected, not a session expiring. Without this check every guest poll
+      // fell through to the refresh attempt below, which immediately failed
+      // (no refresh token to try), emitting 'auth:expired' and wiping the
+      // local cart - even for a visitor who was never logged in.
+      if (!getAccessToken()) {
+        console.warn(`[API] 401 Unauthorized (no session) on ${originalRequest?.url}`);
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         // Queue the request while refreshing
         return new Promise((resolve, reject) => {
