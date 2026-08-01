@@ -14,7 +14,8 @@ import { useGuardedAddToCart } from '@/hooks/usePurchaseAccess';
 import { useToast } from '@/components/shared/Toast';
 import { formatSchemeTag, generateProductSlug } from '@pharmabag/utils';
 import PremiumProductCard from '@/components/shared/PremiumProductCard';
-import { listingNetRate } from '@/lib/pricing';
+import { listingNetRate, effectiveMinQuantity } from '@/lib/pricing';
+import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 
 export default function WishlistPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -23,6 +24,8 @@ export default function WishlistPage() {
   const addToCart = useGuardedAddToCart();
   const { toast } = useToast();
   const router = useRouter();
+  const { data: config } = usePlatformConfig();
+  const minOrderAmount = config?.min_order_amount ?? 20000;
 
   const items = wishlist?.items ?? [];
 
@@ -39,9 +42,10 @@ export default function WishlistPage() {
       (typeof product.images?.[0] === 'string'
         ? product.images[0]
         : (product.images?.[0] as any)?.url) || '/products/pharma_bottle.png';
+    const minQty = effectiveMinQuantity(product, minOrderAmount);
     addToCart.mutate({
       productId: item.productId,
-      quantity: quantity ?? (product.moq || product.minimumOrderQuantity || 1),
+      quantity: quantity ?? minQty,
       productName: product.name,
       price: product.price || listingNetRate(product) || product.mrp || 0,
       mrp: product.mrp || 0,
@@ -51,7 +55,7 @@ export default function WishlistPage() {
       discountType: product.discountType,
       discountMeta: product.discountMeta,
       stock: product.stock,
-      moq: product.moq || product.minimumOrderQuantity || 1,
+      moq: minQty,
       imageUrl: image,
     }, {
       onError: () => toast('Failed to add to bag', 'error'),
@@ -106,7 +110,7 @@ export default function WishlistPage() {
                     (typeof product.images?.[0] === 'string'
                       ? product.images[0]
                       : (product.images?.[0] as any)?.url) || '/products/pharma_bottle.png';
-                  const moq = product.moq || product.minimumOrderQuantity || 1;
+                  const moq = effectiveMinQuantity(product, minOrderAmount);
                   // Saved items carry the raw listing, so the rate is derived
                   // the same way the featured strip derives it.
                   const price = product.price || listingNetRate(product) || product.mrp || 0;

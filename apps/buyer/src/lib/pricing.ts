@@ -168,6 +168,23 @@ export function listingMinOrderQuantity(listing: any, minOrderValue: number): nu
 }
 
 /**
+ * The minimum a buyer may actually order: the higher of what the seller stored
+ * on the listing and what the minimum-order rule requires.
+ *
+ * Every surface that offers a quantity must use this one. The stored figure is
+ * not trustworthy on its own — most listings were saved before the current
+ * rules and ask for roughly half the floor — and the rule alone would ignore a
+ * seller who deliberately set a higher minimum. The detail page and quick view
+ * recomputed while the grid, wishlist and homepage strip passed the stored
+ * value straight through, so the same product asked for 102 units on one screen
+ * and 66 on another. Keep them all on this helper.
+ */
+export function effectiveMinQuantity(listing: any, minOrderValue: number): number {
+  const stored = Number(listing?.moq) || Number(listing?.minimumOrderQuantity) || 1;
+  return Math.max(stored, listingMinOrderQuantity(listing, minOrderValue));
+}
+
+/**
  * The step a quantity moves in for this listing.
  *
  * It is the BUY quantity, not buy + get: a 4+1 moves in fours, and the free

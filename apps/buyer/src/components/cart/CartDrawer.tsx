@@ -6,7 +6,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import { useCart, useUpdateCartItem, useRemoveCartItem, useSyncCart } from '@/hooks/useCart';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { usePurchaseAccess } from '@/hooks/usePurchaseAccess';
-import { priceCart, explainLine, listingLotSize, stepQuantityByLot, snapQuantityToLot } from '@/lib/pricing';
+import { priceCart, explainLine, listingLotSize, stepQuantityByLot, snapQuantityToLot, effectiveMinQuantity } from '@/lib/pricing';
 import { useToast } from '@/components/shared/Toast';
 import { useAuth } from '@pharmabag/api-client';
 import { useRouter } from 'next/navigation';
@@ -72,6 +72,13 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
   const pricing = priceCart(items, config);
   const { shipping, total } = pricing;
   const lineFor = (index: number) => pricing.lines[index];
+
+  // Recomputed rather than read off the item, so a bag filled before the
+  // minimum-order rule reached this surface corrects itself instead of keeping
+  // whatever was captured at add time. Bag items carry mrp, GST and the scheme,
+  // so the figure matches the one the offer row shows.
+  const minQtyFor = (item: any) =>
+    effectiveMinQuantity(item, config?.min_order_amount ?? 20000);
 
   return (
     <AnimatePresence>
@@ -173,7 +180,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                           <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-3 py-1">
                             <button
                               onClick={() => {
-                                const moq = item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1;
+                                const moq = minQtyFor(item);
                                 // Whole lots here too, so the bag cannot walk a
                                 // quantity off the boundary the offer row set.
                                 const lot = listingLotSize(item);
@@ -181,7 +188,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                                 const next = stepQuantityByLot(item.quantity, -1, lot, moq, stock);
                                 updateItem.mutate({ itemId: item.id, quantity: next > 0 ? next : moq });
                               }}
-                              disabled={updateItem.isPending || item.quantity <= (item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1) || syncCart.isPending}
+                              disabled={updateItem.isPending || item.quantity <= minQtyFor(item) || syncCart.isPending}
                               className="text-gray-400 hover:text-gray-900 disabled:opacity-30"
                             >
                               <Minus className="w-3 h-3" />
@@ -192,9 +199,9 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                                 item.stock ?? item.product?.stock ?? 9999,
                                 (item.maximumOrderQuantity || item.product?.maximumOrderQuantity) || (item.stock ?? item.product?.stock ?? 9999)
                               )}
-                              min={item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1}
+                              min={minQtyFor(item)}
                               onUpdate={(qty) => {
-                                const moq = item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1;
+                                const moq = minQtyFor(item);
                                 const stock = item.stock ?? item.product?.stock ?? 9999;
                                 const snapped = snapQuantityToLot(qty, listingLotSize(item), moq, stock);
                                 updateItem.mutate({ itemId: item.id, quantity: snapped > 0 ? snapped : moq });
@@ -206,7 +213,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                                 const stock = item.stock ?? item.product?.stock ?? 9999;
                                 const maxLimit = (item.maximumOrderQuantity || item.product?.maximumOrderQuantity) || stock;
                                 const max = Math.min(stock, maxLimit);
-                                const moq = item.moq || item.product?.moq || item.product?.minimumOrderQuantity || 1;
+                                const moq = minQtyFor(item);
                                 const next = stepQuantityByLot(item.quantity, 1, listingLotSize(item), moq, max);
                                 if (next !== item.quantity) {
                                   updateItem.mutate({ itemId: item.id, quantity: next });
