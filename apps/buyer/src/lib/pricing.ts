@@ -12,7 +12,7 @@
  * gstPercent, then free shipping above a threshold.
  */
 
-import { calculatePricing, formatSchemeTag, VALID_GST_PERCENTAGES } from '@pharmabag/utils';
+import { calculatePricing, formatSchemeQuantity, VALID_GST_PERCENTAGES } from '@pharmabag/utils';
 
 export const PRICING_DEFAULTS = {
   gstPercentFallback: 12,
@@ -204,7 +204,7 @@ export function explainLine(item: any, line: PricedLine): PriceExplanation {
     discountPercent,
     discountValue,
     finalPtr,
-    scheme: formatSchemeTag(discountType, meta),
+    scheme: formatSchemeQuantity(discountType, meta),
     netRate: line.unitPrice,
     quantity: line.quantity,
     lineSubtotal: line.lineSubtotal,

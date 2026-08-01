@@ -17,6 +17,41 @@ export type DiscountMeta = {
   tag?: string;
 };
 
+/**
+ * Just the scheme quantities, e.g. "9+1".
+ *
+ * For the buyer's bag, where the discount already has its own line and
+ * repeating it inside the scheme reads as a second, separate reduction.
+ * Returns '' when the scheme carries no free units, so the caller can drop
+ * the row entirely.
+ */
+export function formatSchemeQuantity(
+  discountType?: string | null,
+  meta?: DiscountMeta | null,
+): string {
+  if (!discountType) return '';
+
+  const d = meta ?? {};
+  const buy = d.buy ?? 0;
+  const get = d.get ?? 0;
+  if (buy <= 0 || get <= 0) return '';
+
+  switch (discountType) {
+    case 'SAME_PRODUCT_BONUS':
+    case 'PTR_PLUS_SAME_PRODUCT_BONUS':
+      return `${buy}+${get}`;
+
+    case 'DIFFERENT_PRODUCT_BONUS':
+    case 'PTR_PLUS_DIFFERENT_PRODUCT_BONUS': {
+      const bonus = d.bonusProductName || '';
+      return bonus ? `${buy}+${get} ${bonus}` : `${buy}+${get}`;
+    }
+
+    default:
+      return '';
+  }
+}
+
 export function formatSchemeTag(
   discountType?: string | null,
   meta?: DiscountMeta | null,
