@@ -273,7 +273,13 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                               <Plus className="w-3 h-3" />
                             </button>
                           </div>
-                          <p className="font-bold text-gray-900 tracking-tight">₹{line.lineTotal.toLocaleString('en-IN')}</p>
+                          {/*
+                            Pinned to two decimals. The line total is exact
+                            rather than rounded now, so an unpinned
+                            toLocaleString could surface a third decimal from a
+                            float artifact (332 x 57.47 is 19080.039999999997).
+                          */}
+                          <p className="font-bold text-gray-900 tracking-tight">₹{line.lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                         {/* How the price was reached - the same figures the
                             seller sees in their pricing preview. Each row only

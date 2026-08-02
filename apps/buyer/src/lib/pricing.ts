@@ -60,26 +60,51 @@ export function priceLine(item: any, config?: PricingConfig): PricedLine {
   const quantity = item?.quantity ?? 1;
   const gstPercent = readGstPercent(item, fallbackGst);
 
+  /**
+   * Line figures are EXACT — no rounding.
+   *
+   * Two reasons, and the second one is a real defect this fixes:
+   *
+   * 1. Rounding here hid the true figure from the buyer. 332 x 57.47 is
+   *    19,080.04, and the bag displayed 19,080.00 — a number that is not the
+   *    arithmetic it sits underneath, on a page whose whole job is showing the
+   *    derivation.
+   *
+   * 2. `OrdersService.checkout` accumulates every line RAW and rounds the cart
+   *    subtotal and GST ONCE at the end. Rounding per line here meant the bag
+   *    and the server could reach different totals: two lines each ending .4
+   *    round down individually (losing 0.8) while their raw sum ends .8 and
+   *    rounds up. The cart-level rounding in `priceCart` is what mirrors the
+   *    server, so that is the only place it belongs.
+   */
   const lineSubtotal = unitPrice * quantity;
-  const gstAmount = Math.round(lineSubtotal * (gstPercent / 100));
+  const gstAmount = lineSubtotal * (gstPercent / 100);
 
   return {
     unitPrice,
     quantity,
-    lineSubtotal: Math.round(lineSubtotal),
+    lineSubtotal,
     gstPercent,
     gstAmount,
-    lineTotal: Math.round(lineSubtotal) + gstAmount,
+    lineTotal: lineSubtotal + gstAmount,
   };
 }
 
 /**
  * Prices a whole cart the way the server will at checkout.
  * Shipping is order-level and belongs to no single line.
+ *
+ * The cart subtotal and GST ARE rounded here, and deliberately so: this is not
+ * a presentational choice but a mirror of `OrdersService.checkout`, which sums
+ * every line raw and then does exactly one `Math.round` on each of the two
+ * totals. These figures are what the buyer is actually charged, so they must
+ * match the server to the rupee — the line rows above are the derivation and
+ * stay exact.
  */
 export function priceCart(items: any[], config?: PricingConfig): PricedCart {
   const lines = (items ?? []).map((item) => priceLine(item, config));
 
+  // Sum RAW, then round once — the order the server does it in.
   const subtotal = Math.round(
     lines.reduce((sum, l) => sum + l.lineSubtotal, 0),
   );
