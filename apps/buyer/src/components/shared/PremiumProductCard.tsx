@@ -7,6 +7,8 @@ import { useState, useRef, useEffect } from 'react';
 import { ShareButton } from './ShareButton';
 import { StockBasedButton } from './StockBasedButton';
 
+import { listingLotSize, stepQuantityByLot, snapQuantityToLot } from '@/lib/pricing';
+
 interface PremiumProductCardProps {
   name: string;
   price: number | string;
@@ -51,6 +53,21 @@ export default function PremiumProductCard({
   onQuickView,
   onClick
 }: PremiumProductCardProps) {
+  /**
+   * Quantities move in whole scheme lots, not in ones.
+   *
+   * The lot is derived from `product` here rather than passed in, because the
+   * three surfaces that render this card (grid, wishlist, homepage strip) all
+   * already pass `product` -- and hand-wiring a `lot` prop per surface is
+   * exactly how the buy-get stepping came to be live on the detail page,
+   * quick view and bag but missing here. Deriving it once means they cannot
+   * drift apart again.
+   *
+   * `listingLotSize` returns 1 when there is no scheme, so a plain listing
+   * behaves as an ordinary +1/-1 stepper.
+   */
+  const lot = listingLotSize(product ?? {});
+
   const [count, setCount] = useState<number>(cartQuantity ?? 0);
   const [bookmarked, setBookmarked] = useState(isBookmarked);
   const [isEditingQty, setIsEditingQty] = useState(false);
@@ -120,7 +137,7 @@ export default function PremiumProductCard({
     e.preventDefault();
     actionClicked.current = true;
     setCount(prev => {
-      const next = Math.min(prev + 1, stock);
+      const next = stepQuantityByLot(prev, 1, lot, moq, stock);
       if (next !== prev) {
         notifyCartChange(next);
       }
@@ -133,9 +150,11 @@ export default function PremiumProductCard({
     e.preventDefault();
     actionClicked.current = true;
     setCount(prev => {
-      const next = prev - 1;
-      notifyCartChange(next >= moq ? next : null);
-      return next >= moq ? next : 0;
+      // Returns 0 once a step down would fall under the minimum, which is the
+      // signal the callers already treat as "remove it from the bag".
+      const next = stepQuantityByLot(prev, -1, lot, moq, stock);
+      notifyCartChange(next > 0 ? next : null);
+      return next;
     });
   };
 
@@ -232,10 +251,20 @@ export default function PremiumProductCard({
                   onBlur={() => {
                     const parsed = parseInt(editValue, 10);
                     if (!isNaN(parsed)) {
-                      const finalQty = Math.max(0, Math.min(parsed, stock));
-                      // If it's less than MOQ but more than 0, snap to MOQ
-                      const reportedQty = (finalQty > 0 && finalQty < moq) ? moq : finalQty;
-                      
+                      /**
+                       * Typed values snap to an allowed quantity, the same way
+                       * the +/- buttons do. Without this the keyboard and the
+                       * stepper disagree about what is valid: you could type
+                       * 190 on a 9+1 listing that steps 189 -> 198.
+                       *
+                       * `snapQuantityToLot` rounds DOWN to minQty + n x lot,
+                       * and returns 0 for anything under the minimum, which
+                       * the caller reads as "remove it".
+                       */
+                      const reportedQty = parsed < moq && parsed > 0
+                        ? moq
+                        : snapQuantityToLot(parsed, lot, moq, stock);
+
                       setCount(reportedQty);
                       notifyCartChange(reportedQty > 0 ? reportedQty : null);
                       setEditValue(String(reportedQty));
