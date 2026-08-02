@@ -55,13 +55,23 @@ export function SeoSection({
  * instead of guessing at visual adjacency.
  */
 export function SpecTable({ rows }: { rows: SpecRow[] }) {
-  if (rows.length === 0) return null;
+  /**
+   * Rows with no value are dropped, not rendered as an empty cell or "N/A".
+   *
+   * Two reasons. A blank cell reads as broken to a user, and "N/A" is worse
+   * for machines — a parser will happily record the phone number as the
+   * literal string "N/A". Omission is the honest representation of "not
+   * stated", and it matches how `prune()` treats the same fields in JSON-LD,
+   * so the visible table and the structured data always agree.
+   */
+  const filled = rows.filter((r) => r.value != null && String(r.value).trim());
+  if (filled.length === 0) return null;
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white/80">
       <table className="w-full border-collapse text-left text-sm">
         <caption className="sr-only">Product specifications</caption>
         <tbody>
-          {rows.map((row, i) => (
+          {filled.map((row, i) => (
             <tr
               key={row.label}
               className={i % 2 === 0 ? 'bg-white/60' : 'bg-slate-50/60'}

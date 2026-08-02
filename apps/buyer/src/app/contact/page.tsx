@@ -36,7 +36,14 @@ const CRUMBS = [
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
     title: `Contact ${SITE_NAME} — Wholesale Enquiries & Support`,
-    description: `Contact ${SITE_NAME} for wholesale medicine enquiries, supplier onboarding and buyer support. Email ${CONTACT.email} or call ${CONTACT.telephone}.`,
+    /**
+     * The phone number is only mentioned when one is actually configured —
+     * see the note on CONTACT in lib/seo/config.ts. Interpolating an empty
+     * value would ship a meta description ending "or call ." to every SERP.
+     */
+    description: `Contact ${SITE_NAME} for wholesale medicine enquiries, supplier onboarding and buyer support. Email ${CONTACT.email}${
+      CONTACT.telephone ? ` or call ${CONTACT.telephone}` : ''
+    }.`,
     path: routes.contact(),
     keywords: [
       'contact PharmaBag',
@@ -100,10 +107,9 @@ export default async function ContactPage() {
               { label: 'Email', value: CONTACT.email },
               { label: 'Phone', value: CONTACT.telephone },
               {
-                label: 'Location',
+                label: 'Based in',
                 value: `${CONTACT.addressLocality}, ${CONTACT.addressRegion}, India`,
               },
-              { label: 'Business hours', value: 'Monday to Saturday, 10:00–19:00 IST' },
               {
                 label: 'Buyer eligibility',
                 value: 'Businesses holding a valid drug licence only',

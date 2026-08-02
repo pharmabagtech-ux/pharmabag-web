@@ -189,7 +189,11 @@ export default async function AboutPage() {
               { label: 'Email', value: CONTACT.email },
               { label: 'Phone', value: CONTACT.telephone },
               {
-                label: 'Registered location',
+                // "Based in", not "Registered office" -- the city is known,
+                // the registered address is not, and claiming one we cannot
+                // evidence is exactly the kind of unverifiable detail that
+                // costs trust on a YMYL page.
+                label: 'Based in',
                 value: `${CONTACT.addressLocality}, ${CONTACT.addressRegion}, India`,
               },
             ]}
