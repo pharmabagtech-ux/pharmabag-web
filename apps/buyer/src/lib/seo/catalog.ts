@@ -8,8 +8,10 @@
  *  - Every response is cached with `next.revalidate` so that rendering 26,000
  *    product pages does not translate into 26,000 uncached API hits. Without
  *    this, enabling SSR would move the site's load onto the API box.
- *  - It never throws. A page that renders without its "related products" rail
- *    is fine; a page that 500s loses the URL from the index.
+ *  - Decorative reads never throw: a page that renders without its "related
+ *    products" rail is fine. Reads a page cannot render without are `strict`
+ *    and DO throw -- see `apiGet` for why turning an API blip into a 404
+ *    is far worse than turning it into a 500.
  */
 import { unstable_noStore } from 'next/cache';
 
@@ -108,29 +110,68 @@ export interface ProductQuery {
   sortOrder?: 'asc' | 'desc';
 }
 
-/** Shared fetch with a timeout, caching and total failure tolerance. */
+/** Raised when a fetch a page cannot render without has failed. */
+export class CatalogUnavailableError extends Error {
+  constructor(path: string, cause?: unknown) {
+    super(`Catalogue request failed: ${path}`);
+    this.name = 'CatalogUnavailableError';
+    this.cause = cause;
+  }
+}
+
+/**
+ * Shared fetch with a timeout, caching, one retry, and a caller-chosen
+ * failure mode.
+ *
+ * The failure mode matters more than it looks. Facet pages resolve a slug by
+ * looking it up in this data, so if a transient timeout returned an empty list
+ * the page would conclude the brand does not exist and call `notFound()` —
+ * turning a two-second API blip into a **404**. Google drops 404s from the
+ * index; it retries 500s. Silently degrading to "not found" is therefore the
+ * worst possible behaviour here, and it was observed happening in
+ * verification before this was added.
+ *
+ * So: data a page cannot render without is fetched with `strict`, which
+ * throws and yields a 500. Decorative data (related products, sibling rails)
+ * keeps the tolerant fallback, because losing a rail should never cost the
+ * whole page.
+ */
 async function apiGet<T>(
   path: string,
   revalidate: number,
   fallback: T,
+  strict = false,
 ): Promise<T> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
-  try {
-    const res = await fetch(`${API_BASE}${path}`, {
-      signal: controller.signal,
-      headers: { accept: 'application/json' },
-      next: { revalidate },
-    });
-    if (!res.ok) return fallback;
-    const body = await res.json();
-    // The API wraps every payload as { message, data }.
-    return (body?.data ?? body ?? fallback) as T;
-  } catch {
-    return fallback;
-  } finally {
-    clearTimeout(timeout);
+  let lastError: unknown;
+
+  // Two attempts: most failures here are a cold API box or a brief timeout.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    try {
+      const res = await fetch(`${API_BASE}${path}`, {
+        signal: controller.signal,
+        headers: { accept: 'application/json' },
+        next: { revalidate },
+      });
+      if (!res.ok) {
+        lastError = new Error(`HTTP ${res.status}`);
+        // 4xx will not improve on retry; 5xx and timeouts might.
+        if (res.status < 500) break;
+        continue;
+      }
+      const body = await res.json();
+      // The API wraps every payload as { message, data }.
+      return (body?.data ?? body ?? fallback) as T;
+    } catch (error) {
+      lastError = error;
+    } finally {
+      clearTimeout(timeout);
+    }
   }
+
+  if (strict) throw new CatalogUnavailableError(path, lastError);
+  return fallback;
 }
 
 function buildQuery(q: ProductQuery): string {
@@ -154,11 +195,14 @@ export interface ProductPage {
   totalPages: number;
 }
 
-export async function fetchProducts(q: ProductQuery = {}): Promise<ProductPage> {
+export async function fetchProducts(
+  q: ProductQuery = {},
+  opts: { strict?: boolean } = {},
+): Promise<ProductPage> {
   const data = await apiGet<{
     products?: CatalogProduct[];
     meta?: { total?: number; page?: number; limit?: number; totalPages?: number };
-  }>(`/products?${buildQuery(q)}`, REVALIDATE_PRODUCT, {});
+  }>(`/products?${buildQuery(q)}`, REVALIDATE_PRODUCT, {}, opts.strict);
 
   const products = Array.isArray(data?.products) ? data.products : [];
   const meta = data?.meta ?? {};
@@ -194,20 +238,29 @@ export async function fetchProduct(
   return data && (data as CatalogProduct).id ? data : null;
 }
 
-export async function fetchCategories(): Promise<CatalogCategory[]> {
+/**
+ * @param strict throw instead of returning [] when the request fails. Use it
+ * anywhere an empty list would be misread as "this slug does not exist".
+ */
+export async function fetchCategories(strict = false): Promise<CatalogCategory[]> {
   const data = await apiGet<CatalogCategory[]>(
     '/products/categories',
     REVALIDATE_TAXONOMY,
     [],
+    strict,
   );
   return Array.isArray(data) ? data : [];
 }
 
-export async function fetchManufacturers(): Promise<CatalogManufacturer[]> {
+/** @param strict see {@link fetchCategories}. */
+export async function fetchManufacturers(
+  strict = false,
+): Promise<CatalogManufacturer[]> {
   const data = await apiGet<CatalogManufacturer[]>(
     '/products/manufacturers',
     REVALIDATE_TAXONOMY,
     [],
+    strict,
   );
   return Array.isArray(data) ? data : [];
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { buildMetadata } from '@/lib/seo/metadata';
+import { buildSegmentMetadata } from '@/lib/seo/metadata';
 import { routes } from '@/lib/seo/url';
 import { SITE_NAME, CATALOGUE_SIZE_APPROX } from '@/lib/seo/config';
 
@@ -20,7 +20,7 @@ import { SITE_NAME, CATALOGUE_SIZE_APPROX } from '@/lib/seo/config';
  * own copy rather than a query string over a grid. `robots.ts` also disallows
  * the `sort=` and `view=` parameter patterns for the same reason.
  */
-export const metadata: Metadata = buildMetadata({
+export const metadata: Metadata = buildSegmentMetadata({
   title: 'Wholesale Medicines Online — Bulk Price List & Suppliers',
   description: `Browse ${CATALOGUE_SIZE_APPROX.toLocaleString('en-IN')}+ medicines available at wholesale rates on ${SITE_NAME}. Compare bulk prices from verified Indian suppliers, check MOQ and GST, and order online with pan-India delivery.`,
   path: routes.products(),

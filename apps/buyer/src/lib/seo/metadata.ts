@@ -81,7 +81,20 @@ export function buildMetadata(input: BuildMetadataInput): Metadata {
    * brand is added explicitly for those below.
    */
   const finalTitle = clampTitle(title);
-  const socialTitle = finalTitle.toLowerCase().includes(SITE_NAME.toLowerCase())
+
+  /**
+   * A title that already names the brand (e.g. "About PharmaBag") opts OUT of
+   * the template via `absolute`, otherwise it renders "About PharmaBag |
+   * PharmaBag". Everything else passes through as a string and picks the
+   * suffix up from the root layout's template.
+   */
+  const carriesBrand = finalTitle
+    .toLowerCase()
+    .includes(SITE_NAME.toLowerCase());
+  const titleField = carriesBrand ? { absolute: finalTitle } : finalTitle;
+
+  /** OG/Twitter do not inherit the template, so they always spell it out. */
+  const socialTitle = carriesBrand
     ? finalTitle
     : `${finalTitle} | ${SITE_NAME}`;
   const finalDescription = clampDescription(description);
@@ -91,7 +104,7 @@ export function buildMetadata(input: BuildMetadataInput): Metadata {
     : DEFAULT_OG_IMAGE;
 
   return {
-    title: finalTitle,
+    title: titleField,
     description: finalDescription,
     keywords: keywords?.length ? keywords : undefined,
     alternates: {
@@ -144,6 +157,27 @@ export function buildMetadata(input: BuildMetadataInput): Metadata {
       ...(prevPath ? { 'link:prev': absoluteUrl(prevPath) } : {}),
       ...(nextPath ? { 'link:next': absoluteUrl(nextPath) } : {}),
     },
+  };
+}
+
+/**
+ * Metadata for a LAYOUT that also has indexable children.
+ *
+ * A layout whose `title` is a plain string replaces the inherited
+ * `title.template` for its entire subtree — which is how `/products/[slug]`
+ * silently lost its " | PharmaBag" suffix once `products/layout.tsx` was
+ * added. Re-declaring the template here keeps children suffixed.
+ */
+export function buildSegmentMetadata(input: BuildMetadataInput): Metadata {
+  const base = buildMetadata(input);
+  const own =
+    typeof base.title === 'string'
+      ? base.title
+      : (base.title as { absolute?: string })?.absolute ?? input.title;
+
+  return {
+    ...base,
+    title: { default: own, template: `%s | ${SITE_NAME}` },
   };
 }
 

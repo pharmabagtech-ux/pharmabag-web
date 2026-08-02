@@ -55,7 +55,8 @@ interface PageProps {
 }
 
 async function resolve(brandSlug: string, citySlug: string) {
-  const manufacturers = await fetchManufacturers();
+  // strict: an empty list here would be misread as "brand does not exist".
+  const manufacturers = await fetchManufacturers(true);
   const matches = manufacturers.filter(
     (m) => m.name?.trim() && facetSlug(m.name) === brandSlug,
   );

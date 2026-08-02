@@ -54,7 +54,8 @@ interface PageProps {
 }
 
 async function resolve(categorySlug: string) {
-  const categories = await fetchCategories();
+  // strict: an empty tree here would be misread as "category does not exist".
+  const categories = await fetchCategories(true);
   const category = categories.find((c) => c.slug === categorySlug);
   return { categories, category };
 }

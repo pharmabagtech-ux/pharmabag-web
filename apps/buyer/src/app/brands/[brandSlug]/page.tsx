@@ -55,7 +55,8 @@ interface PageProps {
  * page per brand instead of splitting authority across near-duplicates.
  */
 async function resolveBrand(brandSlug: string) {
-  const manufacturers = await fetchManufacturers();
+  // strict: an empty list here would be misread as "brand does not exist".
+  const manufacturers = await fetchManufacturers(true);
   const matches = manufacturers.filter(
     (m) => m.name?.trim() && facetSlug(m.name) === brandSlug,
   );
