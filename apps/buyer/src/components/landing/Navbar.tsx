@@ -136,6 +136,31 @@ export default function Navbar({
     logout();
   };
 
+  /**
+   * Tapping the icon of a drawer that is ALREADY open closes it.
+   *
+   * Without this, a second tap called setIsCartOpen(true) on a value that was
+   * already true -- React bails out, nothing re-renders, and from the user's
+   * seat the button is simply dead. That is unusable on a phone: the open
+   * panel covers 64% of a 390x844 screen, leaving only a 110px strip and the
+   * small X as ways out, so tapping the cart icon again is the natural thing
+   * to try and it did nothing. Reported as "from phone clicking on cart
+   * doesn't work".
+   *
+   * The mobile menu button already did this inline; the cart, wishlist and
+   * notification icons did not.
+   */
+  const toggleDrawer = (
+    drawerName: 'cart' | 'wishlist' | 'notifications' | 'menu',
+  ) => {
+    const alreadyOpen =
+      (drawerName === 'cart' && isCartOpen) ||
+      (drawerName === 'wishlist' && isWishlistOpen) ||
+      (drawerName === 'notifications' && isNotificationsOpen) ||
+      (drawerName === 'menu' && isMobileMenuOpen);
+    openDrawer(alreadyOpen ? null : drawerName);
+  };
+
   const openDrawer = (drawerName: 'cart' | 'wishlist' | 'notifications' | 'menu' | null) => {
     setIsCartOpen(drawerName === 'cart');
     setIsWishlistOpen(drawerName === 'wishlist');
@@ -259,7 +284,7 @@ export default function Navbar({
 
                 {/* Notification */}
                 <button
-                  onClick={() => openDrawer('notifications')}
+                  onClick={() => toggleDrawer('notifications')}
                   className="relative p-1.5 text-gray-700 hover:text-sky-600"
                 >
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -273,7 +298,7 @@ export default function Navbar({
 
                 {/* Wishlist */}
                 <button
-                  onClick={() => openDrawer('wishlist')}
+                  onClick={() => toggleDrawer('wishlist')}
                   className="relative p-1.5 text-gray-700 hover:text-sky-600"
                 >
                   <Bookmark className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -287,7 +312,7 @@ export default function Navbar({
 
                 {/* Cart */}
                 <button
-                  onClick={() => openDrawer('cart')}
+                  onClick={() => toggleDrawer('cart')}
                   className="relative p-1.5 text-gray-700 hover:text-sky-600"
                 >
                   <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -374,7 +399,7 @@ export default function Navbar({
 
             {/* MENU BUTTON */}
             <button
-              onClick={() => isMobileMenuOpen ? openDrawer(null as any) : openDrawer('menu')}
+              onClick={() => toggleDrawer('menu')}
               className="lg:hidden p-1.5 text-gray-700 hover:text-gray-900 ml-1 sm:ml-2"
             >
               {isMobileMenuOpen ? (
