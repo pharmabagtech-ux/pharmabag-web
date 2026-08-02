@@ -92,7 +92,7 @@ export default function TicketDetailPage() {
     <main className="min-h-screen bg-[#f8fbfa] flex flex-col">
       <Navbar showUserActions={true} />
 
-      <div className="flex-1 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 px-[4vw] w-full mx-auto flex flex-col">
+      <div className="flex-1 pt-6 pb-28 lg:pt-32 lg:pb-20 px-[4vw] w-full mx-auto flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <Link 

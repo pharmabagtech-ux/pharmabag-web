@@ -32,7 +32,7 @@ export default function CreditPage() {
 
         <Navbar showUserActions onLoginClick={() => setIsLoginOpen(true)} />
 
-        <div className="pt-20 sm:pt-24 md:pt-28 pb-12 sm:pb-20 px-[4vw] w-full mx-auto relative z-10">
+        <div className="pt-6 pb-28 lg:pt-28 lg:pb-20 px-[4vw] w-full mx-auto relative z-10">
           <div className="mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Invoices & Payments</h1>
             <p className="text-gray-500 mt-1">Manage your order invoices and payment history</p>

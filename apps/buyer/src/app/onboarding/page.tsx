@@ -353,7 +353,7 @@ export default function OnboardingPage() {
 
         <Navbar showUserActions onLoginClick={() => setIsLoginOpen(true)} />
 
-        <div className="pt-20 sm:pt-24 md:pt-28 pb-12 sm:pb-20 px-[4vw] w-full mx-auto relative z-10">
+        <div className="pt-6 pb-28 lg:pt-28 lg:pb-20 px-[4vw] w-full mx-auto relative z-10">
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Complete Your Profile</h1>
             <p className="text-gray-500 mt-2">Set up your business details to start ordering</p>
