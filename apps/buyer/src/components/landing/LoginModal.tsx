@@ -126,15 +126,12 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
       </button>
 
       {/* Main UI Container */}
-      <div className="relative mb-10 z-10 w-full h-full flex flex-col items-center justify-start md:justify-center pt-2 pb-2 md:pt-16 md:pb-12 overflow-hidden">
-
-        {/* TOP: Badges - Mobile Only */}
-        <div className="w-full flex md:hidden justify-center  px-0  mb-1">
-          <div className="flex flex-row gap-3 w-full max-w-xs justify-center">
-            <Image src="/app_store_badge.png" alt="App Store" width={112} height={34} className="w-auto h-auto opacity-90" />
-            <Image src="/google_play_badge.png" alt="Google Play" width={112} height={34} className="w-auto h-auto opacity-90" />
-          </div>
-        </div>
+      {/*
+        The app-store badges used to be the first child here. With them removed
+        the login rises into that space; pt-6 on mobile keeps it clear of the
+        close button rather than flush against the top edge.
+      */}
+      <div className="relative mb-10 z-10 w-full h-full flex flex-col items-center justify-start md:justify-center pt-6 pb-2 md:pt-16 md:pb-12 overflow-hidden">
 
         <div className="container max-w-7xl mx-auto flex flex-col items-center mb-6 justify-center w-full px-0">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-2 lg:gap-16 xl:gap-24 w-full h-fit">
@@ -172,15 +169,6 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
                       </button>
                     )}
                   </div>
-
-                  {/* Desktop App Badges */}
-                  {/* <div className="hidden md:block pt-8 border-t border-gray-100/50 w-full">
-                    <p className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Experience on our App</p>
-                    <div className="flex flex-row gap-3 md:gap-4 justify-center items-center">
-                      <Image src="/app_store_badge.png" alt="App Store" width={160} height={50} className="h-10 md:h-32 w-auto cursor-pointer object-contain" />
-                      <Image src="/google_play_badge.png" alt="Google Play" width={160} height={50} className="h-10 md:h-32 w-auto cursor-pointer object-contain" />
-                    </div>
-                  </div> */}
                 </form>
               </div>
             </motion.div>
