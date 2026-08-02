@@ -3,6 +3,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
+/**
+ * The site footer.
+ *
+ * ⚠️ Rendered ONCE, globally, by the root layout (`app/layout.tsx`).
+ * Do NOT render it inside a page — the order detail page did, in all three of
+ * its states, which put two identical footers on every order page (reported
+ * from production). Pages render their own `Navbar`; the footer is global.
+ */
 export default function Footer() {
   /**
    * `href="#"` on About and Contact meant two of the site's strongest trust
