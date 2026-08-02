@@ -19,7 +19,7 @@ export default function ProfilePage() {
     return (
       <main className="min-h-screen bg-gray-50/50">
         <Navbar showUserActions={true} />
-        <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 w-full mx-auto px-[4vw] space-y-6 sm:space-y-8">
+        <div className="pt-6 pb-28 lg:pt-32 lg:pb-20 w-full mx-auto px-[4vw] space-y-6 sm:space-y-8">
           <SkeletonProfileHeader />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
             <div className="bg-white/40 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-white/40 shadow-xl animate-pulse">
@@ -43,7 +43,7 @@ export default function ProfilePage() {
     return (
       <main className="min-h-screen bg-gray-50/50">
         <Navbar showUserActions={true} />
-        <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 w-full mx-auto px-[4vw]">
+        <div className="pt-6 pb-28 lg:pt-32 lg:pb-20 w-full mx-auto px-[4vw]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -100,7 +100,7 @@ export default function ProfilePage() {
       <main className="min-h-screen bg-gray-50/50">
         <Navbar showUserActions={true} />
         
-        <div className="pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-20 w-full mx-auto px-[4vw]">
+        <div className="pt-6 pb-28 lg:pt-32 lg:pb-20 w-full mx-auto px-[4vw]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

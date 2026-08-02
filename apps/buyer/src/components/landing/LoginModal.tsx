@@ -127,11 +127,14 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
 
       {/* Main UI Container */}
       {/*
-        The app-store badges used to be the first child here. With them removed
-        the login rises into that space; pt-6 on mobile keeps it clear of the
-        close button rather than flush against the top edge.
+        The app-store badges used to be the first child here; with them removed
+        the login rises into that space.
+        Top padding is 64px because the close button is `fixed top-4` and 42px
+        tall, so it occupies y 16-58. The heading is a full-width centred block,
+        so anything less than 64 puts its box under the button - measured at
+        pt-6 the two overlapped and a tap near the "!" could hit close.
       */}
-      <div className="relative mb-10 z-10 w-full h-full flex flex-col items-center justify-start md:justify-center pt-6 pb-2 md:pt-16 md:pb-12 overflow-hidden">
+      <div className="relative mb-10 z-10 w-full h-full flex flex-col items-center justify-start md:justify-center pt-16 pb-2 md:pb-12 overflow-hidden">
 
         <div className="container max-w-7xl mx-auto flex flex-col items-center mb-6 justify-center w-full px-0">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-2 lg:gap-16 xl:gap-24 w-full h-fit">

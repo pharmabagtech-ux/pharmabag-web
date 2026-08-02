@@ -92,7 +92,7 @@ export default async function GenericsPage() {
     <>
       <JsonLd json={jsonLd} />
       <Navbar showUserActions />
-      <main className="w-full pb-16 pt-20 lg:pt-28">
+      <main className="w-full pb-28 pt-6 lg:pb-16 lg:pt-28">
         <Breadcrumbs crumbs={CRUMBS} />
 
         <header className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6">
