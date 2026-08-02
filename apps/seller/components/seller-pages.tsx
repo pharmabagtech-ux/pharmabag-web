@@ -60,7 +60,10 @@ function OrderTable({ orders, settlements = [], showConfirm = false, updateFn }:
                     <td className="px-5 py-4"><span className="font-mono text-xs text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded">{displayId}</span></td>
 
                     <td className="px-5 py-4 text-xs text-muted-foreground">{order.items?.length ?? 0} items</td>
-                    <td className="px-5 py-4 text-sm font-semibold text-foreground">{formatCurrency(order.sellerTotal ?? order.totalAmount ?? order.total ?? 0)}</td>
+                    {/* totalAmount first: it is GST-inclusive and matches what the buyer paid.
+                        sellerTotal is the GST-exclusive settlement basis and is
+                        only a fallback for responses predating that field. */}
+                    <td className="px-5 py-4 text-sm font-semibold text-foreground">{formatCurrency(order.totalAmount ?? order.sellerTotal ?? order.total ?? 0)}</td>
 
                     <td className="px-5 py-4">
                       {(() => {
@@ -151,10 +154,26 @@ export function OrdersContent() {
       }
     });
 
+  /**
+   * Totals what the BUYER actually paid for this seller's items, GST included.
+   *
+   * This used to sum `item.totalPrice`, which is GST-exclusive, so the seller
+   * portal reported a smaller number than the buyer was charged for the very
+   * same order. `totalAmount` now comes GST-inclusive from `getSellerOrders`;
+   * the per-item sum is kept only as a fallback for a cached response from
+   * before that change.
+   */
   const totalOrderAmount = useMemo(() => {
     return allOrders.reduce((sum, order) => {
+      if (typeof order.totalAmount === 'number') return sum + order.totalAmount;
       const items = order.items || order.orderItems || [];
-      const orderSellerSum = items.reduce((iSum: number, item: any) => iSum + (item.totalPrice || (item.price * (item.quantity || 1))), 0);
+      const orderSellerSum = items.reduce(
+        (iSum: number, item: any) =>
+          iSum +
+          (item.totalPrice || item.price * (item.quantity || 1)) *
+            (1 + (item.gstPercent ?? 12) / 100),
+        0,
+      );
       return sum + orderSellerSum;
     }, 0);
   }, [allOrders]);

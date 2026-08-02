@@ -153,7 +153,7 @@ export default function SellerDashboard() {
                     <tr key={o.orderId || o.id} className="hover:bg-accent/30 transition-colors">
                       <td className="px-5 py-4"><span className="font-mono text-xs font-medium text-foreground">{(o.orderId || o.id || "").slice(0, 8).toUpperCase() || "—"}</span></td>
 
-                      <td className="px-5 py-4 text-sm font-semibold text-foreground">{formatCurrency(o.sellerTotal ?? o.totalAmount ?? o.total ?? 0)}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-foreground">{formatCurrency(o.totalAmount ?? o.sellerTotal ?? o.total ?? 0)}</td>
                       <td className="px-5 py-4"><OrderStatusBadge status={o.orderStatus || o.status} /></td>
                       <td className="px-5 py-4">
                         <Link href={`/orders/${o.orderId || o.id}`} title="Manage Order">
