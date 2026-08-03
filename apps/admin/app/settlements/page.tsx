@@ -53,8 +53,28 @@ export default function AdminSettlementsPage() {
     // Start with already ledgered settlements
     const items = settlements.map((s: any) => ({ ...s, viewType: "LEDGERED" }));
 
-    // Find delivered orders that don't have settlements for their items yet
-    deliveredOrders.forEach((order: any) => {
+    /**
+     * Delivered orders that have no settlement yet, shown as ready to pay out.
+     *
+     * The buyer must have PAID, not merely received the goods. The API refuses
+     * to create a settlement for an unpaid order - that guard is deliberate,
+     * it stops money going out before it comes in - so listing such an order
+     * here produced a "Paid" button that could never succeed. Clicking it
+     * reported "Target ledger entry was created but is still propagating,
+     * please click Paid again", which was untrue and never resolved however
+     * many times it was retried.
+     *
+     * An unpaid delivered order simply is not ready for payout; it stays on
+     * the Orders screen, where its payment status is the point.
+     */
+    deliveredOrders
+      .filter((order: any) => {
+        const paid = (order.paymentStatus || order.payment_status || '')
+          .toString()
+          .toUpperCase();
+        return paid === 'SUCCESS';
+      })
+      .forEach((order: any) => {
       const orderItems = order.items || order.orderItems || [];
       orderItems.forEach((item: any) => {
           // Check if this item is already in the settlements ledger
@@ -151,7 +171,15 @@ export default function AdminSettlementsPage() {
         }
 
         if (!newRecord) {
-           throw new Error("Target ledger entry was created but is still propagating. Please wait a moment and click 'Paid' again.");
+           /**
+            * Do not claim the record was created - it was not. The usual cause
+            * is the order not being eligible for settlement (the buyer has not
+            * paid), in which case retrying will never work and telling the
+            * admin to click again just wastes their time.
+            */
+           throw new Error(
+             "Could not create a ledger entry for this item. This usually means the buyer has not paid for the order yet - a payout can only be made once payment is confirmed.",
+           );
         }
         settlementId = newRecord.id;
       }
