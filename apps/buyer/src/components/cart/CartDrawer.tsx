@@ -112,7 +112,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
           // so the panel is inset from whichever edge the navbar occupies -
           // otherwise nav links or the mobile bottom-nav icons underneath it
           // are unreachable while the bag is open.
-          className="fixed top-0 lg:top-28 bottom-24 lg:bottom-0 right-0 w-[280px] sm:w-[320px] md:w-[400px] bg-white shadow-2xl z-[101] flex flex-col"
+          className="fixed top-0 lg:top-28 bottom-24 lg:bottom-0 right-0 w-[92vw] max-w-[400px] sm:w-[380px] md:w-[400px] bg-white shadow-2xl z-[101] flex flex-col overflow-x-hidden"
         >
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 md:p-8 border-b border-gray-100">
@@ -200,14 +200,18 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                           className="w-full h-full object-contain p-2" 
                         />
                       </Link>
-                      <div className="flex-1 flex flex-col justify-between">
-                        <div className="flex justify-between">
+                      {/* min-w-0 is load-bearing: without it this flex-1
+                          column cannot shrink below the product name's intrinsic
+                          width, so a long name pushes the quantity stepper and
+                          price past the panel edge and they get clipped. */}
+                      <div className="min-w-0 flex-1 flex flex-col justify-between">
+                        <div className="flex justify-between gap-2 min-w-0">
                           <Link
                             href={itemHref}
                             onClick={onClose}
-                            className="font-bold text-gray-900 leading-tight hover:text-lime-700 transition-colors"
+                            className="min-w-0 font-bold text-gray-900 leading-tight hover:text-lime-700 transition-colors"
                           >
-                            <h3>{itemName}</h3>
+                            <h3 className="break-words">{itemName}</h3>
                           </Link>
                           <button
                             onMouseDown={(e) => {
