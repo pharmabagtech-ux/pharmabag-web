@@ -47,16 +47,21 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
     resolver: zodResolver(productFormSchema) as any,
     defaultValues: defaultValues || {
       product_name: "",
-      product_price: 0,
+      // MRP and stock are deliberately left undefined so the fields start
+      // EMPTY. A prefilled 0 read as a real price, and because the schema
+      // requires an MRP above 0 the form greeted every new listing with
+      // "MRP must be greater than 0" against a value nobody typed.
       company_name: "",
       chemical_combination: "",
       categories: [],
       sub_categories: [],
-      stock: 0,
       min_order_qty: 1,
       max_order_qty: 100000,
       expire_date: (() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; })(),
-      gst_percent: 12,
+      // 5% is the slab almost the entire live catalogue sits on. Still a valid
+      // slab, so the pricing preview and the minimum-quantity maths keep
+      // working on a fresh form (see the note on the Discount section order).
+      gst_percent: 5,
       image_list: [],
       custom_extra_fields: [],
       discount_form_details: { type: "ptr_discount" } as DiscountFormDetails,
@@ -110,7 +115,10 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
 
     if (minRequiredMoq !== lastMinMoqRef.current) {
       setValue("min_order_qty", minRequiredMoq, { shouldDirty: true, shouldValidate: true });
-      if (watchStock < minRequiredMoq) {
+      // Written as "not at or above" so an empty stock field (NaN) is topped up
+      // as well - a plain `<` comparison is false against NaN and would leave
+      // the listing failing its own stock >= minimum rule.
+      if (!(watchStock >= minRequiredMoq)) {
         setValue("stock", minRequiredMoq, { shouldDirty: true, shouldValidate: true });
       }
       lastMinMoqRef.current = minRequiredMoq;
@@ -441,19 +449,21 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[42] transition-opacity duration-300">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Pricing & Stock</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Input 
-              label="MRP (₹) *" 
-              type="number" 
-              step="0.01" 
-              error={errors.product_price?.message} 
-              {...register("product_price", { valueAsNumber: true })} 
+            <Input
+              label="MRP (₹) *"
+              type="number"
+              step="0.01"
+              placeholder="e.g 100"
+              error={errors.product_price?.message}
+              {...register("product_price", { valueAsNumber: true })}
             />
-            <Input 
-              label="Current Stock *" 
-              type="number" 
+            <Input
+              label="Current Stock *"
+              type="number"
               min={minRequiredMoq > 0 ? minRequiredMoq : 1}
-              error={errors.stock?.message} 
-              {...register("stock", { valueAsNumber: true })} 
+              placeholder="e.g 500"
+              error={errors.stock?.message}
+              {...register("stock", { valueAsNumber: true })}
             />
             <Controller
               control={control}
