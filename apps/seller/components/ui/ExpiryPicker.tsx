@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,9 +21,60 @@ const MONTHS = [
 
 const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+/** Height to assume before the panel has been measured, for the flip decision. */
+const ESTIMATED_PANEL_HEIGHT = 300;
+const PANEL_MIN_WIDTH = 320;
+const VIEWPORT_MARGIN = 8;
+
 export function ExpiryPicker({ value, onChange, label, error, className, required }: ExpiryPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  // The panel is rendered into document.body rather than beside the field.
+  // The Pricing & Stock card it sits in is `relative z-[42]`, which opens a
+  // stacking context - so no z-index on the panel can lift it above the sticky
+  // Cancel / Add Product bar (a sibling of that card at z-[100]). The bar was
+  // covering the lower half of the panel and swallowing its clicks. Same fix,
+  // and same reason, as the admin SellersHoverCell.
+  const place = useCallback(() => {
+    const r = fieldRef.current?.getBoundingClientRect();
+    if (!r) return;
+
+    const width = Math.min(Math.max(r.width, PANEL_MIN_WIDTH), window.innerWidth - VIEWPORT_MARGIN * 2);
+    const left = Math.max(VIEWPORT_MARGIN, Math.min(r.left, window.innerWidth - width - VIEWPORT_MARGIN));
+
+    const height = panelRef.current?.offsetHeight ?? ESTIMATED_PANEL_HEIGHT;
+    const below = r.bottom + VIEWPORT_MARGIN;
+    // Drop below the field unless that would run past the fold, in which case
+    // open upwards.
+    const top =
+      below + height > window.innerHeight - VIEWPORT_MARGIN
+        ? Math.max(VIEWPORT_MARGIN, r.top - height - VIEWPORT_MARGIN)
+        : below;
+
+    setPos({ top, left, width });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setPos(null);
+      return;
+    }
+    place();
+    // Re-place once the panel exists, so the flip uses its real height.
+    const frame = requestAnimationFrame(place);
+    // `true` for capture: the form scrolls inside a container, not the window.
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
+    };
+  }, [isOpen, place]);
 
   // Helper to get initial date (this time next year if empty)
   const getInitialDate = () => {
@@ -83,12 +135,14 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
     updateDate(internalDate.getMonth(), internalDate.getFullYear() + delta);
   };
 
-  // Close on outside click
+  // Close on outside click. The panel is portalled out of this subtree, so it
+  // has to be checked separately or every click inside it would close it.
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
+      const target = e.target as Node;
+      if (containerRef.current?.contains(target)) return;
+      if (panelRef.current?.contains(target)) return;
+      setIsOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -106,6 +160,7 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
       )}
 
       <div
+        ref={fieldRef}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "flex items-center justify-between w-full h-14 rounded-2xl border bg-white dark:bg-slate-900 px-4 py-2 cursor-pointer transition-all duration-200 shadow-sm",
@@ -137,13 +192,16 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
         <ChevronsUpDown className="h-4 w-4 text-slate-400" />
       </div>
 
+      {typeof document !== "undefined" && createPortal(
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && pos && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 8, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="absolute z-[100] left-0 right-0 md:w-80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-6"
+            ref={panelRef}
+            initial={{ opacity: 0, y: 2, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95, y: 2 }}
+            style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
+            className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-6"
           >
             <div className="flex flex-col gap-6">
               <div className="grid grid-cols-2 gap-4">
@@ -253,7 +311,8 @@ export function ExpiryPicker({ value, onChange, label, error, className, require
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body)}
 
       {error && (
         <motion.p 
