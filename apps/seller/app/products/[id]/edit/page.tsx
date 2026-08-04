@@ -43,7 +43,10 @@ export default function EditProductPage() {
                 min_order_qty: product.minimumOrderQuantity || 1,
                 max_order_qty: product.maximumOrderQuantity || 100000,
                 expire_date: product.expiryDate || "",
-                gst_percent: product.gstPercent || 12,
+                // Same fallback as the new-listing form - the two drift apart
+                // otherwise. `??` not `||`: 0% is a real slab and `||` would
+                // silently reopen a 0% listing as 5%.
+                gst_percent: product.gstPercent ?? 5,
                 image_list: product.images || [],
                 custom_extra_fields: product.extraFields || [],
                 discount_form_details: product.discountFormDetails || (product.discountType ? {

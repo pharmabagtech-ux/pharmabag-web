@@ -173,12 +173,15 @@ export function minimumOrderQuantity(
 export const productFormSchema = z.object({
   sku: z.string().optional(),
   product_name: z.string().min(2, 'Product name must be at least 2 characters'),
-  product_price: z.number().min(0.01, 'MRP must be greater than 0'),
+  // An empty number input reaches the resolver as NaN, which z.number() rejects
+  // with "Expected number, received nan". These fields start empty on a new
+  // listing, so the blank case gets its own wording.
+  product_price: z.number({ invalid_type_error: 'MRP is required' }).min(0.01, 'MRP must be greater than 0'),
   company_name: z.string().min(2, 'Company name is required'),
   chemical_combination: z.string().optional(),
   categories: z.array(z.string()).min(1, 'Select at least one category'),
   sub_categories: z.array(z.string()).optional(),
-  stock: z.number().int().min(0, 'Stock cannot be negative'),
+  stock: z.number({ invalid_type_error: 'Current stock is required' }).int().min(0, 'Stock cannot be negative'),
   min_order_qty: z.number().int().min(1, 'Minimum 1 required'),
   max_order_qty: z.number().int().min(1, 'Minimum 1 required'),
   expire_date: z.string().refine((val) => {
