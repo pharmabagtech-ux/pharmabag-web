@@ -16,6 +16,8 @@ export default function AdminProductsPage() {
   const [filter, setFilter] = useState<"all" | "active" | "inactive" | "pending">("all");
   const [page, setPage] = useState(1);
   const limit = 20;
+  // One request covers the whole listings table (the API caps limit at 500).
+  const FETCH_LIMIT = 500;
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -25,8 +27,20 @@ export default function AdminProductsPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const queryParams: any = { page, limit };
+  // A row here is a seller listing reduced to one per catalogue product, but the
+  // API paginates and counts the listings themselves. Paging on the server meant
+  // the pager described a different set from the table — pages came up short of
+  // 20 rows, and because de-duplication only ever saw the page in hand, a product
+  // carrying two sellers either side of a page boundary was drawn on both pages.
+  // The listings table is a few hundred rows, so it is fetched in one request and
+  // paged below, after de-duplication: pager and table now count the same thing.
+  const queryParams: any = { page: 1, limit: FETCH_LIMIT };
   if (debouncedSearch) queryParams.search = debouncedSearch;
+  // Status is a filter the API applies too. Applied here it reached only the rows
+  // already fetched, so "Pending Approval" hid nothing that sat further down.
+  if (filter === "active") queryParams.isActive = "true";
+  else if (filter === "inactive") queryParams.isActive = "false";
+  else if (filter === "pending") queryParams.approvalStatus = "PENDING";
 
   const { data: productsData, isLoading } = useAdminProductsFiltered(queryParams);
   const productToggle = useUpdateProductStatus();
@@ -34,9 +48,13 @@ export default function AdminProductsPage() {
 
   // Backend returns { data: [...], total: ... }
   const products: any[] = Array.isArray(productsData) ? productsData : (productsData?.data ?? []);
-  const totalProducts = productsData?.total ?? products.length;
-  const totalPages = Math.max(1, Math.ceil(totalProducts / limit));
+  const totalListings = productsData?.total ?? products.length;
+  // If the table ever outgrows a single fetch, say so rather than quietly showing
+  // a slice of it — at that point this page needs the grouping done server-side.
+  const truncated = totalListings > products.length;
 
+  // De-duplication now runs over every matching listing rather than one page of
+  // them, so a product can no longer be drawn twice.
   const groupedProducts: any[] = [];
   const seenMaster = new Set();
   for (const p of products) {
@@ -47,16 +65,12 @@ export default function AdminProductsPage() {
     groupedProducts.push(p);
   }
 
-  const filtered = groupedProducts.filter((p: any) => {
-    // We can still keep the client-side search just in case
-    const matchesSearch = !debouncedSearch || (p.name ?? "").toLowerCase().includes(debouncedSearch.toLowerCase()) || (p.manufacturer ?? "").toLowerCase().includes(debouncedSearch.toLowerCase());
-    if (!matchesSearch) return false;
-
-    if (filter === "all") return true;
-    if (filter === "pending") return p.approvalStatus === "PENDING" || p.approvalStatus === "pending";
-    if (filter === "active") return p.isActive;
-    return !p.isActive;
-  });
+  // Search and status were both applied by the API; re-applying them here only
+  // risked dropping rows it had matched (it also searches chemical composition,
+  // which the old client-side pass did not look at).
+  const filtered = groupedProducts;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
+  const visible = filtered.slice((page - 1) * limit, page * limit);
 
 
 
@@ -98,6 +112,11 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="font-semibold text-2xl text-foreground">Product Management</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{filtered.length} unique products shown · {filtered.filter((p: any) => p.isActive).length} active</p>
+          {truncated && (
+            <p className="text-sm text-amber-600 mt-0.5" role="status">
+              Showing the first {products.length} of {totalListings} listings — narrow it with a search or a status filter.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
@@ -123,9 +142,9 @@ export default function AdminProductsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
-                {filtered.length === 0 ? (
+                {visible.length === 0 ? (
                   <tr><td colSpan={12} className="py-12 text-center text-sm text-muted-foreground">No products found</td></tr>
-                ) : filtered.map((p: any, i: number) => {
+                ) : visible.map((p: any, i: number) => {
                   // Build the seller list for this catalog product (loaded inline
                   // with the row, so the hover panel is instant). Falls back to the
                   // row's own seller for products without a master-catalog link.
