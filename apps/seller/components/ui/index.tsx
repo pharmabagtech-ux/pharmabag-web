@@ -75,12 +75,24 @@ export function StatSkeleton() {
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> { label?: string; error?: string; leftIcon?: React.ReactNode; rightIcon?: React.ReactNode; }
 export const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, leftIcon, rightIcon, className, id, ...p }, ref) => {
   const iid = id ?? label?.toLowerCase().replace(/\s+/g,"-");
+  // A focused <input type="number"> steps its own value on ArrowUp/ArrowDown, on a
+  // spinner click, and (Firefox / older Chrome) on the mouse wheel. Sellers who type
+  // a value then press Down to move on — an Excel habit — were silently saving one
+  // step less: "PTR Discount %" carries step=0.01, so 12 became 11.99 and was stored.
+  // Every number here is typed, never stepped, so the stepper is switched off.
+  const isNumber = p.type === "number";
+  const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> | undefined = isNumber
+    ? (e) => { p.onKeyDown?.(e); if (!e.defaultPrevented && (e.key === "ArrowUp" || e.key === "ArrowDown")) e.preventDefault(); }
+    : p.onKeyDown;
+  const onWheel: React.WheelEventHandler<HTMLInputElement> | undefined = isNumber
+    ? (e) => { p.onWheel?.(e); e.currentTarget.blur(); }
+    : p.onWheel;
   return (
     <div className="space-y-1.5">
       {label&&<label htmlFor={iid} className="block text-sm font-medium text-foreground">{label}</label>}
       <div className="relative">
         {leftIcon&&<div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{leftIcon}</div>}
-        <input ref={ref} id={iid} className={cn("w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60 disabled:opacity-50 transition-all", leftIcon&&"pl-9", rightIcon&&"pr-9", error&&"border-red-400", className)} aria-invalid={!!error} {...p}/>
+        <input ref={ref} id={iid} className={cn("w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60 disabled:opacity-50 transition-all", leftIcon&&"pl-9", rightIcon&&"pr-9", error&&"border-red-400", isNumber&&"[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none", className)} aria-invalid={!!error} {...p} onKeyDown={onKeyDown} onWheel={onWheel}/>
         {rightIcon&&<div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">{rightIcon}</div>}
       </div>
       {error&&<p className="text-xs text-red-500" role="alert">{error}</p>}
