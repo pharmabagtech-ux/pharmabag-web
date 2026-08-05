@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, UserCheck, UserX, Eye, Ban, Unlock, ChevronDown, ChevronUp, Building2, FileText, MapPin, Palmtree, ExternalLink, Trash2 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
@@ -207,11 +207,36 @@ export default function UsersPage() {
     to: new Date(),
   });
 
+  // Search and the role/status chips are filters the API already applies, and it
+  // counts the filtered set for us. Applying them here instead only ever narrowed
+  // the 20 rows already fetched, while the pager went on reporting every page of
+  // every user — so searching a phone that belonged to someone on page 2 showed
+  // nothing at all on page 1, and the match had to be hunted page by page.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  // Any narrowing shrinks the result set, so page 3 of the old set may not exist.
+  useEffect(() => { setPage(1); }, [role, status]);
+
+  // "VACATION" is ours, not the API's: it is derived from the sellers endpoint and
+  // is not a UserStatus, so sending it would fail the enum check. It stays local.
   const { data: usersData, isLoading } = useAdminUsers({
     page,
     limit,
-    dateFrom: dateRange?.from?.toISOString(),
-    dateTo: dateRange?.to?.toISOString(),
+    search: debouncedSearch || undefined,
+    role: role === "all" ? undefined : role,
+    status: status === "all" || status === "VACATION" ? undefined : status,
+    // A search is for one specific person, so it ignores the date window — which
+    // defaults to the last 30 days and would otherwise hide anyone who registered
+    // before that, making a perfectly good phone number look like no such user.
+    dateFrom: debouncedSearch ? undefined : dateRange?.from?.toISOString(),
+    dateTo: debouncedSearch ? undefined : dateRange?.to?.toISOString(),
   });
   const { data: sellersData } = useAdminSellers();
   const updateStatus = useAffirmUserStatus();
@@ -241,10 +266,14 @@ export default function UsersPage() {
 
   const vacationCount = users.filter((u: any) => u.role === "SELLER" && u.isOnVacation).length;
 
+  // The server has already applied all of this; kept as a harmless second pass so
+  // the rows never contradict the box (it matches on a superset of the API's
+  // fields). It reads the debounced term, not the raw one, so the list does not
+  // blank out for half a second between the keystroke and the refetch.
   const filtered = users.filter((u: any) => {
-    const s = search.toLowerCase();
+    const s = debouncedSearch.toLowerCase();
     const matchesId = (u.id ?? "").toLowerCase().includes(s);
-    const matchesPhone = (u.phone ?? "").includes(search);
+    const matchesPhone = (u.phone ?? "").includes(debouncedSearch);
     const matchesEmail = (u.email || u.sellerProfile?.email || u.buyerProfile?.email || "").toLowerCase().includes(s);
     const matchesBiz = (
       (u.sellerProfile?.companyName ?? "").toLowerCase().includes(s) ||
@@ -255,7 +284,7 @@ export default function UsersPage() {
 
     return (role === "all" || u.role === role) &&
       (status === "all" || (status === "VACATION" ? (u.role === "SELLER" && u.isOnVacation) : u.status === status)) &&
-      (!search || matchesId || matchesPhone || matchesEmail || matchesBiz);
+      (!debouncedSearch || matchesId || matchesPhone || matchesEmail || matchesBiz);
   });
 
   const handleAction = async (id: string, phone: string, action: "approve" | "reject" | "block" | "unblock") => {
@@ -296,7 +325,7 @@ export default function UsersPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="font-semibold text-2xl text-foreground">User Management</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">{users.length} total users · {users.filter((u: any) => u.status === "PENDING").length} pending{vacationCount > 0 && <> · <span className="text-amber-600">{vacationCount} on vacation</span></>}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{totalUsers} total users · {users.filter((u: any) => u.status === "PENDING").length} pending{vacationCount > 0 && <> · <span className="text-amber-600">{vacationCount} on vacation</span></>}{debouncedSearch && <> · <span className="text-muted-foreground">searching all dates</span></>}</p>
           </div>
           <DateRangePicker value={dateRange} onChange={setDateRange} align="end" />
         </div>
