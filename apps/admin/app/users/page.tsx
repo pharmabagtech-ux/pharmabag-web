@@ -232,8 +232,11 @@ export default function UsersPage() {
     search: debouncedSearch || undefined,
     role: role === "all" ? undefined : role,
     status: status === "all" || status === "VACATION" ? undefined : status,
-    dateFrom: dateRange?.from?.toISOString(),
-    dateTo: dateRange?.to?.toISOString(),
+    // A search is for one specific person, so it ignores the date window — which
+    // defaults to the last 30 days and would otherwise hide anyone who registered
+    // before that, making a perfectly good phone number look like no such user.
+    dateFrom: debouncedSearch ? undefined : dateRange?.from?.toISOString(),
+    dateTo: debouncedSearch ? undefined : dateRange?.to?.toISOString(),
   });
   const { data: sellersData } = useAdminSellers();
   const updateStatus = useAffirmUserStatus();
@@ -322,7 +325,7 @@ export default function UsersPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="font-semibold text-2xl text-foreground">User Management</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">{totalUsers} total users · {users.filter((u: any) => u.status === "PENDING").length} pending{vacationCount > 0 && <> · <span className="text-amber-600">{vacationCount} on vacation</span></>}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{totalUsers} total users · {users.filter((u: any) => u.status === "PENDING").length} pending{vacationCount > 0 && <> · <span className="text-amber-600">{vacationCount} on vacation</span></>}{debouncedSearch && <> · <span className="text-muted-foreground">searching all dates</span></>}</p>
           </div>
           <DateRangePicker value={dateRange} onChange={setDateRange} align="end" />
         </div>
