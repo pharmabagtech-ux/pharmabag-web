@@ -226,8 +226,14 @@ export async function getBuyers(params: { page?: number; limit?: number; status?
   return data.data;
 }
 
-export async function getBuyersList(page = 1, limit = 20) {
-  const { data } = await apiClient.get<any>(`/buyers/all?page=${page}&limit=${limit}`);
+export async function getBuyersList(
+  page = 1,
+  limit = 20,
+  filters: { search?: string; verificationStatus?: string; creditTier?: string } = {},
+) {
+  const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+  Object.entries(filters).forEach(([k, v]) => { if (v) qs.set(k, String(v)); });
+  const { data } = await apiClient.get<any>(`/buyers/all?${qs}`);
   return data;
 }
 
