@@ -65,7 +65,7 @@ export function useAdminMe() {
 
 export function useAdminDashboard(params: { dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["admin", "dashboard", params], queryFn: () => getAdminDashboard(params), staleTime: 60_000, retry: 1 }); }
 
-export function useAdminUsers(params: { page?: number; limit?: number; dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["admin", "users", params], queryFn: () => getAdminUsers(params), staleTime: 60_000, retry: 1 }); }
+export function useAdminUsers(params: { page?: number; limit?: number; search?: string; role?: string; status?: string; dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["admin", "users", params], queryFn: () => getAdminUsers(params), staleTime: 60_000, retry: 1 }); }
 
 export function useAdminSellers() { return useQuery({ queryKey: ["admin", "sellers"], queryFn: () => getSellers({ limit: 500 }), staleTime: 60_000, retry: 1 }); }
 

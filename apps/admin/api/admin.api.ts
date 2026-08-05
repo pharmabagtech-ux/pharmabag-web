@@ -11,7 +11,7 @@ export async function getAdminDashboard(params: { dateFrom?: string; dateTo?: st
 }
 
 // ─── Users ───────────────────────────────────────────
-export async function getAdminUsers(params: { page?: number; limit?: number; dateFrom?: string; dateTo?: string } = {}) {
+export async function getAdminUsers(params: { page?: number; limit?: number; search?: string; role?: string; status?: string; dateFrom?: string; dateTo?: string } = {}) {
   const qs = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, String(v)); });
   const { data } = await apiClient.get<any>(`/admin/users?${qs}`);
