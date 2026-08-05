@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Eye, ChevronDown, ChevronUp, FileText, MapPin, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
@@ -14,12 +14,13 @@ import { useQuery } from "@tanstack/react-query";
 type VerificationFilter = "all" | "UNVERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
 type TierFilter = "all" | "PREPAID" | "EMI" | "FULLCREDIT" | "none";
 
+// Mirrors what /buyers/all actually returns: BuyerProfile columns plus the
+// related user. There is no phone, name or email on the profile — the previous
+// shape claimed all three, so `buyer.phone` type-checked and came back
+// undefined at runtime, blanking those columns and making search match nothing.
 interface BuyerProfile {
   id: string;
   userId: string;
-  phone: string;
-  name: string;
-  email?: string;
   legalName: string;
   gstNumber?: string;
   panNumber?: string;
@@ -51,9 +52,29 @@ export default function BuyersPage() {
   const [page, setPage] = useState(1);
   const limit = 20;
 
+  // These are filters the API applies and counts for us. Applied here they only
+  // ever reached the twenty rows already fetched, while the pager kept counting
+  // every buyer — so a phone belonging to someone on a later page looked like no
+  // such buyer, and the pager still offered more pages.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  // Narrowing shrinks the set, so the page being viewed may no longer exist.
+  useEffect(() => { setPage(1); }, [verification, tier]);
+
   const { data: buyersData, isLoading } = useQuery({
-    queryKey: ["admin", "buyers", page, limit],
-    queryFn: () => getBuyersList(page, limit),
+    queryKey: ["admin", "buyers", page, limit, debouncedSearch, verification, tier],
+    queryFn: () => getBuyersList(page, limit, {
+      search: debouncedSearch || undefined,
+      verificationStatus: verification === "all" ? undefined : verification,
+      creditTier: tier === "all" ? undefined : tier,
+    }),
   });
 
   const buyers: BuyerProfile[] = buyersData?.data ?? [];
@@ -62,13 +83,16 @@ export default function BuyersPage() {
 
   const updateGstStatus = useUpdateGstPanStatus();
 
+  // The API has already applied all three; this stays only so the rows can never
+  // contradict the controls, and it reads the fields that actually exist.
   const filtered = buyers.filter((b: BuyerProfile) =>
     (verification === "all" || b.verificationStatus === verification) &&
     (tier === "all" || (tier === "none" ? !b.creditTier : b.creditTier === tier)) &&
-    (!search ||
-      (b.phone ?? "").includes(search) ||
-      (b.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
-      (b.email ?? "").toLowerCase().includes(search.toLowerCase()))
+    (!debouncedSearch ||
+      (b.user?.phone ?? "").includes(debouncedSearch) ||
+      (b.legalName ?? "").toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      (b.gstNumber ?? "").toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      (b.user?.email ?? "").toLowerCase().includes(debouncedSearch.toLowerCase()))
   );
 
   const getStatusColor = (status: string) => {
@@ -222,18 +246,18 @@ export default function BuyersPage() {
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-3">
                               <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary text-sm flex-shrink-0">
-                                {(buyer.name ?? "?").charAt(0).toUpperCase()}
+                                {(buyer.legalName ?? "?").charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <p className="font-semibold text-foreground">{buyer.name}</p>
-                                <p className="text-xs text-muted-foreground">{buyer.legalName}</p>
+                                <p className="font-semibold text-foreground">{buyer.legalName}</p>
+                                <p className="text-xs text-muted-foreground">{[buyer.city, buyer.state].filter(Boolean).join(", ")}</p>
                               </div>
                             </div>
                           </td>
                           <td className="px-5 py-4">
                             <div className="text-sm">
-                              <p className="font-mono text-foreground">{buyer.phone}</p>
-                              {buyer.email && <p className="text-xs text-muted-foreground">{buyer.email}</p>}
+                              <p className="font-mono text-foreground">{buyer.user?.phone ?? "—"}</p>
+                              {buyer.user?.email && <p className="text-xs text-muted-foreground">{buyer.user.email}</p>}
                             </div>
                           </td>
                           <td className="px-5 py-4 max-w-[120px]">
@@ -294,16 +318,16 @@ export default function BuyersPage() {
                                   <h3 className="font-semibold text-sm text-foreground mb-4">Profile Details</h3>
                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     <div className="space-y-1">
-                                      <p className="text-xs font-semibold text-muted-foreground uppercase">Name</p>
-                                      <p className="text-sm font-medium text-foreground">{buyer.name}</p>
-                                    </div>
-                                    <div className="space-y-1">
                                       <p className="text-xs font-semibold text-muted-foreground uppercase">Legal Name</p>
                                       <p className="text-sm font-medium text-foreground">{buyer.legalName}</p>
                                     </div>
                                     <div className="space-y-1">
                                       <p className="text-xs font-semibold text-muted-foreground uppercase">Phone</p>
-                                      <p className="text-sm font-mono text-foreground">{buyer.phone}</p>
+                                      <p className="text-sm font-mono text-foreground">{buyer.user?.phone ?? "—"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <p className="text-xs font-semibold text-muted-foreground uppercase">Email</p>
+                                      <p className="text-sm text-foreground">{buyer.user?.email ?? "—"}</p>
                                     </div>
                                     {buyer.gstNumber && (
                                       <div className="space-y-1">
