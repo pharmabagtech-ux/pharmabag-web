@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Store, TrendingDown } from "lucide-react";
+import { AlertTriangle, Loader2, Store, TrendingDown } from "lucide-react";
 import { formatCurrency, formatSchemeTag } from "@pharmabag/utils";
 import { cn } from "@/lib/utils";
 import { useMasterProductWithListings } from "@/hooks/useSeller";
@@ -21,7 +21,7 @@ export function CompetitionPanel({
   /** The listing being edited, so the seller's own row is marked rather than read as a rival. */
   currentProductId?: string;
 }) {
-  const { data, isLoading, isError } = useMasterProductWithListings(masterProductId);
+  const { data, isLoading, isError, refetch, isRefetching } = useMasterProductWithListings(masterProductId);
 
   if (!masterProductId) return null;
 
@@ -34,8 +34,28 @@ export function CompetitionPanel({
     );
   }
 
-  // Never block the form over this — it is advisory information.
-  if (isError) return null;
+  // Advisory information, so a failed check never blocks the form — but it
+  // must say so. Returning null here used to look identical to "no other
+  // seller exists yet", which left sellers unable to tell a real error apart
+  // from a genuinely uncontested product.
+  if (isError) {
+    return (
+      <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm text-amber-800">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          Couldn't check what other sellers offer. This doesn't mean there are none.
+        </div>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          disabled={isRefetching}
+          className="text-xs font-semibold text-amber-800 underline underline-offset-2 disabled:opacity-50 shrink-0"
+        >
+          {isRefetching ? "Retrying..." : "Retry"}
+        </button>
+      </div>
+    );
+  }
 
   const listings: any[] = data?.listings ?? [];
   const others = listings.filter((l) => l.id !== currentProductId);
