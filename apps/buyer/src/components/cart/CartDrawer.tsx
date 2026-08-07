@@ -12,7 +12,7 @@ import { useAuth } from '@pharmabag/api-client';
 import { productSlug } from '@pharmabag/utils';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 
 function QuantityInput({ value, max, min, onUpdate, disabled }: { value: number; max: number; min: number; onUpdate: (val: number) => void; disabled?: boolean }) {
   const [localValue, setLocalValue] = useState(String(value));
@@ -86,34 +86,40 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          key="cart-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0, transitionEnd: { display: "none" } }}
-          onClick={onClose}
-          // Below the navbar's z-50 (both Navbar and PremiumNavbar), so a
-          // click on "All Products" or any nav link while the bag is open
-          // reaches the link instead of just closing the drawer.
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
-        />
-      )}
-      {isOpen && (
-        <motion.div
-          key="cart-drawer-panel"
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%', transitionEnd: { display: "none" } }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          // The panel sits above the navbar (z-50) so its own controls stay
-          // clickable, but that also means it physically covers whatever
-          // part of the navbar falls under its footprint. The navbar floats
-          // near the top on lg+ screens and pinned to the bottom below that,
-          // so the panel is inset from whichever edge the navbar occupies -
-          // otherwise nav links or the mobile bottom-nav icons underneath it
-          // are unreachable while the bag is open.
-          className="fixed top-0 lg:top-28 bottom-24 lg:bottom-0 right-0 w-[92vw] max-w-[400px] sm:w-[380px] md:w-[400px] bg-white shadow-2xl z-[101] flex flex-col overflow-x-hidden"
-        >
+        // Backdrop and panel as ONE fragment under a single AnimatePresence
+        // child. They used to be two separate top-level `{isOpen && ...}`
+        // blocks, each tracked as its own exit/enter by framer-motion. The
+        // backdrop's plain opacity fade and the panel's spring settle at
+        // different speeds, and a fast enough re-toggle could let one
+        // finish its exit and unmount while the other was still mid-cycle —
+        // verified live: the panel stayed open with its backdrop gone.
+        // Wrapping both in a fragment with one shared key makes framer-motion
+        // mount and unmount them together, so they can't fall out of sync.
+        <Fragment key="cart-drawer">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            // Below the navbar's z-50 (both Navbar and PremiumNavbar), so a
+            // click on "All Products" or any nav link while the bag is open
+            // reaches the link instead of just closing the drawer.
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+          />
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            // The panel sits above the navbar (z-50) so its own controls stay
+            // clickable, but that also means it physically covers whatever
+            // part of the navbar falls under its footprint. The navbar floats
+            // near the top on lg+ screens and pinned to the bottom below that,
+            // so the panel is inset from whichever edge the navbar occupies -
+            // otherwise nav links or the mobile bottom-nav icons underneath it
+            // are unreachable while the bag is open.
+            className="fixed top-0 lg:top-28 bottom-24 lg:bottom-0 right-0 w-[92vw] max-w-[400px] sm:w-[380px] md:w-[400px] bg-white shadow-2xl z-[101] flex flex-col overflow-x-hidden"
+          >
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 md:p-8 border-b border-gray-100">
               <div className="flex items-center gap-3">
@@ -377,7 +383,8 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                 </button>
               </div>
             )}
-        </motion.div>
+          </motion.div>
+        </Fragment>
       )}
     </AnimatePresence>
   );
