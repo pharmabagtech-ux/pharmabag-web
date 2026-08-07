@@ -114,16 +114,27 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
     if (minRequiredMoq <= 0) return;
 
     if (minRequiredMoq !== lastMinMoqRef.current) {
-      setValue("min_order_qty", minRequiredMoq, { shouldDirty: true, shouldValidate: true });
+      lastMinMoqRef.current = minRequiredMoq;
+
+      // Only touch the field - and mark the form dirty - when the value on
+      // screen actually needs to change. `lastMinMoqRef` starts at 0, so on
+      // an EDIT page this condition was true on the very first render even
+      // though the listing's own min_order_qty already equalled
+      // minRequiredMoq (it was correct when the listing was saved). Calling
+      // setValue anyway dirtied the form before the seller had touched
+      // anything, so the browser's native "leave site, unsaved changes?"
+      // warning could fire on a form nobody had actually edited.
+      if (minRequiredMoq !== watchMinMoq) {
+        setValue("min_order_qty", minRequiredMoq, { shouldDirty: true, shouldValidate: true });
+      }
       // Written as "not at or above" so an empty stock field (NaN) is topped up
       // as well - a plain `<` comparison is false against NaN and would leave
       // the listing failing its own stock >= minimum rule.
       if (!(watchStock >= minRequiredMoq)) {
         setValue("stock", minRequiredMoq, { shouldDirty: true, shouldValidate: true });
       }
-      lastMinMoqRef.current = minRequiredMoq;
     }
-  }, [minRequiredMoq, setValue, watchStock]);
+  }, [minRequiredMoq, setValue, watchStock, watchMinMoq]);
 
   // Reset active index when suggestions change
   useEffect(() => {
