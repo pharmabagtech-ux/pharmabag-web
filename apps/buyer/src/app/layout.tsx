@@ -124,7 +124,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang={SITE_LANG}
       className={openSans.variable}
       style={{
-        backgroundImage: "url('/Pharma_ui.png')",
+        backgroundImage: "url('/Pharma_ui.webp')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
