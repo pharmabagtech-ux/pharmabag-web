@@ -248,13 +248,18 @@ export default function UsersPage() {
   const totalUsers = usersData?.total ?? rawUsers.length;
   const totalPages = Math.max(1, Math.ceil(totalUsers / limit));
 
-  // Merge vacation status from the sellers endpoint into the users list
-  // The /admin/users endpoint may not include isOnVacation, but /admin/users/sellers does
+  // Merge vacation status from the sellers endpoint into the users list.
+  //
+  // The endpoint returns SELLER PROFILE rows: the user id lives on the related
+  // `user`, and the flag is the schema's `isVacation` — this map was previously
+  // keyed by the profile's own id and read a field (`isOnVacation`) that the
+  // API has never had, so no user ever matched and the count sat at 0.
   const sellersList: any[] = Array.isArray(sellersData) ? sellersData : (sellersData?.data ?? []);
   const sellerVacationMap = new Map<string, boolean>();
   sellersList.forEach((s: any) => {
-    if (s.id && typeof s.isOnVacation === "boolean") {
-      sellerVacationMap.set(s.id, s.isOnVacation);
+    const sellerUserId = s.user?.id ?? s.userId;
+    if (sellerUserId) {
+      sellerVacationMap.set(sellerUserId, !!s.isVacation);
     }
   });
   const users = rawUsers.map((u: any) => {
@@ -264,13 +269,32 @@ export default function UsersPage() {
     return u;
   });
 
-  const vacationCount = users.filter((u: any) => u.role === "SELLER" && u.isOnVacation).length;
+  // Counted across ALL sellers, not the visible page of users — a seller on
+  // vacation who happens to sit on page 3 of User Management still counts.
+  const vacationCount = sellersList.filter((s: any) => !!s.isVacation).length;
+
+  // The VACATION tab lists every vacation seller regardless of which page of
+  // the (server-paginated) users list they would fall on. Rows are shaped like
+  // user rows so the table renders them unchanged; `id` is the USER id, which
+  // the view link, delete action and expanded detail all key on.
+  const vacationRows = sellersList
+    .filter((s: any) => !!s.isVacation)
+    .map((s: any) => ({
+      id: s.user?.id ?? s.userId,
+      phone: s.user?.phone,
+      email: s.user?.email ?? s.email,
+      role: "SELLER",
+      status: s.user?.status,
+      createdAt: s.user?.createdAt ?? s.createdAt,
+      sellerProfile: s,
+      isOnVacation: true,
+    }));
 
   // The server has already applied all of this; kept as a harmless second pass so
   // the rows never contradict the box (it matches on a superset of the API's
   // fields). It reads the debounced term, not the raw one, so the list does not
   // blank out for half a second between the keystroke and the refetch.
-  const filtered = users.filter((u: any) => {
+  const filtered = (status === "VACATION" ? vacationRows : users).filter((u: any) => {
     const s = debouncedSearch.toLowerCase();
     const matchesId = (u.id ?? "").toLowerCase().includes(s);
     const matchesPhone = (u.phone ?? "").includes(debouncedSearch);
@@ -283,7 +307,7 @@ export default function UsersPage() {
     );
 
     return (role === "all" || u.role === role) &&
-      (status === "all" || (status === "VACATION" ? (u.role === "SELLER" && u.isOnVacation) : u.status === status)) &&
+      (status === "all" || status === "VACATION" || u.status === status) &&
       (!debouncedSearch || matchesId || matchesPhone || matchesEmail || matchesBiz);
   });
 
