@@ -15,7 +15,7 @@ const TESTIMONIALS: Testimonial[] = [
       "Since joining PharmaBag, sourcing medicines in bulk has become much faster and more transparent. The platform saves us hours every week by connecting us with trusted suppliers across India. We've expanded our product range while keeping procurement costs under control.",
     name: 'Rajesh Agarwal',
     role: 'Owner, Shree Balaji Pharma Distributors – Jaipur',
-    avatar: '/testimonials/rajesh-agarwal.png',
+    avatar: '/testimonials/rajesh-agarwal.webp',
   },
   {
     id: 2,
@@ -23,7 +23,7 @@ const TESTIMONIALS: Testimonial[] = [
       "As an independent pharmacy owner, finding reliable wholesalers at competitive prices was always a challenge. PharmaBag has simplified the entire buying process. The ordering experience is smooth, deliveries are timely, and we've seen a noticeable improvement in inventory management.",
     name: 'Priya Nair',
     role: 'Owner, MedCare Pharmacy – Kochi',
-    avatar: '/testimonials/priya-nair.png',
+    avatar: '/testimonials/priya-nair.webp',
   },
   {
     id: 3,
@@ -31,7 +31,7 @@ const TESTIMONIALS: Testimonial[] = [
       "PharmaBag has become an important part of our procurement process. The wide selection of brands, competitive B2B pricing, and easy ordering system help us serve our retail partners more efficiently. It's a platform we rely on for consistent business growth.",
     name: 'Amit Patel',
     role: 'Director, Patel Healthcare Distributors – Ahmedabad',
-    avatar: '/testimonials/amit-patel.png',
+    avatar: '/testimonials/amit-patel.webp',
   },
 ];
 
@@ -50,6 +50,10 @@ export default function Testimonials() {
                 <img
                   src={testimonial.avatar}
                   alt={testimonial.name}
+                  width={128}
+                  height={128}
+                  loading="lazy"
+                  decoding="async"
                   className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full grayscale hover:grayscale-0 transition-all duration-500"
                 />
               </div>

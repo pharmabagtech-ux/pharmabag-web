@@ -1,3 +1,9 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# sharp needs its postinstall script to fetch the platform's native binary —
+# pnpm blocks install scripts by default, which would leave next/image
+# silently unable to optimise anything on a fresh deploy.
+onlyBuiltDependencies:
+  - sharp

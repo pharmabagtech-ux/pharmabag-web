@@ -118,7 +118,7 @@ export default function LoginModal({ isOpen: isOpenProp, onClose: onCloseProp }:
     <div role="dialog" className="fixed  inset-0 z-[1000] h-screen w-screen overflow-hidden flex flex-col items-center justify-center p-0 select-none">
       {/* Backgrounds */}
       <div className="fixed inset-0 bg-gradient-to-b from-[#E0F7FA] to-[#B2EBF2] z-0 md:hidden" />
-      <div className="fixed inset-0 z-0 hidden md:block" style={{ backgroundImage: "url('/Pharma_ui.png')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }} />
+      <div className="fixed inset-0 z-0 hidden md:block" style={{ backgroundImage: "url('/Pharma_ui.webp')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }} />
 
       {/* Close Button */}
       <button onClick={() => onClose()} className="fixed top-4 right-4 p-2 text-black hover:bg-black/10 rounded-full z-[150] bg-white shadow-xl border border-black/5">
