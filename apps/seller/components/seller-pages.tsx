@@ -98,6 +98,30 @@ function OrderTable({ orders, settlements = [], showConfirm = false, updateFn }:
   );
 }
 
+/**
+ * What the seller is owed for one order item, mirroring the API's
+ * settlement.util: the seller receives goods value PLUS GST (they issue the
+ * invoice, so the tax is theirs to remit) LESS the platform's 5% commission,
+ * which is charged on goods only, never on tax.
+ *
+ * Ledgered settlements already carry this figure as `amount`; this exists for
+ * items that have no settlement row yet. Summing bare `totalPrice` for those
+ * (as this file used to) mixes a GST-exclusive figure into totals whose other
+ * rows are GST-inclusive-net — at 5% GST the two happen to be numerically
+ * equal (+5% − 5%), which is why the error stayed invisible until the stat
+ * cards were compared side by side.
+ */
+const SELLER_COMMISSION_RATE = 0.05;
+const FALLBACK_GST_PERCENT = 12;
+function sellerReceivable(item: any): number {
+  const goods = item.totalPrice || item.price * (item.quantity || 1) || 0;
+  const gst =
+    typeof item.gstAmount === "number"
+      ? item.gstAmount
+      : goods * ((item.gstPercent ?? FALLBACK_GST_PERCENT) / 100);
+  return goods + gst - goods * SELLER_COMMISSION_RATE;
+}
+
 export function OrdersContent() {
   const [tab, setTab] = useState<OrderTab>("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -131,7 +155,7 @@ export function OrdersContent() {
         items.forEach((item: any) => {
           const inLedger = recordedSettlements.some(rs => rs.orderItemId === item.id);
           if (!inLedger) {
-            totalPending += (item.totalPrice || (item.price * (item.quantity || 1)));
+            totalPending += sellerReceivable(item);
           }
         });
       }
@@ -217,6 +241,7 @@ export function OrdersContent() {
         <StatCard
           title="Order Amount"
           value={formatCurrency(totalOrderAmount)}
+          change="what buyers paid, incl. GST"
           icon={TrendingUp}
           iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20"
           delay={0.05}
@@ -224,6 +249,7 @@ export function OrdersContent() {
         <StatCard
           title="Pending Amount"
           value={formatCurrency(dynamicStats.totalPending)}
+          change="your payout: incl. GST, less 5% commission"
           icon={Clock}
           iconClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20"
           delay={0.1}
@@ -231,6 +257,7 @@ export function OrdersContent() {
         <StatCard
           title="Paid Amount"
           value={formatCurrency(dynamicStats.totalPaid)}
+          change="payouts received, same basis"
           icon={CheckCircle}
           iconClass="bg-green-50 text-green-600 dark:bg-green-900/20"
           delay={0.15}
@@ -445,7 +472,9 @@ export function PayoutsContent() {
             items.push({
               id: `pending-${item.id}`,
               createdAt: order.createdAt,
-              amount: item.totalPrice,
+              // Same basis as the recorded rows beside it (gross − commission),
+              // not the bare GST-exclusive totalPrice.
+              amount: sellerReceivable(item),
               status: "READY",
               reference: "Pending Entry",
               viewType: "READY"
