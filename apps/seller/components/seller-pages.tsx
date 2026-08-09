@@ -23,7 +23,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
-import { subDays } from "date-fns";
+import { subDays, endOfDay } from "date-fns";
 
 const ORDER_TABS = [
   { key: "all", label: "All Orders" },
@@ -140,13 +140,18 @@ export function OrdersContent() {
 
   const { data: orders, isLoading } = useSellerOrders({
     dateFrom: dateRange?.from?.toISOString(),
-    dateTo: dateRange?.to?.toISOString(),
+    // End-of-day, not the instant the range was built: `to` defaults to the
+    // page-mount moment, so anything created after the page was opened (a
+    // settlement, a just-delivered order) was filtered out of every refetch
+    // until a full reload. A picker-chosen date has the same problem — it is
+    // midnight, which excludes the entire selected day.
+    dateTo: dateRange?.to ? endOfDay(dateRange.to).toISOString() : undefined,
   });
   const { data: settlementStats } = useSellerSettlementSummary();
   const updateOrderStatus = useUpdateSellerOrderStatus();
   const { data: settlementsList } = useSellerSettlements({
     dateFrom: dateRange?.from?.toISOString(),
-    dateTo: dateRange?.to?.toISOString(),
+    dateTo: dateRange?.to ? endOfDay(dateRange.to).toISOString() : undefined,
   });
   const allOrders: any[] = (Array.isArray(orders) ? orders : (orders as any)?.orders || (orders as any)?.data || []);
   const recordedSettlements: any[] = Array.isArray(settlementsList) ? settlementsList : (settlementsList as any)?.data ?? (settlementsList as any)?.settlements ?? [];
