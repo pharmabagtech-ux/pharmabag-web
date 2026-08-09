@@ -102,6 +102,13 @@ export default function AdminSettlementsPage() {
   const totalSettlements = settlementsData?.total ?? displayItems.length;
   const totalPages = Math.max(1, Math.ceil(totalSettlements / limit));
 
+  // Money delivered but not yet settleable: orders that are delivered with the
+  // buyer's payment still unconfirmed. It is NOT a pending payout (nothing is
+  // owed until the payment clears) — it is the pipeline waiting on Payments.
+  const awaitingAmount = displayItems
+    .filter((s: any) => s.payoutStatus === "AWAITING_PAYMENT")
+    .reduce((sum: number, s: any) => sum + (s.amount ?? 0), 0);
+
   const filtered = displayItems.filter((s: any) =>
     (filter === "ALL" || (filter === "PENDING" && s.payoutStatus !== "PAID") || s.payoutStatus === filter) &&
     (!search || 
@@ -251,9 +258,9 @@ export default function AdminSettlementsPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Transactions" value={String(totalSettlements)} icon={CreditCard} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0} />
-          <StatCard title="Gross Settlement Volume" value={formatCurrency(settlements.reduce((sum: number, s: any) => sum + (s.amount ?? 0), 0))} icon={TrendingUp} iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20" delay={0.05} />
-          <StatCard title="Pending Payouts" value={formatCurrency(pendingAmount)} icon={Clock} iconClass="bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20" delay={0.1} />
+          <StatCard title="Total Transactions" value={String(displayItems.length)} icon={CreditCard} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0} />
+          <StatCard title="Awaiting Payment" value={formatCurrency(awaitingAmount)} icon={Clock} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0.05} />
+          <StatCard title="Pending Payouts" value={formatCurrency(pendingAmount)} icon={TrendingUp} iconClass="bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20" delay={0.1} />
           <StatCard title="Total Settled" value={formatCurrency(settlements.filter((s: any) => s.payoutStatus === "PAID").reduce((sum: number, s: any) => sum + (s.amount ?? 0), 0))} icon={CheckCircle2} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0.15} />
         </div>
 
