@@ -69,7 +69,16 @@ function OrderTable({ orders, settlements = [], showConfirm = false, updateFn }:
                       {(() => {
                          const orderId = order.orderId || order.id;
                          const settlement = settlements.find(s => s.orderItem?.orderId === orderId);
-                         const status = settlement?.payoutStatus || ((order.orderStatus === "DELIVERED" || order.status === "DELIVERED") ? "READY" : "PENDING");
+                         // A settlement only exists (and can be READY/PAID) once the
+                         // buyer's payment is confirmed. Showing "READY" for any
+                         // delivered order — as this did — told the seller money was
+                         // ready to pay out while the admin settlement ledger, which
+                         // correctly requires a confirmed payment, showed nothing.
+                         // The two now agree: no confirmed payment ⇒ AWAITING PAYMENT.
+                         const delivered = order.orderStatus === "DELIVERED" || order.status === "DELIVERED";
+                         const paid = (order.paymentStatus || order.payment_status || "").toString().toUpperCase() === "SUCCESS";
+                         const status = settlement?.payoutStatus
+                           || (delivered && paid ? "READY" : delivered ? "AWAITING PAYMENT" : "PENDING");
                          return (
                            <Badge variant={status === "PAID" ? "success" : status === "READY" ? "warning" : "info"}>
                              {status}

@@ -67,14 +67,10 @@ export default function AdminSettlementsPage() {
      * An unpaid delivered order simply is not ready for payout; it stays on
      * the Orders screen, where its payment status is the point.
      */
-    deliveredOrders
-      .filter((order: any) => {
-        const paid = (order.paymentStatus || order.payment_status || '')
-          .toString()
-          .toUpperCase();
-        return paid === 'SUCCESS';
-      })
-      .forEach((order: any) => {
+    deliveredOrders.forEach((order: any) => {
+      const paid = (order.paymentStatus || order.payment_status || '')
+        .toString()
+        .toUpperCase() === 'SUCCESS';
       const orderItems = order.items || order.orderItems || [];
       orderItems.forEach((item: any) => {
           // Check if this item is already in the settlements ledger
@@ -87,8 +83,14 @@ export default function AdminSettlementsPage() {
               seller: item.seller || order.seller,
               amount: item.totalPrice,
               commission: 0,
-              payoutStatus: "PENDING_ENTRY",
-              viewType: "READY"
+              // A settlement can only be created — and paid out — once the
+              // buyer's payment is confirmed, so a delivered-but-unpaid order
+              // gets a NON-actionable AWAITING_PAYMENT row rather than a "Paid"
+              // button that can never succeed. Previously these orders were
+              // filtered out entirely, which left the ledger looking empty even
+              // when deliveries existed, with no hint of why.
+              payoutStatus: paid ? "PENDING_ENTRY" : "AWAITING_PAYMENT",
+              viewType: paid ? "READY" : "AWAITING_PAYMENT",
             });
           }
         });
@@ -315,16 +317,20 @@ export default function AdminSettlementsPage() {
                       <div className="text-sm font-bold text-primary">{formatCurrency(s.amount)}</div>
                     </td>
                     <td className="px-5 py-4">
-                      <Badge variant={s.payoutStatus === "PAID" ? "success" : (s.payoutStatus === "PENDING" || s.payoutStatus === "PENDING_ENTRY") ? "warning" : "info"}>
-                        {s.payoutStatus === "PENDING_ENTRY" ? "PENDING" : s.payoutStatus}
+                      <Badge variant={s.payoutStatus === "PAID" ? "success" : s.payoutStatus === "AWAITING_PAYMENT" ? "info" : (s.payoutStatus === "PENDING" || s.payoutStatus === "PENDING_ENTRY") ? "warning" : "info"}>
+                        {s.payoutStatus === "PENDING_ENTRY" ? "PENDING" : s.payoutStatus === "AWAITING_PAYMENT" ? "AWAITING PAYMENT" : s.payoutStatus}
                       </Badge>
                     </td>
                     <td className="px-5 py-4 text-right">
-                      {s.payoutStatus !== "PAID" ? (
-                        <Button 
-                          size="sm" 
-                          variant="primary" 
-                          onClick={() => openModal(s.id)} 
+                      {s.payoutStatus === "AWAITING_PAYMENT" ? (
+                        <span className="text-xs text-muted-foreground" title="This order is delivered but the buyer's payment has not been confirmed yet. Confirm it in Payments and this becomes payable.">
+                          Confirm payment first
+                        </span>
+                      ) : s.payoutStatus !== "PAID" ? (
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => openModal(s.id)}
                           className="h-9 px-4 rounded-xl shadow-sm"
                           leftIcon={<CheckCircle2 className="h-4 w-4" />}>
                           Paid
