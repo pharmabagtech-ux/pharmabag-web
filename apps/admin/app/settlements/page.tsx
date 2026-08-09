@@ -109,6 +109,15 @@ export default function AdminSettlementsPage() {
     .filter((s: any) => s.payoutStatus === "AWAITING_PAYMENT")
     .reduce((sum: number, s: any) => sum + (s.amount ?? 0), 0);
 
+  // Everything payable right now: ledgered settlements still PENDING plus
+  // delivered-and-paid orders whose ledger entry hasn't been created yet
+  // (PENDING_ENTRY). Both render in the table as "PENDING" with a Paid
+  // button, so the card must count both or it reads ₹0.00 above a visible
+  // pending row.
+  const pendingAmount = displayItems
+    .filter((s: any) => s.payoutStatus === "PENDING" || s.payoutStatus === "PENDING_ENTRY")
+    .reduce((sum: number, s: any) => sum + (s.amount ?? 0), 0);
+
   const filtered = displayItems.filter((s: any) =>
     (filter === "ALL" || (filter === "PENDING" && s.payoutStatus !== "PAID") || s.payoutStatus === filter) &&
     (!search || 
@@ -236,8 +245,6 @@ export default function AdminSettlementsPage() {
       </AdminLayout>
     );
   }
-
-  const pendingAmount = settlements.filter((s: any) => s.payoutStatus === "PENDING").reduce((sum: number, s: any) => sum + (s.amount ?? 0), 0);
 
   return (
     <AdminLayout>
