@@ -14,6 +14,12 @@ const NAV = [
   { icon: Package, label: "Products", href: "/products" },
   { icon: PackagePlus, label: "Product Requests", href: "/product-requests" },
   { icon: ClipboardList, label: "Orders", href: "/orders" },
+  // Payments is where buyer payments are verified. It was a working page with
+  // no way to reach it (never in this nav), so payments piled up unconfirmed —
+  // and an order only becomes settleable once its payment is confirmed, so the
+  // Settlements ledger stayed empty. Placed on the money path: Orders → Payments
+  // → Settlements.
+  { icon: CreditCard, label: "Payments", href: "/payments" },
   { icon: Layout, label: "Marketing", href: "/marketing" },
   { icon: Banknote, label: "Settlements", href: "/settlements" },
   { icon: Ticket, label: "Tickets", href: "/tickets" },
