@@ -12,7 +12,7 @@ import { useSettlements, useMarkSettlementPaid, useSyncSettlements, useAdminOrde
 
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
-import { subDays } from "date-fns";
+import { subDays, endOfDay } from "date-fns";
 import { getSettlements } from "@/api/admin.api";
 
 
@@ -32,7 +32,12 @@ export default function AdminSettlementsPage() {
     page,
     limit,
     dateFrom: dateRange?.from?.toISOString(),
-    dateTo: dateRange?.to?.toISOString(),
+    // End-of-day, not the instant the range was built: `to` defaults to the
+    // page-mount moment, so a settlement created while this tab sat open (the
+    // admin confirms payments in another tab) was filtered out of every
+    // refetch until a full reload. A picker-chosen date has the same problem
+    // — it is midnight, which excludes the entire selected day.
+    dateTo: dateRange?.to ? endOfDay(dateRange.to).toISOString() : undefined,
   });
   const { data: deliveredData, isLoading: loadingOrders } = useAdminOrdersFiltered({ status: "DELIVERED", limit: 50 });
   const markPaid = useMarkSettlementPaid();

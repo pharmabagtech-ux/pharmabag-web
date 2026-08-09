@@ -144,7 +144,10 @@ export function useRejectPayment() {
 
 // ─── Settlements ─────────────────────────────────────
 
-export function useSettlements(params: { page?: number; limit?: number; dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["admin", "settlements", params], queryFn: () => getSettlements(params), staleTime: 60_000, retry: 1 }); }
+// Money queries opt back into refetch-on-focus (the app default disables it):
+// payments are confirmed and orders delivered in other tabs, so without it
+// the settlements ledger keeps showing the state from when the tab was opened.
+export function useSettlements(params: { page?: number; limit?: number; dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["admin", "settlements", params], queryFn: () => getSettlements(params), staleTime: 60_000, retry: 1, refetchOnWindowFocus: true }); }
 
 export function useMarkSettlementPaid() {
   const qc = useQueryClient();
@@ -309,7 +312,9 @@ export function useRejectProduct() {
 // ─── Orders Extended ─────────────────────────────────
 
 export function useAdminOrdersFiltered(params: { page?: number; limit?: number; status?: string; search?: string; dateFrom?: string; dateTo?: string } = {}) {
-  return useQuery({ queryKey: ["admin", "orders", params], queryFn: () => getAdminOrdersFiltered(params), staleTime: 60_000, retry: 1 });
+  // refetchOnWindowFocus: the settlements page derives its ready-to-pay rows
+  // from this list, so it must pick up deliveries made in another tab.
+  return useQuery({ queryKey: ["admin", "orders", params], queryFn: () => getAdminOrdersFiltered(params), staleTime: 60_000, retry: 1, refetchOnWindowFocus: true });
 }
 
 export function useOrderById(orderId: string) {

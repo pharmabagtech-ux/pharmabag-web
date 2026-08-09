@@ -92,7 +92,11 @@ export function useSellerProduct(id: string) { return useQuery({ queryKey: ["sel
 
 export function useCategories() { return useQuery({ queryKey: ["categories"], queryFn: getCategoriesWithSubs, staleTime: 300_000, retry: 1 }); }
 
-export function useSellerOrders(params: { dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["seller", "orders", params], queryFn: () => getSellerOrders(params), staleTime: 60_000, retry: 1 }); }
+// The money-bearing queries below opt back into refetch-on-focus (the app
+// default disables it): the admin delivers orders and confirms payments in a
+// DIFFERENT tab, so without it the seller's order statuses and payout cards
+// keep showing the state from whenever this tab was opened.
+export function useSellerOrders(params: { dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["seller", "orders", params], queryFn: () => getSellerOrders(params), staleTime: 60_000, retry: 1, refetchOnWindowFocus: true }); }
 
 export function useUpdateSellerOrderStatus() {
   const qc = useQueryClient();
@@ -105,9 +109,9 @@ export function useUpdateSellerOrderStatus() {
   });
 }
 
-export function useSellerSettlements(params: { dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["seller", "settlements", params], queryFn: () => getSellerSettlements(params), staleTime: 60_000, retry: 1 }); }
+export function useSellerSettlements(params: { dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["seller", "settlements", params], queryFn: () => getSellerSettlements(params), staleTime: 60_000, retry: 1, refetchOnWindowFocus: true }); }
 
-export function useSellerSettlementSummary() { return useQuery({ queryKey: ["seller", "settlement-summary"], queryFn: getSellerSettlementSummary, staleTime: 60_000, retry: 1 }); }
+export function useSellerSettlementSummary() { return useQuery({ queryKey: ["seller", "settlement-summary"], queryFn: getSellerSettlementSummary, staleTime: 60_000, retry: 1, refetchOnWindowFocus: true }); }
 
 export function useRequestPayout() {
   const qc = useQueryClient();
