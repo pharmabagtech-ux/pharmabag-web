@@ -32,7 +32,7 @@ import { effectiveMinQuantity, listingLotSize, stepQuantityByLot, snapQuantityTo
  */
 export default function ProductDetailClient({ params }: { params: { productSlug: string } }) {
   const productId = parseProductIdFromSlug(params.productSlug);
-  const { data: productRaw, isLoading, isError } = useProductById(productId);
+  const { data: productRaw, isLoading, isError, error: productError, refetch: refetchProduct, isRefetching: isRefetchingProduct } = useProductById(productId);
   const product = productRaw as any;
   const addToCart = useGuardedAddToCart();
   const removeCartItem = useRemoveCartItem();
@@ -127,6 +127,33 @@ export default function ProductDetailClient({ params }: { params: { productSlug:
         <Navbar showUserActions={true} />
         <div className="pt-32 pb-20 flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-gray-300 animate-spin" />
+        </div>
+      </main>
+    );
+  }
+
+  // A failed fetch (rate limit, network blip, 5xx) is not the same as a
+  // genuine 404 - the product almost certainly still exists, the request
+  // just didn't get through. Telling a buyer "not found" for that is wrong
+  // and erodes trust in the catalogue. Only a confirmed 404 says "not found";
+  // everything else offers a retry.
+  const productStatus = (productError as any)?.response?.status;
+  if (isError && productStatus !== 404) {
+    return (
+      <main className="min-h-screen bg-gray-50/50">
+        <Navbar showUserActions={true} />
+        <div className="pt-32 pb-20 flex flex-col items-center justify-center gap-3">
+          <AlertCircle className="w-10 h-10 text-gray-300" />
+          <p className="text-lg font-bold text-gray-400">Couldn't load this product</p>
+          <p className="text-sm text-gray-400">This is usually temporary - please try again.</p>
+          <button
+            type="button"
+            onClick={() => refetchProduct()}
+            disabled={isRefetchingProduct}
+            className="text-sm font-bold text-blue-600 hover:underline disabled:opacity-50"
+          >
+            {isRefetchingProduct ? 'Retrying...' : 'Retry'}
+          </button>
         </div>
       </main>
     );
