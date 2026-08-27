@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { Open_Sans } from 'next/font/google';
 import '@/styles/globals.css';
 import { Providers } from './providers';
@@ -99,6 +100,21 @@ export const metadata: Metadata = {
     icon: '/pharmabag_logo.png',
     apple: '/pharmabag_logo.png',
   },
+  /**
+   * Search-engine ownership verification. Both tags render ONLY when the env
+   * var carries a real token, so this ships inert: paste the token from
+   * Search Console ("HTML tag" method) / Bing Webmaster into the frontend
+   * env and redeploy — no code change needed. DNS verification also works;
+   * these are the code-side option.
+   */
+  verification: {
+    ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION
+      ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION }
+      : {}),
+    ...(process.env.NEXT_PUBLIC_BING_VERIFICATION
+      ? { other: { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_VERIFICATION } }
+      : {}),
+  },
 };
 
 /**
@@ -142,6 +158,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JsonLd json={siteGraph} />
       </head>
       <body className={openSans.className}>
+        {/*
+          GA4, env-gated: nothing loads until NEXT_PUBLIC_GA4_ID holds a real
+          measurement id (G-XXXXXXX), so this ships inert with zero Core Web
+          Vitals cost. afterInteractive keeps it off the critical path once
+          enabled.
+        */}
+        {process.env.NEXT_PUBLIC_GA4_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA4_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${process.env.NEXT_PUBLIC_GA4_ID}');`}
+            </Script>
+          </>
+        )}
         <Providers>
           <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             {/*

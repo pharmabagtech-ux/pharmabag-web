@@ -77,6 +77,9 @@ export const routes = {
   about: () => '/about',
   contact: () => '/contact',
   faq: () => '/faq',
+  privacy: () => '/privacy',
+  terms: () => '/terms',
+  shipping: () => '/shipping',
 } as const;
 
 /**

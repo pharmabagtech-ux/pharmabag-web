@@ -14,11 +14,9 @@ import Image from 'next/image';
 export default function Footer() {
   /**
    * `href="#"` on About and Contact meant two of the site's strongest trust
-   * signals pointed nowhere. Those pages now exist, so the links resolve.
-   *
-   * Policy pages are still unbuilt; they are left out rather than pointed at
-   * "#" — a dead link on a medicines marketplace reads as a trust failure to
-   * both quality raters and buyers, whereas an absent link is merely a gap.
+   * signals pointed nowhere. Those pages now exist, so the links resolve —
+   * and the policy pages (Shipping/Privacy/Terms) exist as of the round-2
+   * SEO audit, so they are linked here too instead of being left out.
    */
   const footerLinks = [
     { label: 'About', href: '/about' },
@@ -28,6 +26,9 @@ export default function Footer() {
     { label: 'Brands', href: '/brands' },
     { label: 'Suppliers by City', href: '/wholesale-medicine-suppliers' },
     { label: 'blog.pharmabag.in', href: '/blogs' },
+    { label: 'Shipping & Delivery', href: '/shipping' },
+    { label: 'Privacy', href: '/privacy' },
+    { label: 'Terms', href: '/terms' },
   ];
 
   return (
