@@ -102,6 +102,9 @@ async function handleStatic() {
     { path: routes.about(), changeFrequency: 'monthly', priority: 0.6, lastModified: now },
     { path: routes.contact(), changeFrequency: 'monthly', priority: 0.6, lastModified: now },
     { path: routes.faq(), changeFrequency: 'monthly', priority: 0.6, lastModified: now },
+    { path: routes.privacy(), changeFrequency: 'monthly', priority: 0.4, lastModified: now },
+    { path: routes.terms(), changeFrequency: 'monthly', priority: 0.4, lastModified: now },
+    { path: routes.shipping(), changeFrequency: 'monthly', priority: 0.5, lastModified: now },
   ];
   return xmlResponse(renderUrlSet(urls));
 }
