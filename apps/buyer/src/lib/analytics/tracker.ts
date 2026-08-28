@@ -20,7 +20,7 @@
  *   pageView(path)                – called on every route change
  *   pageLeft(path)                – flushes the page being left
  *   reportScroll(pct)             – max scroll depth for the current page
- *   identify(userId)              – call once a buyer/seller logs in
+ *   identify(userId)              – call once a buyer/seller logs in, null to clear on logout
  *   onVisibilityChange()          – called on document visibilitychange
  */
 
@@ -299,10 +299,10 @@ export function onVisibilityChange(): void {
   }
 }
 
-/** Call once a buyer/seller is known to be logged in. */
-export function identify(userId: string): void {
+/** Call once a buyer/seller is known to be logged in, or with null on logout to clear it. */
+export function identify(userId: string | null): void {
   if (!hasWindow() || disabled) return;
-  currentUserId = userId.slice(0, 200);
+  currentUserId = userId ? userId.slice(0, 200) : undefined;
 }
 
 export function startTracker(): void {

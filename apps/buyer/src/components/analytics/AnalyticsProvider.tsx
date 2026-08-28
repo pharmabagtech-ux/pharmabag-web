@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@pharmabag/api-client';
 import {
@@ -12,31 +12,10 @@ import {
   identify,
 } from '@/lib/analytics/tracker';
 
-export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
+function AnalyticsRouteTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
   const previousPath = useRef<string | null>(null);
-  const startedRef = useRef(false);
-
-  useEffect(() => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-    startTracker();
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    const handleScroll = () => {
-      const doc = document.documentElement;
-      const scrolled = doc.scrollTop;
-      const max = doc.scrollHeight - doc.clientHeight;
-      if (max > 0) reportScroll((scrolled / max) * 100);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('pagehide', () => pageLeft(window.location.pathname, true));
-    return () => {
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   useEffect(() => {
     const fullPath = searchParams?.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
@@ -49,9 +28,41 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, searchParams]);
 
+  return null;
+}
+
+export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+
   useEffect(() => {
-    if (user?.id && user.id !== 'unknown') identify(user.id);
+    startTracker();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    const handleScroll = () => {
+      const doc = document.documentElement;
+      const scrolled = doc.scrollTop;
+      const max = doc.scrollHeight - doc.clientHeight;
+      if (max > 0) reportScroll((scrolled / max) * 100);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    const handlePageHide = () => pageLeft(window.location.pathname, true);
+    window.addEventListener('pagehide', handlePageHide);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('pagehide', handlePageHide);
+    };
+  }, []);
+
+  useEffect(() => {
+    identify(user?.id && user.id !== 'unknown' ? user.id : null);
   }, [user?.id]);
 
-  return <>{children}</>;
+  return (
+    <>
+      <Suspense fallback={null}>
+        <AnalyticsRouteTracker />
+      </Suspense>
+      {children}
+    </>
+  );
 }
