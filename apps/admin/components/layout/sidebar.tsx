@@ -9,6 +9,11 @@ import { useState } from "react";
 
 const NAV = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  // A fully built Platform Analytics page (revenue/orders charts, top
+  // products, top sellers) existed with no way to reach it — same class of
+  // bug this nav already had once for Payments. BarChart3 was imported but
+  // unused, presumably left over from an earlier attempt at this exact entry.
+  { icon: BarChart3, label: "Analytics", href: "/analytics" },
   { icon: Users, label: "Users", href: "/users" },
   { icon: FileSpreadsheet, label: "Upload CSV File", href: "/csv-upload" },
   { icon: Package, label: "Products", href: "/products" },
