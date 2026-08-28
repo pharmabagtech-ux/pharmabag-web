@@ -20,12 +20,24 @@ export default function RealtimeAnalyticsPage() {
               Activity in the last 5 minutes · refreshes every 10 seconds · no personal data shown
             </p>
           </div>
-          <Badge variant={active > 0 ? "success" : "default"} size="md">
-            <Activity className="h-3.5 w-3.5" /> {active} active now
-          </Badge>
+          {realtime.isError ? (
+            <Badge variant="error" size="md">
+              <Activity className="h-3.5 w-3.5" /> Couldn&apos;t load
+            </Badge>
+          ) : (
+            <Badge variant={active > 0 ? "success" : "default"} size="md">
+              <Activity className="h-3.5 w-3.5" /> {active} active now
+            </Badge>
+          )}
         </div>
 
         <AnalyticsNav active="realtime" />
+
+        {realtime.isError && (
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Couldn&apos;t load real-time data. Retrying automatically — check back shortly.
+          </p>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <SectionCard title="Pages being viewed">
