@@ -558,3 +558,25 @@ export async function getWebAnalyticsRealtime(): Promise<WebAnalyticsRealtime> {
   const { data } = await apiClient.get<{ data: WebAnalyticsRealtime }>("/admin/analytics/realtime");
   return data.data;
 }
+
+export interface WebAnalyticsTrafficKpis {
+  visitors: number;
+  newVisitors: number;
+  sessions: number;
+  pageviews: number;
+}
+
+export interface WebAnalyticsTraffic {
+  current: WebAnalyticsTrafficKpis;
+  previous: WebAnalyticsTrafficKpis | null;
+  daily: Array<{ date: string; visitors: number; sessions: number }>;
+  channels: Array<{ category: string; visitors: number; sessions: number }>;
+  referrers: Array<{ domain: string; visitors: number; sessions: number }>;
+}
+
+export async function getWebAnalyticsTraffic(from: string, to: string): Promise<WebAnalyticsTraffic> {
+  const { data } = await apiClient.get<{ data: WebAnalyticsTraffic }>(
+    `/admin/analytics/traffic?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+  );
+  return data.data;
+}
