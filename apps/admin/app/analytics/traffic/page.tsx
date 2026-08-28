@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { AdminLayout } from "@/components/layout/admin-layout";
+import { Skeleton } from "@/components/ui";
 import { AnalyticsNav } from "@/components/analytics/analytics-nav";
 import { BarList, KpiCard, SectionCard, TrendChart } from "@/components/analytics/charts";
 import { useWebAnalyticsTraffic } from "@/hooks/useWebAnalytics";
@@ -51,6 +52,12 @@ export default function TrafficAnalyticsPage() {
 
         <AnalyticsNav active="traffic" />
 
+        {traffic.isError && (
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Couldn&apos;t load traffic data. Retrying automatically — check back shortly.
+          </p>
+        )}
+
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Period:</span>
           {PERIODS.map(({ k, l }) => (
@@ -74,29 +81,41 @@ export default function TrafficAnalyticsPage() {
         </div>
 
         <SectionCard title="Daily trend" subtitle="Visitors and sessions per day">
-          <TrendChart
-            data={traffic.data?.daily ?? []}
-            series={[
-              { key: "visitors", label: "Visitors" },
-              { key: "sessions", label: "Sessions" },
-            ]}
-          />
+          {traffic.isLoading ? (
+            <Skeleton className="h-64 w-full" />
+          ) : (
+            <TrendChart
+              data={traffic.data?.daily ?? []}
+              series={[
+                { key: "visitors", label: "Visitors" },
+                { key: "sessions", label: "Sessions" },
+              ]}
+            />
+          )}
         </SectionCard>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SectionCard title="Acquisition channels" subtitle="Sessions by channel">
-            <BarList
-              rows={(traffic.data?.channels ?? []).map((c) => ({
-                label: CATEGORY_LABELS[c.category] ?? c.category,
-                value: c.sessions,
-              }))}
-            />
+            {traffic.isLoading ? (
+              <Skeleton className="h-40 w-full" />
+            ) : (
+              <BarList
+                rows={(traffic.data?.channels ?? []).map((c) => ({
+                  label: CATEGORY_LABELS[c.category] ?? c.category,
+                  value: c.sessions,
+                }))}
+              />
+            )}
           </SectionCard>
 
           <SectionCard title="Top referrer domains" subtitle="Real domains that sent traffic">
-            <BarList
-              rows={(traffic.data?.referrers ?? []).map((r) => ({ label: r.domain, value: r.sessions }))}
-            />
+            {traffic.isLoading ? (
+              <Skeleton className="h-40 w-full" />
+            ) : (
+              <BarList
+                rows={(traffic.data?.referrers ?? []).map((r) => ({ label: r.domain, value: r.sessions }))}
+              />
+            )}
           </SectionCard>
         </div>
       </div>
