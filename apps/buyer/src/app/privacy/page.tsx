@@ -87,6 +87,18 @@ export default function PrivacyPage() {
           </p>
         </SeoSection>
 
+        <SeoSection id="analytics" title="Analytics and tracking">
+          <p>
+            {SITE_NAME} uses first-party analytics to understand how the site
+            is used — page views, navigation paths and approximate session
+            length. This does not use cookies for tracking (a random id is
+            stored in your browser&apos;s local storage) and collects no
+            personal information. Tracking is automatically disabled if your
+            browser sends a Do Not Track signal. This data is never sold or
+            shared with third parties.
+          </p>
+        </SeoSection>
+
         <SeoSection id="share" title="Who it is shared with">
           <p>
             Order details and the delivery address are shared with the
