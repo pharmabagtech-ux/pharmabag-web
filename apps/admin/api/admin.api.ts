@@ -546,3 +546,15 @@ export async function deleteCustomOrder(id: string) {
   const { data } = await apiClient.delete<{ data: any }>(`/custom-orders/${id}`);
   return data.data;
 }
+
+// ─── Web Analytics ───────────────────────────────────
+export interface WebAnalyticsRealtime {
+  activeVisitors: number;
+  topPages: Array<{ page: string; visitors: number }>;
+  recentEvents: Array<{ name: string; ts: string; page: string | null; productId: string | null }>;
+}
+
+export async function getWebAnalyticsRealtime(): Promise<WebAnalyticsRealtime> {
+  const { data } = await apiClient.get<{ data: WebAnalyticsRealtime }>("/admin/analytics/realtime");
+  return data.data;
+}

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { StatCard, Badge, Tabs } from "@/components/ui";
+import { AnalyticsNav } from "@/components/analytics/analytics-nav";
 import { formatCurrency, formatCompact } from "@pharmabag/utils";
 import { TrendingUp, Users, ShoppingBag, Package, CreditCard, AlertTriangle, Flag, CheckCircle, BarChart3, Trophy } from "lucide-react";
 import { useAdminDashboard, useRevenueChart, useOrdersChart, useTopProducts, useTopSellers } from "@/hooks/useAdmin";
@@ -54,6 +55,8 @@ export default function AdminAnalyticsPage() {
           <h1 className="font-semibold text-2xl text-foreground">Platform Analytics</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Comprehensive performance metrics from live data</p>
         </div>
+
+        <AnalyticsNav active="platform" />
 
         {/* Top-level stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

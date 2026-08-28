@@ -5,6 +5,7 @@ import { AuthProvider } from '@pharmabag/api-client';
 import { ToastProvider } from '@/components/shared/Toast';
 import { useApiEventHandler } from '@/hooks/useApiEventHandler';
 import LoginModal from '@/components/landing/LoginModal';
+import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider';
 
 function ApiEventBridge({ children }: { children: React.ReactNode }) {
   useApiEventHandler();
@@ -16,8 +17,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ReactQueryProvider>
       <AuthProvider baseURL={process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL}>
         <ToastProvider>
-          <ApiEventBridge>{children}</ApiEventBridge>
-          <LoginModal />
+          <AnalyticsProvider>
+            <ApiEventBridge>{children}</ApiEventBridge>
+            <LoginModal />
+          </AnalyticsProvider>
         </ToastProvider>
       </AuthProvider>
     </ReactQueryProvider>
