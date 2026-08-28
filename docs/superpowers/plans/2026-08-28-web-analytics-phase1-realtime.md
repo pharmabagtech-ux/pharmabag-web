@@ -924,6 +924,47 @@ git commit -m "feat(web-analytics): wire WebAnalyticsModule into the app"
 
 ---
 
+## Task 8b: Fix the deploy workflow to actually apply migrations
+
+**Discovered during Task 1 execution, not in the original spec:** `.github/workflows/deploy.yml` rsyncs code to the EC2 box and runs `prisma generate` + `pm2 restart`, but never runs `prisma migrate deploy`. Without this fix, merging Task 1's schema change would not create the new tables in production — `/analytics/collect` would fail on every real request, silently (the buyer app's proxy always returns 204 regardless of backend errors). This also means every PAST schema-changing PR on this repo has had migrations applied some other way (manually, presumably) — fixing the workflow itself, rather than doing a one-off manual migration, closes the gap for every future schema change too.
+
+**Files:**
+- Modify: `.github/workflows/deploy.yml`
+
+- [ ] **Step 1: Add the migration step**
+
+Insert a new step between `Generating Prisma Client` and `Building application`:
+
+```yaml
+            echo "Generating Prisma Client..."
+            npx prisma generate
+
+            echo "Applying database migrations..."
+            npx prisma migrate deploy
+
+            echo "Building application..."
+            npm run build
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add .github/workflows/deploy.yml
+git commit -m "fix(ci): run prisma migrate deploy on every production deploy
+
+The deploy workflow generated the Prisma client and restarted the app,
+but never applied pending migrations -- a schema change merged to main
+would silently never reach the production database until someone
+manually ran migrate deploy on the box. Discovered while adding the
+WebVisitor/WebSession/WebEvent tables in this same PR."
+```
+
+- [ ] **Step 3: Flag this prominently in Task 9's PR body**
+
+This change means the very next deploy (this PR's own deploy) will apply BOTH the new migration step AND the WebVisitor/WebSession/WebEvent migration in the same run — call this out explicitly in the PR description opened in Task 9, so whoever reviews understands this PR changes the deploy pipeline itself, not just adds a feature.
+
+---
+
 ## Task 9: Verify, push, open PR (Part A)
 
 - [ ] **Step 1: Full verification**
@@ -943,7 +984,7 @@ Expected: `tsc` clean; the two `web-analytics` test files pass in full; the FULL
 ```bash
 git push fork feat/web-analytics-realtime-ingest
 ```
-Then open a PR against `pharmabagtech-ux/pharmabag-api` `main`, titled something like `feat(web-analytics): first-party analytics ingest + Real-time report (Phase 1)`, linking the spec at `docs/superpowers/specs/2026-08-28-web-analytics-phase1-realtime-design.md` (that file lives in the `pharmabag-web` repo — reference it by URL to that repo's blob, since specs are tracked there). Body should state plainly: new public `POST /analytics/collect` endpoint (rate-limited, no auth — anonymous visitors are tracked by design), new `GET /admin/analytics/realtime` (admin-only), three new additive Prisma tables. No existing endpoint or table is touched.
+Then open a PR against `pharmabagtech-ux/pharmabag-api` `main`, titled something like `feat(web-analytics): first-party analytics ingest + Real-time report (Phase 1)`, linking the spec at `docs/superpowers/specs/2026-08-28-web-analytics-phase1-realtime-design.md` (that file lives in the `pharmabag-web` repo — reference it by URL to that repo's blob, since specs are tracked there). Body should state plainly: new public `POST /analytics/collect` endpoint (rate-limited, no auth — anonymous visitors are tracked by design), new `GET /admin/analytics/realtime` (admin-only), three new additive Prisma tables. No existing endpoint or table is touched. **Also call out Task 8b's change prominently**: this PR also fixes `.github/workflows/deploy.yml` to run `prisma migrate deploy` on every deploy (it never did before) — this deploy will be the first to apply that fix, and it applies simultaneously with this PR's own new migration.
 
 - [ ] **Step 3: Merge, watch the deploy, live-verify**
 
