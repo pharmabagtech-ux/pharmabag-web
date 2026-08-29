@@ -70,8 +70,22 @@ export function prune<T extends Json>(obj: T): T {
  * The company node. Typed as both Organization and MedicalBusiness so it
  * satisfies generic Organization consumers while also declaring the
  * pharmaceutical vertical that medical-intent queries are matched against.
+ *
+ * `overrides` carries the admin-panel site settings (SEO Settings page);
+ * every field falls back to the code-level config, so callers that pass
+ * nothing get exactly the historical output.
  */
-export function organizationSchema(): Json {
+export function organizationSchema(
+  overrides: {
+    sameAs?: string[];
+    email?: string;
+    addressLocality?: string;
+    addressRegion?: string;
+  } = {},
+): Json {
+  const email = overrides.email || CONTACT.email;
+  const sameAs = overrides.sameAs?.length ? overrides.sameAs : SOCIAL_PROFILES;
+
   return prune({
     '@type': ['Organization', 'MedicalBusiness', 'WholesaleStore'],
     '@id': ORGANIZATION_ID,
@@ -85,13 +99,13 @@ export function organizationSchema(): Json {
       caption: SITE_NAME,
     },
     image: DEFAULT_OG_IMAGE.url,
-    email: CONTACT.email,
+    email,
     telephone: CONTACT.telephone,
     address: {
       '@type': 'PostalAddress',
       streetAddress: CONTACT.streetAddress,
-      addressLocality: CONTACT.addressLocality,
-      addressRegion: CONTACT.addressRegion,
+      addressLocality: overrides.addressLocality || CONTACT.addressLocality,
+      addressRegion: overrides.addressRegion || CONTACT.addressRegion,
       postalCode: CONTACT.postalCode,
       addressCountry: CONTACT.addressCountry,
     },
@@ -109,11 +123,11 @@ export function organizationSchema(): Json {
       'PCD pharma franchise',
       'Hospital and pharmacy supply chain',
     ],
-    sameAs: SOCIAL_PROFILES.length ? SOCIAL_PROFILES : undefined,
+    sameAs: sameAs.length ? sameAs : undefined,
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'sales',
-      email: CONTACT.email,
+      email,
       telephone: CONTACT.telephone,
       areaServed: 'IN',
       availableLanguage: ['en', 'hi'],
