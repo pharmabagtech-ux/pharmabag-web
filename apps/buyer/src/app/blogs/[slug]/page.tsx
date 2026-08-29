@@ -133,14 +133,26 @@ export default function BlogDetailPage() {
               </div>
             )}
 
-            {blog.content ? (
-              <div
-                className="prose prose-gray max-w-none prose-headings:font-bold prose-a:text-lime-600 prose-img:rounded-xl"
-                dangerouslySetInnerHTML={{ __html: blog.content }}
-              />
-            ) : (
-              <p className="text-gray-500">No content available for this blog post.</p>
-            )}
+            {(() => {
+              /**
+               * Content shape is HTML string for admin-editor posts; the
+               * legacy seeded row stores `{ text }`. Rendering the object
+               * directly produced garbage — resolve to a string first, and
+               * only claim "no content" when the RESOLVED string is empty.
+               */
+              const contentHtml =
+                typeof blog.content === "string"
+                  ? blog.content
+                  : (blog.content as { text?: string } | null)?.text ?? "";
+              return contentHtml ? (
+                <div
+                  className="prose prose-gray max-w-none prose-headings:font-bold prose-a:text-lime-600 prose-img:rounded-xl"
+                  dangerouslySetInnerHTML={{ __html: contentHtml }}
+                />
+              ) : (
+                <p className="text-gray-500">No content available for this blog post.</p>
+              );
+            })()}
           </motion.article>
         )}
       </div>
