@@ -580,3 +580,25 @@ export async function getWebAnalyticsTraffic(from: string, to: string): Promise<
   );
   return data.data;
 }
+
+export interface WebAnalyticsAudienceQuality {
+  totalSessions: number;
+  botSessions: number;
+  humanSessions: number;
+  lowEngagementSessions: number;
+  lowEngagementPct: number;
+}
+
+export interface WebAnalyticsAudience {
+  devices: Array<{ deviceType: string; visitors: number; sessions: number }>;
+  os: Array<{ os: string; visitors: number; sessions: number }>;
+  browsers: Array<{ browser: string; visitors: number; sessions: number }>;
+  quality: WebAnalyticsAudienceQuality;
+}
+
+export async function getWebAnalyticsAudience(from: string, to: string): Promise<WebAnalyticsAudience> {
+  const { data } = await apiClient.get<{ data: WebAnalyticsAudience }>(
+    `/admin/analytics/audience?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+  );
+  return data.data;
+}
