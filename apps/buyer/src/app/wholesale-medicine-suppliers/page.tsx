@@ -30,7 +30,7 @@ const CRUMBS = [
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
-    title: 'Wholesale Medicine Suppliers in India — By State & City',
+    title: 'Wholesale Medicine Suppliers in India',
     description: `Find verified wholesale medicine suppliers and pharmaceutical distributors across ${STATES.length} Indian states and ${ALL_CITIES.length} cities on ${SITE_NAME}. Bulk rates, GST invoicing and pan-India delivery.`,
     path: routes.locations(),
     keywords: [

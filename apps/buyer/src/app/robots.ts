@@ -88,6 +88,8 @@ export default function robots(): MetadataRoute.Robots {
       })),
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
+    // The robots.txt Host directive (a Yandex extension) takes a bare
+    // hostname, not a URL with scheme.
+    host: SITE_URL.replace(/^https?:\/\//, ''),
   };
 }

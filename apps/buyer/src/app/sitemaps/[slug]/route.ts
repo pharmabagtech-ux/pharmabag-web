@@ -6,7 +6,7 @@ import {
   type SitemapUrl,
 } from '@/lib/seo/sitemap';
 import {
-  fetchProducts,
+  fetchSitemapProducts,
   fetchCategories,
   fetchManufacturers,
 } from '@/lib/seo/catalog';
@@ -60,29 +60,32 @@ export async function GET(
 async function handleProducts(chunk: number) {
   if (!Number.isInteger(chunk) || chunk < 0 || chunk > 100) notFound();
 
-  // The API caps `limit` at 100, so a 5,000-URL chunk is 50 sequential pages.
-  const perApiPage = 100;
-  const pagesPerChunk = PRODUCTS_PER_SITEMAP / perApiPage;
-  const firstApiPage = chunk * pagesPerChunk + 1;
+  /**
+   * ONE call per chunk against the API's dedicated throttle-exempt
+   * `/products/sitemap` endpoint.
+   *
+   * The previous version paged the grid endpoint 50 times per chunk; since
+   * the API's per-visitor throttle keys on this box's single IP, any build of
+   * more than ~2 chunks got 429'd, which read as "end of catalogue" — chunk 1
+   * shipped truncated and chunks 2-5 shipped as 404s while the sitemap index
+   * kept advertising them.
+   */
+  const { products } = await fetchSitemapProducts({
+    page: chunk + 1,
+    limit: PRODUCTS_PER_SITEMAP,
+  });
 
   const urls: SitemapUrl[] = [];
-  for (let i = 0; i < pagesPerChunk; i++) {
-    const { products } = await fetchProducts({
-      page: firstApiPage + i,
-      limit: perApiPage,
+  for (const p of products) {
+    const slug = p.slug?.trim();
+    if (!slug) continue;
+    urls.push({
+      path: routes.product(slug),
+      lastModified: p.updatedAt ?? p.createdAt,
+      changeFrequency: 'weekly',
+      // Products with a live seller are the ones that can convert.
+      priority: p.hasSellers ? 0.8 : 0.5,
     });
-    if (products.length === 0) break;
-    for (const p of products) {
-      const slug = p.slug?.trim();
-      if (!slug) continue;
-      urls.push({
-        path: routes.product(slug),
-        lastModified: p.updatedAt ?? p.createdAt,
-        changeFrequency: 'weekly',
-        // Products with a live seller are the ones that can convert.
-        priority: p.hasSellers ? 0.8 : 0.5,
-      });
-    }
   }
 
   if (urls.length === 0) notFound();
@@ -90,21 +93,28 @@ async function handleProducts(chunk: number) {
 }
 
 async function handleStatic() {
-  const now = new Date();
+  /**
+   * No `lastModified` here on purpose. These pages have no real modification
+   * timestamp to report, and the old `now()` stamp — refreshed on every
+   * request — teaches crawlers that this site's lastmod is noise. Google
+   * documents that it ignores lastmod entirely once it catches a site always
+   * claiming "changed just now"; omitting the tag keeps the PRODUCT chunks'
+   * genuine timestamps credible.
+   */
   const urls: SitemapUrl[] = [
-    { path: routes.home(), changeFrequency: 'daily', priority: 1.0, lastModified: now },
-    { path: routes.products(), changeFrequency: 'daily', priority: 0.9, lastModified: now },
-    { path: routes.categories(), changeFrequency: 'weekly', priority: 0.8, lastModified: now },
-    { path: routes.brands(), changeFrequency: 'weekly', priority: 0.8, lastModified: now },
-    { path: routes.generics(), changeFrequency: 'weekly', priority: 0.8, lastModified: now },
-    { path: routes.locations(), changeFrequency: 'weekly', priority: 0.8, lastModified: now },
-    { path: routes.blogs(), changeFrequency: 'daily', priority: 0.7, lastModified: now },
-    { path: routes.about(), changeFrequency: 'monthly', priority: 0.6, lastModified: now },
-    { path: routes.contact(), changeFrequency: 'monthly', priority: 0.6, lastModified: now },
-    { path: routes.faq(), changeFrequency: 'monthly', priority: 0.6, lastModified: now },
-    { path: routes.privacy(), changeFrequency: 'monthly', priority: 0.4, lastModified: now },
-    { path: routes.terms(), changeFrequency: 'monthly', priority: 0.4, lastModified: now },
-    { path: routes.shipping(), changeFrequency: 'monthly', priority: 0.5, lastModified: now },
+    { path: routes.home(), changeFrequency: 'daily', priority: 1.0 },
+    { path: routes.products(), changeFrequency: 'daily', priority: 0.9 },
+    { path: routes.categories(), changeFrequency: 'weekly', priority: 0.8 },
+    { path: routes.brands(), changeFrequency: 'weekly', priority: 0.8 },
+    { path: routes.generics(), changeFrequency: 'weekly', priority: 0.8 },
+    { path: routes.locations(), changeFrequency: 'weekly', priority: 0.8 },
+    { path: routes.blogs(), changeFrequency: 'daily', priority: 0.7 },
+    { path: routes.about(), changeFrequency: 'monthly', priority: 0.6 },
+    { path: routes.contact(), changeFrequency: 'monthly', priority: 0.6 },
+    { path: routes.faq(), changeFrequency: 'monthly', priority: 0.6 },
+    { path: routes.privacy(), changeFrequency: 'monthly', priority: 0.4 },
+    { path: routes.terms(), changeFrequency: 'monthly', priority: 0.4 },
+    { path: routes.shipping(), changeFrequency: 'monthly', priority: 0.5 },
   ];
   return xmlResponse(renderUrlSet(urls));
 }
@@ -136,8 +146,25 @@ async function handleBrands() {
     (m) => (m.productCount ?? 0) >= MIN_PRODUCTS_FOR_BRAND_PAGE && m.name?.trim(),
   );
 
-  const urls: SitemapUrl[] = eligible.map((m) => ({
-    path: routes.brand(facetSlug(m.name)),
+  /**
+   * Manufacturer NAMES are not unique once slugified — "Sun Pharma",
+   * "SUN PHARMA" and "Sun Pharma Ltd" all collapse onto one brand page — and
+   * emitting one entry per name shipped 217 duplicate URLs in this sitemap
+   * (996 entries, 779 unique). Dedupe by slug, keeping the highest
+   * product-count row so the top-brands ranking below stays honest.
+   */
+  const bySlug = new Map<string, (typeof eligible)[number]>();
+  for (const m of eligible) {
+    const slug = facetSlug(m.name);
+    const existing = bySlug.get(slug);
+    if (!existing || (m.productCount ?? 0) > (existing.productCount ?? 0)) {
+      bySlug.set(slug, m);
+    }
+  }
+  const uniqueBrands = Array.from(bySlug.values());
+
+  const urls: SitemapUrl[] = Array.from(bySlug.keys()).map((slug) => ({
+    path: routes.brand(slug),
     changeFrequency: 'weekly',
     priority: 0.7,
   }));
@@ -148,7 +175,7 @@ async function handleBrands() {
    * The full cross-product would be thousands of pages saying nearly the same
    * thing. Capping it keeps every generated page defensibly distinct.
    */
-  const topBrands = [...eligible]
+  const topBrands = [...uniqueBrands]
     .sort((a, b) => (b.productCount ?? 0) - (a.productCount ?? 0))
     .slice(0, 40);
 

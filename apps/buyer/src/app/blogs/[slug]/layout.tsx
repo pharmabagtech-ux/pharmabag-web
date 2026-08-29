@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { routes, absoluteUrl } from '@/lib/seo/url';
@@ -43,16 +44,25 @@ interface BlogPost {
   content?: { text?: string } | string;
 }
 
-async function fetchPost(slug: string): Promise<BlogPost | null> {
+/**
+ * Three-way result: the post, `'not-found'` when the API CONFIRMED the slug
+ * does not exist, or `null` for a transient failure. The distinction matters
+ * because unknown slugs used to render as HTTP 200 shells (soft-404s), but
+ * turning a blip into a hard 404 would be worse — Google drops 404s and
+ * retries errors.
+ */
+async function fetchPost(slug: string): Promise<BlogPost | 'not-found' | null> {
   try {
     const res = await fetch(`${API_BASE}/blog/posts/${encodeURIComponent(slug)}`, {
       headers: { accept: 'application/json' },
       next: { revalidate: 3600 },
     });
+    if (res.status === 404) return 'not-found';
     if (!res.ok) return null;
     const body = await res.json();
     const post = body?.data ?? body;
-    return post?.title ? (post as BlogPost) : null;
+    // A 200 whose payload has no post is the API's other "not found" shape.
+    return post?.title ? (post as BlogPost) : 'not-found';
   } catch {
     return null;
   }
@@ -74,7 +84,10 @@ export async function generateMetadata({
   params: { slug: string };
 }): Promise<Metadata> {
   const post = await fetchPost(params.slug);
+  if (post === 'not-found') notFound();
   if (!post) {
+    // Transient failure: keep the tolerant noindex head rather than 404ing a
+    // post that exists.
     return buildMetadata({
       title: 'Article not found',
       description: 'Browse pharmaceutical industry articles and buying guides.',
@@ -104,6 +117,10 @@ export default async function BlogPostLayout({
 }) {
   const post = await fetchPost(params.slug);
 
+  // Confirmed-nonexistent slugs return a REAL 404 instead of an HTTP 200
+  // shell. Transient failures still fall through to the client (soft but
+  // safe); only the API's own word downgrades a URL to 404.
+  if (post === 'not-found') notFound();
   if (!post) return <>{children}</>;
 
   const slug = post.slug ?? params.slug;

@@ -85,7 +85,7 @@ export async function generateMetadata({
   const path = routes.brand(params.brandSlug);
 
   return buildMetadata({
-    title: `${brand.name} Products — Wholesale Price List & Distributor${page > 1 ? ` — Page ${page}` : ''}`,
+    title: `${brand.name} — Wholesale Price List${page > 1 ? ` — Page ${page}` : ''}`,
     description: `Buy ${brand.name} medicines at wholesale rates on ${SITE_NAME}. ${(brand.productCount ?? 0).toLocaleString('en-IN')} products from verified distributors, with net rates, MOQ, GST invoicing and pan-India delivery.`,
     path: page > 1 ? `${path}?page=${page}` : path,
     keywords: [

@@ -156,7 +156,14 @@ async function apiGet<T>(
       });
       if (!res.ok) {
         lastError = new Error(`HTTP ${res.status}`);
-        // 4xx will not improve on retry; 5xx and timeouts might.
+        // 4xx will not improve on retry — EXCEPT 429, which by definition
+        // improves once the rate-limit window rolls over. Treating 429 as
+        // permanent is how the sitemap builder once read a throttled page as
+        // "end of catalogue" and shipped 404 chunk files.
+        if (res.status === 429) {
+          await new Promise((r) => setTimeout(r, 1_500 * (attempt + 1)));
+          continue;
+        }
         if (res.status < 500) break;
         continue;
       }
@@ -219,23 +226,108 @@ export async function fetchProducts(
   };
 }
 
+/** One sitemap entry's worth of product: slug + dates + sellability. */
+export interface SitemapProduct {
+  slug: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+  hasSellers?: boolean;
+}
+
+export interface SitemapProductPage {
+  products: SitemapProduct[];
+  total: number;
+  totalPages: number;
+}
+
+/**
+ * Catalogue enumeration for the XML sitemap chunks, via the API's dedicated
+ * throttle-exempt `/products/sitemap` endpoint.
+ *
+ * The old approach — paging `/products` at its 100-row cap — needed 269
+ * sequential calls from this box's single IP, and the API's per-visitor
+ * throttle (100 req/60s) killed the run at ~call 100: chunk 1 truncated at
+ * 4,900 URLs and chunks 2-5 rendered as 404s, leaving 63% of the catalogue in
+ * no sitemap. This endpoint returns 5,000 slim rows per call, so a full
+ * rebuild is ~6 requests. `strict` is NOT used: on failure the chunk 404s
+ * exactly as it always has, rather than 500ing the sitemap index.
+ */
+export async function fetchSitemapProducts(q: {
+  page?: number;
+  limit?: number;
+}): Promise<SitemapProductPage> {
+  const params = new URLSearchParams();
+  params.set('page', String(Math.max(1, q.page ?? 1)));
+  params.set('limit', String(Math.min(5000, Math.max(1, q.limit ?? 5000))));
+
+  const data = await apiGet<{
+    products?: SitemapProduct[];
+    meta?: { total?: number; totalPages?: number };
+  }>(`/products/sitemap?${params.toString()}`, REVALIDATE_PRODUCT, {});
+
+  const products = Array.isArray(data?.products) ? data.products : [];
+  return {
+    products,
+    total: Number(data?.meta?.total ?? products.length) || 0,
+    totalPages: Number(data?.meta?.totalPages ?? 0) || 0,
+  };
+}
+
 /**
  * Single product by stored slug (or id).
  *
  * `findOne` on the API resolves an exact slug first, then falls back to the
  * SKU-suffixed and legacy-punctuation forms, so passing the URL segment
  * straight through is correct and covers old shared links.
+ *
+ * The return contract is deliberately three-way:
+ *  - the product          → it exists
+ *  - `null`               → the API CONFIRMED it does not exist (404, or a
+ *                           200 with no product body) — safe to `notFound()`
+ *  - CatalogUnavailableError thrown → the API could not be reached. The old
+ *    version returned `null` here too, which served a 200 "Product not found"
+ *    shell for every unknown OR unreachable product — a soft-404 that also
+ *    meant a two-second API blip could tell Google a live product was gone.
  */
 export async function fetchProduct(
   slugOrId: string,
 ): Promise<CatalogProduct | null> {
   if (!slugOrId) return null;
-  const data = await apiGet<CatalogProduct | null>(
-    `/products/${encodeURIComponent(slugOrId)}`,
-    REVALIDATE_PRODUCT,
-    null,
-  );
-  return data && (data as CatalogProduct).id ? data : null;
+  const path = `/products/${encodeURIComponent(slugOrId)}`;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    try {
+      const res = await fetch(`${API_BASE}${path}`, {
+        signal: controller.signal,
+        headers: { accept: 'application/json' },
+        next: { revalidate: REVALIDATE_PRODUCT },
+      });
+      if (res.status === 404) return null;
+      if (!res.ok) {
+        lastError = new Error(`HTTP ${res.status}`);
+        if (res.status === 429) {
+          await new Promise((r) => setTimeout(r, 1_500 * (attempt + 1)));
+          continue;
+        }
+        if (res.status < 500) break;
+        continue;
+      }
+      const body = await res.json();
+      const data = (body?.data ?? body) as CatalogProduct | null;
+      // A 200 whose payload carries no product is the API's other way of
+      // saying "not found" — treat it the same as a 404.
+      return data && data.id ? data : null;
+    } catch (error) {
+      lastError = error;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  throw new CatalogUnavailableError(path, lastError);
 }
 
 /**

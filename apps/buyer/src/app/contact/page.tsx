@@ -35,7 +35,7 @@ const CRUMBS = [
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
-    title: `Contact ${SITE_NAME} — Wholesale Enquiries & Support`,
+    title: `Contact ${SITE_NAME} — Wholesale Enquiries`,
     /**
      * The phone number is only mentioned when one is actually configured —
      * see the note on CONTACT in lib/seo/config.ts. Interpolating an empty

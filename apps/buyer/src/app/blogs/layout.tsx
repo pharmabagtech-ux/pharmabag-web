@@ -14,7 +14,7 @@ import { SITE_NAME } from '@/lib/seo/config';
  * Individual posts set their own metadata in `blogs/[slug]/layout.tsx`.
  */
 export const metadata: Metadata = buildSegmentMetadata({
-  title: 'Pharmaceutical Industry Insights & Wholesale Buying Guides',
+  title: 'Pharma Industry Insights & Buying Guides',
   description: `Articles, buying guides and industry updates for pharmacy owners, hospital procurement teams and pharmaceutical distributors from ${SITE_NAME}.`,
   path: routes.blogs(),
   keywords: [
