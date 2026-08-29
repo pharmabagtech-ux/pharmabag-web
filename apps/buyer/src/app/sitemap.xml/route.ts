@@ -1,5 +1,5 @@
 import { renderSitemapIndex, xmlResponse, PRODUCTS_PER_SITEMAP } from '@/lib/seo/sitemap';
-import { fetchProducts, fetchManufacturers } from '@/lib/seo/catalog';
+import { fetchSitemapProducts, fetchManufacturers } from '@/lib/seo/catalog';
 
 /**
  * The sitemap index — previously a 404, so nothing on this site was ever
@@ -13,11 +13,11 @@ import { fetchProducts, fetchManufacturers } from '@/lib/seo/catalog';
 export const revalidate = 3600;
 
 export async function GET() {
-  const now = new Date();
-
   // One 1-item request purely to read `meta.total` and size the chunk list.
+  // Uses the throttle-exempt sitemap endpoint so index generation can never
+  // be rate-limited into under-advertising the catalogue.
   const [{ total }, manufacturers] = await Promise.all([
-    fetchProducts({ page: 1, limit: 1 }),
+    fetchSitemapProducts({ page: 1, limit: 1 }),
     fetchManufacturers(),
   ]);
 
@@ -26,20 +26,26 @@ export async function GET() {
     Math.ceil((total || 0) / PRODUCTS_PER_SITEMAP),
   );
 
+  /**
+   * No lastmod on the children: it used to be stamped `now()` on every fetch,
+   * which claims "everything changed every hour" and teaches crawlers to
+   * ignore this site's lastmod. The child sitemaps carry real per-URL dates
+   * where they genuinely exist (the product chunks).
+   */
   const sitemaps: { path: string; lastModified?: Date }[] = [
-    { path: '/sitemaps/static.xml', lastModified: now },
-    { path: '/sitemaps/categories.xml', lastModified: now },
-    { path: '/sitemaps/generics.xml', lastModified: now },
-    { path: '/sitemaps/locations.xml', lastModified: now },
-    { path: '/sitemaps/blogs.xml', lastModified: now },
+    { path: '/sitemaps/static.xml' },
+    { path: '/sitemaps/categories.xml' },
+    { path: '/sitemaps/generics.xml' },
+    { path: '/sitemaps/locations.xml' },
+    { path: '/sitemaps/blogs.xml' },
   ];
 
   if (manufacturers.length > 0) {
-    sitemaps.push({ path: '/sitemaps/brands.xml', lastModified: now });
+    sitemaps.push({ path: '/sitemaps/brands.xml' });
   }
 
   for (let i = 0; i < productChunks; i++) {
-    sitemaps.push({ path: `/sitemaps/products-${i}.xml`, lastModified: now });
+    sitemaps.push({ path: `/sitemaps/products-${i}.xml` });
   }
 
   return xmlResponse(renderSitemapIndex(sitemaps));

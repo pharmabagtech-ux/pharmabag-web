@@ -38,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
   ).length;
 
   return buildMetadata({
-    title: 'Pharmaceutical Brands & Manufacturers — Wholesale Suppliers',
+    title: 'Pharmaceutical Brands — Wholesale Suppliers',
     description: `Browse ${count}+ pharmaceutical brands and manufacturers supplied at wholesale on ${SITE_NAME}, including Cipla, Sun Pharma, Mankind, Lupin, Abbott, Torrent and Intas. Compare bulk rates and order with GST invoicing.`,
     path: routes.brands(),
     keywords: [

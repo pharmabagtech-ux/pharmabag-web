@@ -35,7 +35,7 @@ function classId(name: string): string {
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
-    title: 'Generic Medicines by Molecule — Salt Composition Wholesale',
+    title: 'Generic Medicines by Molecule — Wholesale',
     description: `Browse ${MOLECULES.length} generic molecules and salt compositions available at wholesale on ${SITE_NAME} — paracetamol, amoxicillin, metformin, atorvastatin, pantoprazole and more, grouped by therapeutic class.`,
     path: routes.generics(),
     keywords: [

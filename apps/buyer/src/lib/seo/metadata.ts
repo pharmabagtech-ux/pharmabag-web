@@ -65,7 +65,6 @@ export function buildMetadata(input: BuildMetadataInput): Metadata {
     type = 'website',
     publishedTime,
     modifiedTime,
-    keywords,
     prevPath,
     nextPath,
   } = input;
@@ -106,7 +105,12 @@ export function buildMetadata(input: BuildMetadataInput): Metadata {
   return {
     title: titleField,
     description: finalDescription,
-    keywords: keywords?.length ? keywords : undefined,
+    /**
+     * `keywords` is accepted for callers but deliberately NOT emitted.
+     * No search engine has used the meta keywords tag for ranking in over a
+     * decade; its only modern correlation is with spam. The lists stay in the
+     * call sites as documentation of each page's target queries.
+     */
     alternates: {
       canonical,
       /**

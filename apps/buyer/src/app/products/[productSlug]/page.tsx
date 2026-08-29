@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import ProductDetailClient from './ProductDetailClient';
 import JsonLd from '@/components/seo/JsonLd';
 import {
@@ -64,9 +65,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!product) {
     /**
-     * Unresolvable slug. Marked noindex rather than left to inherit the site
-     * default, so a dead link cannot park a duplicate of the homepage title in
-     * the index.
+     * The API confirmed this slug does not exist (`fetchProduct` throws on
+     * blips, so a null here is a real 404). The page function below returns
+     * the actual 404 status; this metadata only dresses the not-found page.
      */
     return buildMetadata({
       title: 'Product not found',
@@ -109,14 +110,14 @@ export default async function ProductPage({ params }: PageProps) {
   const product = await fetchProduct(params.productSlug);
 
   /**
-   * If the product cannot be resolved server-side, fall through to the client
-   * component, which already renders a proper not-found state. Calling
-   * `notFound()` here would replace that with the generic 404 and lose the
-   * existing UX for a transient API blip.
+   * A null product is now a CONFIRMED "does not exist" — `fetchProduct`
+   * throws `CatalogUnavailableError` on transient API failures instead of
+   * returning null, so a blip renders the error page (a 500 Google retries),
+   * never a 404 it would drop. The previous fall-through to the client shell
+   * served unknown slugs as HTTP 200 "Product not found" — a soft-404 that
+   * wasted crawl budget across every dead link ever shared.
    */
-  if (!product) {
-    return <ProductDetailClient params={params} />;
-  }
+  if (!product) notFound();
 
   const canonicalSlug = product.slug?.trim() || params.productSlug;
   const url = absoluteUrl(routes.product(canonicalSlug));

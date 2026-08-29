@@ -41,7 +41,7 @@ const CRUMBS = [
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
-    title: `About ${SITE_NAME} — B2B Pharmaceutical Wholesale Marketplace`,
+    title: `About ${SITE_NAME} — Wholesale Medicine Marketplace`,
     description: `${SITE_NAME} is an Indian B2B pharmaceutical wholesale marketplace connecting licensed pharmacies, hospitals and distributors with verified medicine suppliers. Learn how supplier verification, pricing and GST invoicing work.`,
     path: routes.about(),
     keywords: [

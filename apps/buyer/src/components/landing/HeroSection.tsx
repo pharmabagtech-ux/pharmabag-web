@@ -39,14 +39,20 @@ export default function HeroSection() {
 
   return (
     <div className="w-[96vw] sm:w-[92vw] mx-auto flex-1 flex flex-col justify-start items-center bg-transparent mt-4 sm:mt-6 lg:mt-8">
-      {/* Main Heading */}
-      <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-[72px] text-gray-900 mb-0 sm:mb-1 lg:mb-2 tracking-tight font-medium">
-        <span className="text-gray-800">India&apos;s Only </span>
-        <span className="text-black font-extrabold">Trusted</span>
+      {/* Main Heading — ONE h1 holding the whole phrase. It used to be split
+          into an h1 reading just "India's Only Trusted" with the meaningful
+          half ("B2B Pharma Platform") in a separate h2, which left the
+          homepage's h1 semantically empty for crawlers. The visual layout is
+          unchanged: each line keeps its exact classes as a block span. */}
+      <h1 className="text-center">
+        <span className="block text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-[72px] text-gray-900 mb-0 sm:mb-1 lg:mb-2 tracking-tight font-medium">
+          <span className="text-gray-800">India&apos;s Only </span>
+          <span className="text-black font-extrabold">Trusted</span>
+        </span>
+        <span className="block text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-[72px] text-black mb-1 sm:mb-2 lg:mb-4 tracking-tight font-extrabold pb-2">
+          B2B Pharma Platform
+        </span>
       </h1>
-      <h2 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-[72px] text-black mb-1 sm:mb-2 lg:mb-4 tracking-tight font-extrabold pb-2">
-        B2B Pharma Platform
-      </h2>
 
       {/* Subtext */}
       <p className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-700 mb-4 sm:mb-6 lg:mb-10 font-bold px-2">

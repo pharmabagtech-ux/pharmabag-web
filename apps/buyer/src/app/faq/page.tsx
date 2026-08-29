@@ -29,7 +29,7 @@ const CRUMBS = [
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
-    title: 'Wholesale Medicine Buying FAQ — Licences, Pricing & Delivery',
+    title: 'Wholesale Medicine Buying FAQ — Licences & GST',
     description: `Answers to common questions about buying wholesale medicines in India on ${SITE_NAME}: drug licence requirements, minimum order value, PTR and net rate pricing, GST invoicing, schemes and pan-India delivery.`,
     path: routes.faq(),
     keywords: [

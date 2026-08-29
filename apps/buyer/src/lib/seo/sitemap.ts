@@ -83,7 +83,10 @@ export function renderSitemapIndex(
   const entries = sitemaps
     .map((s) => {
       const loc = xmlEscape(absoluteUrl(s.path));
-      const lastmod = toW3CDate(s.lastModified ?? new Date());
+      // Only emit lastmod when the caller has a REAL date. Defaulting to
+      // now() made every child claim it changed on every fetch, which trains
+      // crawlers to disregard this site's lastmod signals altogether.
+      const lastmod = toW3CDate(s.lastModified);
       return [
         '  <sitemap>',
         `    <loc>${loc}</loc>`,

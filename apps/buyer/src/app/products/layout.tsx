@@ -21,7 +21,8 @@ import { SITE_NAME, CATALOGUE_SIZE_APPROX } from '@/lib/seo/config';
  * the `sort=` and `view=` parameter patterns for the same reason.
  */
 export const metadata: Metadata = buildSegmentMetadata({
-  title: 'Wholesale Medicines Online — Bulk Price List & Suppliers',
+  // Must fit clampTitle's 48-char budget or the tag ships with a literal "…".
+  title: 'Wholesale Medicines Online — Bulk Price List',
   description: `Browse ${CATALOGUE_SIZE_APPROX.toLocaleString('en-IN')}+ medicines available at wholesale rates on ${SITE_NAME}. Compare bulk prices from verified Indian suppliers, check MOQ and GST, and order online with pan-India delivery.`,
   path: routes.products(),
   keywords: [
