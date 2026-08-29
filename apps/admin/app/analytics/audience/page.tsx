@@ -88,6 +88,8 @@ export default function AudienceAnalyticsPage() {
         <SectionCard title="Traffic quality" subtitle="Bots are stored but never mixed into the human breakdowns above">
           {audience.isLoading ? (
             <Skeleton className="h-24 w-full" />
+          ) : audience.isError ? (
+            <Badge variant="error" size="md">Couldn&apos;t load</Badge>
           ) : (
             <div className="space-y-3">
               <Badge variant={(quality?.botSessions ?? 0) > (quality?.humanSessions ?? 0) ? "warning" : "success"} size="md">
