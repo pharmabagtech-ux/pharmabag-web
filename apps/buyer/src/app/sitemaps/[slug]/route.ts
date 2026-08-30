@@ -52,6 +52,8 @@ export async function GET(
       return handleLocations();
     case 'blogs':
       return handleBlogs();
+    case 'images':
+      return handleImages();
     default:
       notFound();
   }
@@ -88,6 +90,43 @@ async function handleProducts(chunk: number) {
     });
   }
 
+  if (urls.length === 0) notFound();
+  return xmlResponse(renderUrlSet(urls));
+}
+
+/**
+ * Image sitemap: every product that has a catalogue image, with the image
+ * attached via Google's image-sitemap extension.
+ *
+ * Kept as its own child (rather than decorating the products-N chunks) so the
+ * imaged subset — currently ~109 sellable products of 26,815 — is one small
+ * document Search Console can report on directly. Pages the same
+ * throttle-exempt endpoint the chunks use; ~6 calls per regeneration.
+ */
+async function handleImages() {
+  const urls: SitemapUrl[] = [];
+  let page = 1;
+  let totalPages = 1;
+  do {
+    const res = await fetchSitemapProducts({ page, limit: PRODUCTS_PER_SITEMAP });
+    totalPages = res.totalPages || 1;
+    for (const p of res.products) {
+      const slug = p.slug?.trim();
+      if (!slug || !p.imageUrl) continue;
+      urls.push({
+        path: routes.product(slug),
+        lastModified: p.updatedAt ?? p.createdAt,
+        changeFrequency: 'weekly',
+        priority: 0.8,
+        imageUrl: p.imageUrl,
+      });
+    }
+    page += 1;
+  } while (page <= totalPages && page <= 20);
+
+  // Before the API starts sending imageUrl (deploy ordering), or if no
+  // product has an image, serve a 404 rather than an empty urlset — the
+  // index only advertises this child once it can exist meaningfully.
   if (urls.length === 0) notFound();
   return xmlResponse(renderUrlSet(urls));
 }

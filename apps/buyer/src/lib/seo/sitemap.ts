@@ -30,6 +30,12 @@ export interface SitemapUrl {
    * which is worth having on a catalogue this size.
    */
   priority?: number;
+  /**
+   * Product image for the Google image-sitemap extension. When any URL in a
+   * set carries one, the urlset declares the image namespace and the entry
+   * gets an `<image:image>` block.
+   */
+  imageUrl?: string | null;
 }
 
 /** XML-escapes a URL. Ampersands in query strings break sitemaps otherwise. */
@@ -50,6 +56,7 @@ function toW3CDate(value?: string | Date | null): string | undefined {
 }
 
 export function renderUrlSet(urls: SitemapUrl[]): string {
+  const hasImages = urls.some((u) => u.imageUrl);
   const entries = urls
     .map((u) => {
       const loc = xmlEscape(absoluteUrl(u.path));
@@ -64,6 +71,9 @@ export function renderUrlSet(urls: SitemapUrl[]): string {
         typeof u.priority === 'number'
           ? `    <priority>${u.priority.toFixed(1)}</priority>`
           : null,
+        u.imageUrl
+          ? `    <image:image>\n      <image:loc>${xmlEscape(u.imageUrl)}</image:loc>\n    </image:image>`
+          : null,
         '  </url>',
       ]
         .filter(Boolean)
@@ -71,8 +81,11 @@ export function renderUrlSet(urls: SitemapUrl[]): string {
     })
     .join('\n');
 
+  const imageNs = hasImages
+    ? ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"'
+    : '';
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${imageNs}>
 ${entries}
 </urlset>`;
 }

@@ -44,6 +44,14 @@ export async function GET() {
     sitemaps.push({ path: '/sitemaps/brands.xml' });
   }
 
+  /**
+   * Product-image sitemap (Google image extension). Requires the API's
+   * /products/sitemap to send imageUrl — that shipped first (api#41), so
+   * this can be advertised unconditionally; the child itself 404s in the
+   * only degenerate case (zero imaged products in the whole catalogue).
+   */
+  sitemaps.push({ path: '/sitemaps/images.xml' });
+
   for (let i = 0; i < productChunks; i++) {
     sitemaps.push({ path: `/sitemaps/products-${i}.xml` });
   }

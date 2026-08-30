@@ -242,6 +242,8 @@ export interface SitemapProduct {
   updatedAt?: string | null;
   createdAt?: string | null;
   hasSellers?: boolean;
+  /** First catalogue image, when the API is new enough to send it. */
+  imageUrl?: string | null;
 }
 
 export interface SitemapProductPage {
