@@ -63,6 +63,21 @@ interface PageProps {
   params: { productSlug: string };
 }
 
+/**
+ * The API serves `images` as MasterProductImage rows (`{ id, url, ... }`),
+ * not URL strings. This page fed the raw object into buildMetadata, which
+ * calls string methods on it — a guaranteed render crash. It never fired in
+ * production only because every master had zero images until 2026-08-30;
+ * the first attached image turned every imaged PDP into a 500.
+ */
+function imageUrlOf(img: unknown): string | null {
+  if (typeof img === 'string') return img;
+  if (img && typeof (img as { url?: unknown }).url === 'string') {
+    return (img as { url: string }).url;
+  }
+  return null;
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const product = await fetchProduct(params.productSlug);
 
@@ -108,7 +123,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
      * competing for the same content.
      */
     path: routes.product(canonicalSlug),
-    image: product.ogImage || product.images?.[0] || listing?.images?.[0] || null,
+    image:
+      product.ogImage ||
+      imageUrlOf(product.images?.[0]) ||
+      imageUrlOf(listing?.images?.[0]) ||
+      null,
     keywords,
   });
 }
@@ -216,7 +235,7 @@ export default async function ProductPage({ params }: PageProps) {
       url,
       description: summary,
       sku: product.sku ?? null,
-      image: product.images?.[0] ?? listing?.images?.[0] ?? null,
+      image: imageUrlOf(product.images?.[0]) ?? imageUrlOf(listing?.images?.[0]) ?? null,
       brand: product.manufacturer ?? null,
       category: product.category?.name ?? null,
       activeIngredient: product.chemicalComposition ?? null,
