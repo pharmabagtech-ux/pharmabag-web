@@ -59,7 +59,15 @@ async function fetchPost(slug: string): Promise<BlogPost | 'not-found' | null> {
     });
     if (res.status === 404) return 'not-found';
     if (!res.ok) return null;
-    const body = await res.json();
+    /**
+     * Read as text before parsing: the API answers an unknown slug with an
+     * HTTP 200 and a COMPLETELY EMPTY body (verified live — 0 bytes), and
+     * `res.json()` throws on empty input, which the catch below would misread
+     * as a transient failure. An empty 200 is a confirmed "does not exist".
+     */
+    const raw = await res.text();
+    if (!raw.trim()) return 'not-found';
+    const body = JSON.parse(raw);
     const post = body?.data ?? body;
     // A 200 whose payload has no post is the API's other "not found" shape.
     return post?.title ? (post as BlogPost) : 'not-found';
