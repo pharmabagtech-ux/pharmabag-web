@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import CollectionShell from '@/components/seo/CollectionShell';
@@ -128,6 +129,18 @@ export default async function MoleculePage({ params, searchParams }: PageProps) 
     if (m) brandCounts.set(m, (brandCounts.get(m) ?? 0) + 1);
   }
   const brands = Array.from(brandCounts.entries()).sort((a, b) => b[1] - a[1]);
+
+  /**
+   * Live wholesale-rate comparison — products on this page that currently
+   * have a priced seller, cheapest net rate first. This table exists only
+   * where the data does (>= 2 priced rows), and it is the one piece of
+   * content on this page no competitor can reproduce: real net rates from
+   * live listings, not scraped price guesses.
+   */
+  const pricedRows = products
+    .filter((p) => p.hasSellers && typeof p.price === 'number' && p.price > 0 && p.slug)
+    .sort((a, b) => (a.price as number) - (b.price as number))
+    .slice(0, 10);
 
   const formCounts = new Map<string, number>();
   for (const p of products) {
@@ -262,6 +275,76 @@ export default async function MoleculePage({ params, searchParams }: PageProps) 
               >
                 <p className="text-sm leading-relaxed text-slate-700">
                   {CLASS_GUIDANCE[molecule.therapeuticClass]}
+                </p>
+              </SeoSection>
+            ) : null}
+
+            {/*
+              The live-rate comparison. Rendered only when at least two
+              products carry a priced seller — a "comparison" of one row is
+              noise, and most long-tail molecules have no live offer yet.
+              Rates come straight from the same listings the checkout bills.
+            */}
+            {pricedRows.length >= 2 ? (
+              <SeoSection
+                id="rate-comparison"
+                title={`${molecule.name} brands compared — live wholesale rates`}
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[560px] text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                        <th className="py-2 pr-3">Brand</th>
+                        <th className="py-2 pr-3">Manufacturer</th>
+                        <th className="py-2 pr-3">MRP</th>
+                        <th className="py-2 pr-3">Net rate / unit</th>
+                        <th className="py-2">Below MRP</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pricedRows.map((p) => {
+                        const net = p.price as number;
+                        const mrp =
+                          typeof p.mrp === 'number' && p.mrp > net ? p.mrp : null;
+                        const saving = mrp
+                          ? Math.round(((mrp - net) / mrp) * 100)
+                          : null;
+                        return (
+                          <tr
+                            key={p.id}
+                            className="border-b border-slate-100 last:border-0"
+                          >
+                            <td className="py-2 pr-3">
+                              <Link
+                                href={routes.product(p.slug as string)}
+                                className="font-semibold text-teal-700 underline-offset-2 hover:underline"
+                              >
+                                {p.name}
+                              </Link>
+                            </td>
+                            <td className="py-2 pr-3 text-slate-600">
+                              {p.manufacturer ?? '—'}
+                            </td>
+                            <td className="py-2 pr-3 text-slate-600">
+                              {mrp ? inr(mrp) : '—'}
+                            </td>
+                            <td className="py-2 pr-3 font-semibold text-slate-900">
+                              {inr(net)}
+                            </td>
+                            <td className="py-2 text-slate-600">
+                              {saving !== null ? `${saving}%` : '—'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                  Net rates are live wholesale offers from verified suppliers,
+                  exclusive of GST, and move with seller schemes. Rates shown
+                  are per unit received after scheme and discount — the amount
+                  a verified buyer is actually billed.
                 </p>
               </SeoSection>
             ) : null}
