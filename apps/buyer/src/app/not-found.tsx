@@ -1,60 +1,30 @@
 import Link from 'next/link';
-import { headers } from 'next/headers';
 import type { Metadata } from 'next';
+import Track404Client from '@/components/Track404Client';
 
 /**
- * Root 404 page — and the site's 404 LOGGER.
+ * Root 404 page — deliberately STATIC.
  *
- * Every real 404 (unknown routes, dead product/blog slugs via notFound())
- * renders through here. The path arrives in the `x-pathname` header stamped
- * by the middleware, because a not-found boundary cannot read the URL any
- * other way. Logging is strictly fire-and-forget: a failed or slow log call
- * must never delay or break the 404 render — hence the 1.5s abort and the
- * blanket catch.
+ * An earlier version read `headers()` here to log the dead path server-side.
+ * That single dynamic API forced EVERY route in the app to per-request
+ * rendering, because Next prerenders the not-found shell as part of each
+ * page. The logging now happens in two safer places instead:
  *
- * This is what feeds the admin panel's 404 log, and unlike client-side
- * analytics it sees CRAWLER 404s — the ones that actually matter for SEO.
+ *  - server-side at the notFound() call sites that know their path from
+ *    params (product + blog shells) — covers crawler hits on renamed URLs,
+ *    which is the traffic that matters for SEO;
+ *  - client-side here via <Track404Client/> for arbitrary dead paths.
  */
-
-const API_BASE = (
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  'https://api.pharmabag.in/api'
-).replace(/\/+$/, '');
 
 export const metadata: Metadata = {
   title: 'Page not found',
   robots: { index: false, follow: true },
 };
 
-async function log404(path: string, referrer: string | null): Promise<void> {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 1_500);
-    await fetch(`${API_BASE}/redirects/track-404`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ path, referrer: referrer ?? undefined }),
-      signal: controller.signal,
-      cache: 'no-store',
-    });
-    clearTimeout(timer);
-  } catch {
-    // Never let logging affect the page.
-  }
-}
-
-export default async function NotFound() {
-  const h = headers();
-  const path = h.get('x-pathname');
-  const referrer = h.get('referer');
-
-  if (path) {
-    await log404(path, referrer);
-  }
-
+export default function NotFound() {
   return (
     <main className="flex min-h-[70vh] flex-col items-center justify-center bg-[#f2fcf6] px-4 text-center">
+      <Track404Client />
       <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">404</p>
       <h1 className="mt-2 text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
         Page not found

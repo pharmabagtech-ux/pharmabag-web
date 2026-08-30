@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { routes, absoluteUrl } from '@/lib/seo/url';
+import { report404 } from '@/lib/track-404';
 import { graph, articleSchema, breadcrumbSchema } from '@/lib/seo/schema';
 import { squash } from '@/lib/seo/content';
 
@@ -127,8 +128,13 @@ export default async function BlogPostLayout({
 
   // Confirmed-nonexistent slugs return a REAL 404 instead of an HTTP 200
   // shell. Transient failures still fall through to the client (soft but
-  // safe); only the API's own word downgrades a URL to 404.
-  if (post === 'not-found') notFound();
+  // safe); only the API's own word downgrades a URL to 404. The dead path
+  // is reported to the 404 log here — ONLY here, not also in
+  // generateMetadata, or every hit would be counted twice.
+  if (post === 'not-found') {
+    await report404(routes.blog(params.slug));
+    notFound();
+  }
   if (!post) return <>{children}</>;
 
   const slug = post.slug ?? params.slug;
