@@ -97,12 +97,22 @@ export const SOCIAL_PROFILES: string[] = [
   // Add verified profiles only — an unowned URL here weakens the whole node.
 ];
 
+/**
+ * The default social share card — a true 1200x630 branded card, shown when a
+ * page without its own image is shared on WhatsApp/LinkedIn/social or
+ * rendered as an AI-chat link preview. Regenerate via the SVG->sharp script
+ * if the branding changes. Distinct from SITE_LOGO_URL on purpose: a share
+ * card and a logo are different jobs.
+ */
 export const DEFAULT_OG_IMAGE = {
-  url: `${SITE_URL}/pharmabag_logo.png`,
+  url: `${SITE_URL}/og-card.png`,
   width: 1200,
   height: 630,
   alt: `${SITE_NAME} — ${SITE_TAGLINE}`,
 };
+
+/** The actual logo mark, used by the Organization schema node. */
+export const SITE_LOGO_URL = `${SITE_URL}/pharmabag_logo.png`;
 
 /**
  * The floor a buyer must clear on any single line, in rupees.

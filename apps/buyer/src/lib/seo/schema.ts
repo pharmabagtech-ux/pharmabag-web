@@ -28,6 +28,7 @@ import {
   CONTACT,
   SOCIAL_PROFILES,
   DEFAULT_OG_IMAGE,
+  SITE_LOGO_URL,
   MIN_ORDER_VALUE_INR,
 } from './config';
 import { absoluteUrl } from './url';
@@ -93,12 +94,14 @@ export function organizationSchema(
     legalName: SITE_LEGAL_NAME,
     url: SITE_URL,
     description: SITE_DESCRIPTION,
+    // The Organization's logo is the LOGO, not the share card — Google's
+    // knowledge panel and AI engines pull this as the brand mark.
     logo: {
       '@type': 'ImageObject',
-      url: DEFAULT_OG_IMAGE.url,
+      url: SITE_LOGO_URL,
       caption: SITE_NAME,
     },
-    image: DEFAULT_OG_IMAGE.url,
+    image: SITE_LOGO_URL,
     email,
     telephone: CONTACT.telephone,
     address: {
