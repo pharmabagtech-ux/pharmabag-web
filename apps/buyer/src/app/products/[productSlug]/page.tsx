@@ -11,6 +11,7 @@ import {
   type SeoLink,
 } from '@/components/seo/SeoContent';
 import { fetchProduct, fetchProducts } from '@/lib/seo/catalog';
+import { report404 } from '@/lib/track-404';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { routes, absoluteUrl, facetSlug } from '@/lib/seo/url';
 import {
@@ -121,7 +122,16 @@ export default async function ProductPage({ params }: PageProps) {
    * served unknown slugs as HTTP 200 "Product not found" — a soft-404 that
    * wasted crawl budget across every dead link ever shared.
    */
-  if (!product) notFound();
+  /**
+   * The dead path is reported to the 404 log HERE (params carry it) rather
+   * than in not-found.tsx, whose headers() usage once forced the whole app
+   * dynamic. Crawler hits on renamed product URLs — the log's whole purpose
+   * — are captured server-side this way.
+   */
+  if (!product) {
+    await report404(routes.product(params.productSlug));
+    notFound();
+  }
 
   const canonicalSlug = product.slug?.trim() || params.productSlug;
   const url = absoluteUrl(routes.product(canonicalSlug));
