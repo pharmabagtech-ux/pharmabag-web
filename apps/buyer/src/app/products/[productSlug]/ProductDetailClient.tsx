@@ -108,7 +108,9 @@ export default function ProductDetailClient({ params }: { params: { productSlug:
         gstPercent: product.gstPercent,
         discountType: (product as any).discountType,
         discountMeta: (product as any).discountMeta,
-        imageUrl: product.images?.[0]
+        // Master images are `{ url }` rows, not strings; storing the raw
+        // object put "[object Object]" in the bag's <img src>.
+        imageUrl: typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as any)?.url
       },
       {
         onSuccess: () => {
@@ -499,7 +501,7 @@ export default function ProductDetailClient({ params }: { params: { productSlug:
                           <div className="flex items-center justify-end w-full">
                             {(!listingCartItem || listingCartItem.quantity === 0) ? (
                               <button 
-                                onClick={() => addToCart.mutate({ productId: l.id, quantity: minQty, productName: product.name, slug: toProductSlug(product), price: l.price, mrp: mrp, gstPercent: l.gstPercent ?? product.gstPercent, imageUrl: product.images?.[0], discountType: l.discountType, discountMeta: l.discountMeta, moq: minQty, stock: l.stock })}
+                                onClick={() => addToCart.mutate({ productId: l.id, quantity: minQty, productName: product.name, slug: toProductSlug(product), price: l.price, mrp: mrp, gstPercent: l.gstPercent ?? product.gstPercent, imageUrl: typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as any)?.url, discountType: l.discountType, discountMeta: l.discountMeta, moq: minQty, stock: l.stock })}
                                 className="w-full sm:w-[144px] h-8 sm:h-12 bg-white border border-slate-200 text-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center hover:border-teal-500 transition-all shadow-sm"
                               >
                                 <Plus className="w-4 h-4 sm:w-6 sm:h-6" strokeWidth={3} />
@@ -519,7 +521,7 @@ export default function ProductDetailClient({ params }: { params: { productSlug:
                                     stock={l.stock}
                                     minQty={minQty}
                                     lot={lot}
-                                    onUpdate={(nextQty) => addToCart.mutate({ productId: l.id, quantity: nextQty, productName: product.name, slug: toProductSlug(product), price: l.price, mrp: mrp, gstPercent: l.gstPercent ?? product.gstPercent, imageUrl: product.images?.[0], discountType: l.discountType, discountMeta: l.discountMeta, moq: minQty, stock: l.stock, replace: true })}
+                                    onUpdate={(nextQty) => addToCart.mutate({ productId: l.id, quantity: nextQty, productName: product.name, slug: toProductSlug(product), price: l.price, mrp: mrp, gstPercent: l.gstPercent ?? product.gstPercent, imageUrl: typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as any)?.url, discountType: l.discountType, discountMeta: l.discountMeta, moq: minQty, stock: l.stock, replace: true })}
                                     className="w-4 sm:w-10 text-[10px] sm:text-lg font-black text-white text-center bg-transparent outline-none"
                                   />
                                   
