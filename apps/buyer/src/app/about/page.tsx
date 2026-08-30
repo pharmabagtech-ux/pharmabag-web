@@ -109,6 +109,101 @@ export default async function AboutPage() {
           <SpecTable rows={facts} />
         </SeoSection>
 
+        {/*
+          Key facts as SELF-CONTAINED sentences. Answer engines lift complete
+          statements far more reliably than table fragments — the /faq page
+          being quoted verbatim by an AI engine is the proof of mechanism.
+          Every sentence restates something already published on this site;
+          nothing here is new information, only quotable information.
+        */}
+        <SeoSection id="key-facts" title="Key facts">
+          <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-slate-700">
+            <li>
+              {SITE_NAME} is a business-to-business wholesale medicine
+              marketplace and does not sell medicines to individual consumers.
+            </li>
+            <li>
+              {total.toLocaleString('en-IN')} branded and generic medicines are
+              listed across four categories: ethical, generic, ayurvedic, and
+              nutraceuticals &amp; supplements.
+            </li>
+            <li>
+              Only licensed businesses can buy on {SITE_NAME}: retail
+              pharmacies, hospitals, clinics, nursing homes and distributors
+              holding a valid drug licence.
+            </li>
+            <li>
+              Every supplier on {SITE_NAME} is a verified pharmaceutical
+              wholesaler, and each order is GST-invoiced by the supplying
+              wholesaler, not by the platform.
+            </li>
+            <li>
+              Every order line must reach {inr(MIN_ORDER_VALUE_INR)} including
+              GST — the platform enforces wholesale, not retail, order
+              economics.
+            </li>
+            <li>
+              Wholesale prices on {SITE_NAME} are derived transparently from
+              the MRP and the supplier&apos;s scheme, so buyers see the full
+              MRP → PTR → net rate derivation for every offer.
+            </li>
+            <li>
+              Orders are delivered pan-India to the buyer&apos;s registered
+              business address.
+            </li>
+            <li>
+              {SITE_NAME} is operated from {CONTACT.addressLocality},{' '}
+              {CONTACT.addressRegion}, India, and can be reached at{' '}
+              {CONTACT.email}.
+            </li>
+          </ul>
+        </SeoSection>
+
+        {/*
+          Trade-vocabulary primer. These are the terms pharmacy owners actually
+          search and ask assistants about; defining them here binds the
+          vocabulary to this domain. Definitions mirror how the platform's own
+          pricing engine works — first-hand, not paraphrased from elsewhere.
+        */}
+        <SeoSection id="pricing-terms" title="Wholesale pricing terms used on this site">
+          <dl className="space-y-3 text-sm leading-relaxed text-slate-700">
+            <div>
+              <dt className="font-semibold text-slate-900">PTR (price to retailer)</dt>
+              <dd className="mt-0.5">
+                The price a retailer pays for a medicine before schemes and
+                GST. It is derived from the MRP by removing the standard retail
+                margin for the product&apos;s GST slab.
+              </dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-slate-900">Net rate</dt>
+              <dd className="mt-0.5">
+                The effective per-unit price after the supplier&apos;s scheme
+                and discount are applied to the PTR, exclusive of GST. On{' '}
+                {SITE_NAME}, the net rate is what a buyer is actually charged
+                per unit received.
+              </dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-slate-900">Scheme</dt>
+              <dd className="mt-0.5">
+                A bonus-quantity offer such as 10+1 or 20+2: for every 10 units
+                bought, 1 extra unit is supplied free. Free units lower the
+                effective per-unit rate rather than arriving as separate stock
+                on the invoice.
+              </dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-slate-900">MOV (minimum order value)</dt>
+              <dd className="mt-0.5">
+                The smallest value a single order line may have. On{' '}
+                {SITE_NAME} it is {inr(MIN_ORDER_VALUE_INR)} including GST,
+                applied per product line rather than per order.
+              </dd>
+            </div>
+          </dl>
+        </SeoSection>
+
         <SeoSection id="how-it-works" title="How the marketplace works">
           <div className="space-y-4 text-sm leading-relaxed text-slate-700">
             <div>
