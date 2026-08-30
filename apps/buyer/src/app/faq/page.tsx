@@ -144,11 +144,16 @@ export default async function FaqPage() {
 
   const jsonLd = graph(
     breadcrumbSchema(CRUMBS),
+    /**
+     * Plain WebPage on purpose: faqSchema() below already emits the FAQPage
+     * node with mainEntity. Typing this node FAQPage too put two FAQPage
+     * nodes in the graph — one without mainEntity — and Google may read the
+     * empty one.
+     */
     webPageSchema({
       name: 'Wholesale Medicine Buying FAQ',
       url,
       description: `Common questions about buying wholesale medicines in India on ${SITE_NAME}.`,
-      type: 'FAQPage',
     }),
     faqSchema(allFaqs),
   );
