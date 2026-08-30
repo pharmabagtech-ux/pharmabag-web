@@ -16,6 +16,7 @@ import {
   SITE_LANG,
   DEFAULT_OG_IMAGE,
 } from '@/lib/seo/config';
+import { fetchSiteSettings } from '@/lib/seo/site-settings';
 
 /**
  * `display: 'swap'` keeps text painted in a fallback face while Open Sans
@@ -29,7 +30,21 @@ const openSans = Open_Sans({
   variable: '--font-open-sans',
 });
 
-export const metadata: Metadata = {
+/**
+ * The root head is built per-request (with a 5-minute-cached settings fetch)
+ * instead of being a static export, so that verification tokens, GA4 and the
+ * default share image can be edited in the admin panel and go live without a
+ * redeploy. Env vars remain the fallback for every runtime value, so an
+ * unreachable API or empty settings row reproduces the old behaviour exactly.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await fetchSiteSettings();
+
+  const ogImage = settings.defaultOgImage
+    ? { url: settings.defaultOgImage, width: 1200, height: 630, alt: `${SITE_NAME} — ${SITE_TAGLINE}` }
+    : DEFAULT_OG_IMAGE;
+
+  return {
   /**
    * `metadataBase` is what turns every relative OG/canonical URL in the app
    * into an absolute one. Without it Next emits relative social image paths,
@@ -47,18 +62,6 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   referrer: 'origin-when-cross-origin',
-  keywords: [
-    'wholesale medicines',
-    'bulk medicine supplier',
-    'pharmaceutical wholesaler India',
-    'medicine distributor',
-    'generic medicines wholesale',
-    'pharmacy supplier',
-    'hospital medicine supplier',
-    'B2B pharma marketplace',
-    'PCD pharma',
-    'medicine exporter India',
-  ],
   authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
@@ -88,34 +91,39 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     locale: SITE_LOCALE,
-    images: [DEFAULT_OG_IMAGE],
+    images: [ogImage],
   },
   twitter: {
     card: 'summary_large_image',
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
-    images: [DEFAULT_OG_IMAGE.url],
+    images: [ogImage.url],
   },
   icons: {
     icon: '/pharmabag_logo.png',
     apple: '/pharmabag_logo.png',
   },
   /**
-   * Search-engine ownership verification. Both tags render ONLY when the env
-   * var carries a real token, so this ships inert: paste the token from
-   * Search Console ("HTML tag" method) / Bing Webmaster into the frontend
-   * env and redeploy — no code change needed. DNS verification also works;
-   * these are the code-side option.
+   * Search-engine ownership verification. The primary source is now the
+   * admin panel's SEO Settings page (live within ~5 minutes of saving); the
+   * env vars remain as a fallback so an already-configured deployment keeps
+   * working. Both tags render only when a real token exists somewhere.
    */
   verification: {
-    ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION
-      ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION }
+    ...((settings.gscVerification || process.env.NEXT_PUBLIC_GSC_VERIFICATION)
+      ? { google: settings.gscVerification || process.env.NEXT_PUBLIC_GSC_VERIFICATION }
       : {}),
-    ...(process.env.NEXT_PUBLIC_BING_VERIFICATION
-      ? { other: { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_VERIFICATION } }
+    ...((settings.bingVerification || process.env.NEXT_PUBLIC_BING_VERIFICATION)
+      ? {
+          other: {
+            'msvalidate.01':
+              (settings.bingVerification || process.env.NEXT_PUBLIC_BING_VERIFICATION) as string,
+          },
+        }
       : {}),
   },
-};
+  };
+}
 
 /**
  * Split out of `metadata` because Next 14 warns when viewport keys live there.
@@ -127,13 +135,32 @@ export const viewport: Viewport = {
   themeColor: '#0f766e',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  /**
+   * Same cached fetch as generateMetadata — Next dedupes identical fetches
+   * within a request, so this costs nothing extra. Tolerant: {} on failure.
+   */
+  const settings = await fetchSiteSettings();
+
   /**
    * Organization + WebSite are emitted once, site-wide, with stable `@id`s.
    * Every page-level node then references those ids instead of redefining the
    * company, which is how Google consolidates them into a single entity.
+   * Admin-panel settings (sameAs profiles, contact info) override the code
+   * defaults when present.
    */
-  const siteGraph = graph(organizationSchema(), websiteSchema());
+  const siteGraph = graph(
+    organizationSchema({
+      sameAs: settings.socialProfiles,
+      email: settings.supportEmail,
+      addressLocality: settings.addressLocality,
+      addressRegion: settings.addressRegion,
+    }),
+    websiteSchema(),
+  );
+
+  /** GA4: panel-configured id first, env var as the legacy fallback. */
+  const ga4Id = settings.ga4MeasurementId || process.env.NEXT_PUBLIC_GA4_ID;
 
   return (
     <html
@@ -159,22 +186,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={openSans.className}>
         {/*
-          GA4, env-gated: nothing loads until NEXT_PUBLIC_GA4_ID holds a real
-          measurement id (G-XXXXXXX), so this ships inert with zero Core Web
-          Vitals cost. afterInteractive keeps it off the critical path once
-          enabled.
+          GA4, gated on a real measurement id from the admin panel (primary)
+          or the NEXT_PUBLIC_GA4_ID env var (fallback) — nothing loads until
+          one exists, so this ships inert with zero Core Web Vitals cost.
+          afterInteractive keeps it off the critical path once enabled.
         */}
-        {process.env.NEXT_PUBLIC_GA4_ID && (
+        {ga4Id && (
           <>
             <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA4_ID}`}
+              src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}
               strategy="afterInteractive"
             />
             <Script id="ga4-init" strategy="afterInteractive">
               {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', '${process.env.NEXT_PUBLIC_GA4_ID}');`}
+gtag('config', '${ga4Id}');`}
             </Script>
           </>
         )}
