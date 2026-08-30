@@ -7,6 +7,9 @@ import { Button, Badge, Input, Modal, Textarea, Pagination } from "@/components/
 import toast from "react-hot-toast";
 import { useSuggestions, useCreateSuggestion, useUpdateSuggestion, useDeleteSuggestion } from "@/hooks/useAdmin";
 import { apiClient } from "@/lib/apiClient";
+import SeoFieldsPanel, { type SeoFieldsValue } from "@/components/seo/SeoFieldsPanel";
+
+const EMPTY_SEO: SeoFieldsValue = { metaTitle: "", metaDescription: "", metaKeywords: [], canonicalUrl: "", ogImage: "" };
 
 export default function MasterCatalogPage() {
   const [view, setView] = useState<"CATALOG" | "BULK">("CATALOG");
@@ -22,6 +25,7 @@ export default function MasterCatalogPage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "", description: "" });
+  const [seo, setSeo] = useState<SeoFieldsValue>(EMPTY_SEO);
 
   const suggestions: any[] = Array.isArray(suggestionsData) ? suggestionsData : (suggestionsData?.data ?? []);
   const total = suggestionsData?.total ?? suggestions.length;
@@ -39,6 +43,7 @@ export default function MasterCatalogPage() {
   const openCreate = () => {
     setEditing(null);
     setForm({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "", description: "" });
+    setSeo(EMPTY_SEO);
     setShowModal(true);
   };
 
@@ -53,6 +58,13 @@ export default function MasterCatalogPage() {
       category: item.categoryId || item.category?.id || item.category?.name || item.category || "",
       subCategory: item.subCategoryId || item.subCategory?.id || item.subCategory?.name || item.subCategory || "",
       description: item.description ?? ""
+    });
+    setSeo({
+      metaTitle: item.metaTitle ?? "",
+      metaDescription: item.metaDescription ?? "",
+      metaKeywords: [],
+      canonicalUrl: "",
+      ogImage: item.ogImage ?? "",
     });
     setShowModal(true);
   };
@@ -71,7 +83,18 @@ export default function MasterCatalogPage() {
       };
       
       if (editing) {
-        await updateSuggestion.mutateAsync({ id: editing.id, payload });
+        // SEO overrides ride only the UPDATE path (the create DTO has no such
+        // fields). Empty string is meaningful: it CLEARS an override back to
+        // the storefront's generated head.
+        await updateSuggestion.mutateAsync({
+          id: editing.id,
+          payload: {
+            ...payload,
+            metaTitle: seo.metaTitle,
+            metaDescription: seo.metaDescription,
+            ogImage: seo.ogImage,
+          },
+        });
         toast.success("Catalog entry updated");
       } else {
         await createSuggestion.mutateAsync(payload);
@@ -520,6 +543,25 @@ export default function MasterCatalogPage() {
             <div className="col-span-2">
               <Textarea label="Description" placeholder="Detailed product description..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={4} />
             </div>
+            {editing && (
+              <div className="col-span-2">
+                {/*
+                  Optional head overrides. Blank = the storefront's generated
+                  title/description (the placeholders + preview show exactly
+                  what ships if these stay empty). Keywords/canonical are
+                  hidden: product canonicals are ALWAYS the stored slug.
+                */}
+                <SeoFieldsPanel
+                  value={seo}
+                  onChange={setSeo}
+                  fallbackTitle={`${form.name || "Product"} Wholesale Price — ${form.manufacturer || "Supplier"}`}
+                  fallbackDescription={form.description?.trim() || `Buy ${form.name || "this product"} online at wholesale rates on PharmaBag.`}
+                  previewUrl={`pharmabag.in/products/${editing?.slug || "product-slug"}`}
+                  showKeywords={false}
+                  showCanonical={false}
+                />
+              </div>
+            )}
           </div>
           <div className="flex justify-end gap-3 pt-6">
             <Button variant="ghost" onClick={() => setShowModal(false)}>Cancel</Button>

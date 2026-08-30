@@ -92,8 +92,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   ].filter(Boolean);
 
   return buildMetadata({
-    title: productTitle(product),
-    description: productDescription(product),
+    /**
+     * Admin overrides win when set (hand-tuned in the catalogue edit modal);
+     * the generated head remains the default for the whole catalogue.
+     */
+    title: product.metaTitle?.trim() || productTitle(product),
+    description: product.metaDescription?.trim() || productDescription(product),
     /**
      * Canonical always uses the slug the API stored, never the requested one.
      * Old punctuation-style links and SKU-suffixed variants both resolve to
@@ -101,7 +105,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
      * competing for the same content.
      */
     path: routes.product(canonicalSlug),
-    image: product.images?.[0] ?? listing?.images?.[0] ?? null,
+    image: product.ogImage || product.images?.[0] || listing?.images?.[0] || null,
     keywords,
   });
 }

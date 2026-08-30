@@ -62,6 +62,16 @@ export interface CatalogProduct {
   storageAndHandling?: string | null;
   images?: string[] | null;
   listings?: CatalogListing[] | null;
+
+  /**
+   * Admin-set SEO head overrides (null across the catalogue by default).
+   * When present they replace the GENERATED title/description/OG image in
+   * the page head only — H1, schema and on-page copy stay generated, so the
+   * structured data always describes the actual page.
+   */
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  ogImage?: string | null;
 }
 
 /** A seller's offer against a catalogue product. */
