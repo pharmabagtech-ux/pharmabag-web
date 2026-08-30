@@ -229,6 +229,13 @@ export interface ProductSchemaInput {
   minOrderQuantity?: number | null;
   ratingValue?: number | null;
   reviewCount?: number | null;
+  /**
+   * Net rates of ALL priced listings on the product. With two or more, the
+   * offers node becomes an AggregateOffer (lowPrice/highPrice/offerCount) —
+   * the markup price-range rich results are built from, and honest by
+   * construction because the numbers are the live listings themselves.
+   */
+  offerPrices?: number[];
 }
 
 /**
@@ -244,6 +251,10 @@ export interface ProductSchemaInput {
 export function productSchema(p: ProductSchemaInput): Json {
   const currency = p.currency ?? 'INR';
   const hasOffer = typeof p.price === 'number' && p.price > 0;
+  const validPrices = (p.offerPrices ?? []).filter(
+    (n) => typeof n === 'number' && n > 0,
+  );
+  const isAggregate = validPrices.length >= 2;
   const hasRating =
     typeof p.ratingValue === 'number' &&
     typeof p.reviewCount === 'number' &&
@@ -292,7 +303,29 @@ export function productSchema(p: ProductSchemaInput): Json {
           }
         : undefined,
     ].filter(Boolean) as Json[],
-    offers: hasOffer
+    /**
+     * Two or more priced sellers → AggregateOffer with the real range, the
+     * shape price-range rich results are built from. A single seller keeps
+     * the plain Offer, byte-identical to what shipped before this existed.
+     */
+    offers: isAggregate
+      ? prune({
+          '@type': 'AggregateOffer',
+          '@id': `${p.url}#offers`,
+          url: p.url,
+          lowPrice: Math.min(...validPrices).toFixed(2),
+          highPrice: Math.max(...validPrices).toFixed(2),
+          offerCount: validPrices.length,
+          priceCurrency: currency,
+          availability: p.inStock
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
+          itemCondition: 'https://schema.org/NewCondition',
+          seller: { '@id': ORGANIZATION_ID },
+          /** Signals B2B intent, which is the qualifying fact for this site. */
+          eligibleCustomerType: 'https://schema.org/BusinessCustomer',
+        })
+      : hasOffer
       ? prune({
           '@type': 'Offer',
           '@id': `${p.url}#offer`,
