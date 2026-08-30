@@ -13,6 +13,8 @@ import {
 } from '@/lib/seo/schema';
 import { SITE_NAME, MIN_ORDER_VALUE_INR } from '@/lib/seo/config';
 import { inr } from '@/lib/seo/content';
+import { SeoSection } from '@/components/seo/SeoContent';
+import { FORM_GUIDANCE } from '@/lib/seo/data/facet-guidance';
 
 /**
  * Dosage-form landing page — e.g. /categories/generic/syrup.
@@ -190,6 +192,28 @@ export default async function DosageFormPage({ params, searchParams }: PageProps
         browseHref={`${routes.products()}?category=${encodeURIComponent(category.name)}&subCategory=${encodeURIComponent(form.name)}`}
         browseLabel="Open in catalogue"
         faqs={faqs}
+        body={
+          /*
+            Hand-written procurement guidance per dosage form — the content
+            that makes 31 form pages genuinely distinct rather than one
+            template with a swapped noun. Commercial knowledge only (storage,
+            breakage, pack conventions, movement); nothing clinical.
+          */
+          FORM_GUIDANCE[form.name.toLowerCase()] ? (
+            <SeoSection
+              id="buying-guide"
+              // "Tablet" -> "Tablets"; already-plural names and acronyms
+              // (Drops, Lozenges, PFS) stay as they are.
+              title={`Buying ${/s$/i.test(form.name) ? form.name : `${form.name}s`} at wholesale`}
+            >
+              <div className="space-y-3 text-sm leading-relaxed text-slate-700">
+                {FORM_GUIDANCE[form.name.toLowerCase()].map((para) => (
+                  <p key={para.slice(0, 32)}>{para}</p>
+                ))}
+              </div>
+            </SeoSection>
+          ) : undefined
+        }
         linkSections={[
           ...(siblings.length
             ? [

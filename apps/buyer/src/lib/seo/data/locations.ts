@@ -131,6 +131,7 @@ export const STATES: State[] = [
   {
     name: 'Rajasthan',
     slug: 'rajasthan',
+    note: 'Jaipur leads the wholesale trade, with long secondary routes serving one of India’s most geographically spread pharmacy networks.',
     cities: [
       { name: 'Jaipur', slug: 'jaipur' },
       { name: 'Jodhpur', slug: 'jodhpur' },
@@ -141,6 +142,7 @@ export const STATES: State[] = [
   {
     name: 'Madhya Pradesh',
     slug: 'madhya-pradesh',
+    note: 'Indore is the state’s wholesale centre and one of central India’s major distribution markets, with Bhopal serving the east.',
     aka: 'MP',
     cities: [
       { name: 'Indore', slug: 'indore', note: 'The largest wholesale medicine market in central India.' },
@@ -171,6 +173,7 @@ export const STATES: State[] = [
   {
     name: 'Haryana',
     slug: 'haryana',
+    note: 'Combines NCR-driven distribution through Gurugram and Faridabad with a growing formulation-manufacturing footprint.',
     cities: [
       { name: 'Panchkula', slug: 'panchkula' },
       { name: 'Karnal', slug: 'karnal' },
@@ -181,6 +184,7 @@ export const STATES: State[] = [
   {
     name: 'Kerala',
     slug: 'kerala',
+    note: 'One of India’s strongest per-capita medicine markets, with a dense pharmacy network supplied mainly through Ernakulam and Kozhikode.',
     cities: [
       { name: 'Kochi', slug: 'kochi' },
       { name: 'Thiruvananthapuram', slug: 'thiruvananthapuram' },
@@ -191,6 +195,7 @@ export const STATES: State[] = [
   {
     name: 'Andhra Pradesh',
     slug: 'andhra-pradesh',
+    note: 'Home to the Visakhapatnam pharma-industrial belt, with strong distribution through Vijayawada and Guntur.',
     cities: [
       { name: 'Visakhapatnam', slug: 'visakhapatnam' },
       { name: 'Vijayawada', slug: 'vijayawada' },
@@ -201,6 +206,7 @@ export const STATES: State[] = [
   {
     name: 'Odisha',
     slug: 'odisha',
+    note: 'Cuttack’s wholesale market historically anchors the state’s medicine trade, alongside Bhubaneswar’s institutional demand.',
     cities: [
       { name: 'Bhubaneswar', slug: 'bhubaneswar' },
       { name: 'Cuttack', slug: 'cuttack' },
@@ -210,6 +216,7 @@ export const STATES: State[] = [
   {
     name: 'Assam',
     slug: 'assam',
+    note: 'Guwahati is the pharmaceutical distribution gateway for the entire Northeast, supplying the neighbouring states onward.',
     cities: [
       { name: 'Guwahati', slug: 'guwahati', note: 'The primary distribution point for the north-eastern states.' },
       { name: 'Dibrugarh', slug: 'dibrugarh' },
@@ -228,6 +235,7 @@ export const STATES: State[] = [
   {
     name: 'Chhattisgarh',
     slug: 'chhattisgarh',
+    note: 'Raipur anchors the state’s wholesale trade, supplying a largely tier-2 and rural pharmacy network.',
     cities: [
       { name: 'Raipur', slug: 'raipur' },
       { name: 'Bhilai', slug: 'bhilai' },
@@ -262,11 +270,13 @@ export const STATES: State[] = [
   {
     name: 'Jammu and Kashmir',
     slug: 'jammu-and-kashmir',
+    note: 'Jammu is the region’s primary stocking point, with supply planned around longer, weather-dependent transit into the valley.',
     cities: [{ name: 'Jammu', slug: 'jammu' }, { name: 'Srinagar', slug: 'srinagar' }],
   },
   {
     name: 'Chandigarh',
     slug: 'chandigarh',
+    note: 'A compact, high-throughput trade hub serving Punjab, Haryana and Himachal, close to the Baddi manufacturing belt.',
     cities: [{ name: 'Chandigarh', slug: 'chandigarh' }],
   },
 ];

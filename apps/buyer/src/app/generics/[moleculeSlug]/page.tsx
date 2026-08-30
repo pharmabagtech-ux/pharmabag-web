@@ -20,6 +20,7 @@ import {
   relatedMolecules,
   MOLECULES,
 } from '@/lib/seo/data/molecules';
+import { CLASS_GUIDANCE } from '@/lib/seo/data/facet-guidance';
 
 /**
  * Molecule landing page — e.g. /generics/amoxicillin.
@@ -247,6 +248,23 @@ export default async function MoleculePage({ params, searchParams }: PageProps) 
                 information and consult a qualified medical practitioner.
               </p>
             </SeoSection>
+
+            {/*
+              Class-level procurement guidance — hand-written per therapeutic
+              class (see facet-guidance.ts), so 154 molecule pages stop
+              sharing one template intro. Commercial observations only: how
+              the class TRADES, never how it treats.
+            */}
+            {CLASS_GUIDANCE[molecule.therapeuticClass] ? (
+              <SeoSection
+                id="stocking-notes"
+                title={`Stocking ${molecule.therapeuticClass.toLowerCase()} products`}
+              >
+                <p className="text-sm leading-relaxed text-slate-700">
+                  {CLASS_GUIDANCE[molecule.therapeuticClass]}
+                </p>
+              </SeoSection>
+            ) : null}
 
             {brands.length > 0 ? (
               <SeoSection
