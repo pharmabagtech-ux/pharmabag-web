@@ -35,7 +35,13 @@ function classId(name: string): string {
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
-    title: 'Generic Medicines by Molecule — Wholesale',
+    /**
+     * Deliberately does NOT lead with "Generic Medicines": that phrase is
+     * owned by /categories/generic (the Generic CATEGORY page), and the two
+     * were competing for "generic medicines wholesale" queries. This hub's
+     * distinct intent is the molecule/salt directory — the title now says so.
+     */
+    title: 'Browse Medicines by Molecule & Salt',
     description: `Browse ${MOLECULES.length} generic molecules and salt compositions available at wholesale on ${SITE_NAME} — paracetamol, amoxicillin, metformin, atorvastatin, pantoprazole and more, grouped by therapeutic class.`,
     path: routes.generics(),
     keywords: [
