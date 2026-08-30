@@ -31,7 +31,9 @@ import {
   bestListing,
   dosageForm,
   isPrescriptionOnly,
+  inr,
 } from '@/lib/seo/content';
+import { formatSchemeTag } from '@pharmabag/utils';
 import { MOLECULES } from '@/lib/seo/data/molecules';
 
 /**
@@ -140,6 +142,11 @@ export default async function ProductPage({ params }: PageProps) {
   const specs = productSpecs(product);
   const faqs = productFaqs(product);
   const summary = productSummary(product);
+
+  /** Priced listings for the crawlable seller-comparison table (API-ranked). */
+  const pricedListings = (product.listings ?? []).filter(
+    (l) => typeof l.price === 'number' && l.price > 0,
+  );
 
   const crumbs = [
     { name: 'Home', path: routes.home() },
@@ -321,6 +328,70 @@ export default async function ProductPage({ params }: PageProps) {
             batch and prescribing information before dispensing.
           </p>
         </SeoSection>
+
+        {/*
+          Server-rendered seller comparison — the crawlable twin of the
+          interactive listing rows above (and of the AggregateOffer schema).
+          Same information the client UI already shows buyers on this page,
+          so nothing new is exposed; what changes is that crawlers and AI
+          engines can finally see the comparison. Listings arrive from the
+          API already ranked by net price (rankListingsByNetPrice).
+        */}
+        {pricedListings.length > 0 ? (
+          <SeoSection
+            id="seller-offers"
+            title={`Compare seller offers for ${product.name}`}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[560px] text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                    <th className="py-2 pr-3">Seller</th>
+                    <th className="py-2 pr-3">Net rate / unit</th>
+                    <th className="py-2 pr-3">MRP</th>
+                    <th className="py-2 pr-3">Scheme</th>
+                    <th className="py-2">Min qty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pricedListings.map((l, i) => {
+                    const scheme = formatSchemeTag(l.discountType, l.discountMeta as never);
+                    return (
+                      <tr key={l.id} className="border-b border-slate-100 last:border-0">
+                        <td className="py-2 pr-3 text-slate-700">
+                          {l.seller?.companyName ?? `Seller ${i + 1}`}
+                          {l.seller?.city ? (
+                            <span className="text-slate-400"> · {l.seller.city}</span>
+                          ) : null}
+                          {i === 0 ? (
+                            <span className="ml-2 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700">
+                              Lowest rate
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="py-2 pr-3 font-semibold text-slate-900">
+                          {inr(l.price as number)}
+                        </td>
+                        <td className="py-2 pr-3 text-slate-600">
+                          {typeof l.mrp === 'number' && l.mrp > 0 ? inr(l.mrp) : '—'}
+                        </td>
+                        <td className="py-2 pr-3 text-slate-600">{scheme || '—'}</td>
+                        <td className="py-2 text-slate-600">
+                          {typeof l.moq === 'number' && l.moq > 0 ? l.moq : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-slate-500">
+              Net rates are per unit received after scheme and discount,
+              exclusive of GST, and move with seller offers. Ordering at these
+              rates requires a verified buyer account.
+            </p>
+          </SeoSection>
+        ) : null}
 
         {faqs.length > 0 ? (
           <SeoSection
