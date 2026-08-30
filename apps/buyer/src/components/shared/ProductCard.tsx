@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { productImageAlt } from '@/lib/seo/image-alt';
 import { motion } from 'framer-motion';
 
 interface ProductCardProps {
@@ -24,7 +25,7 @@ export default function ProductCard({ name, price, image, stock, onClick }: Prod
       <div className="relative w-full aspect-[4/5] mb-4 overflow-hidden bg-white flex justify-center items-center">
         <Image
           src={image}
-          alt={name}
+          alt={productImageAlt(name)}
           fill
           className={`object-contain p-1 transform group-hover:scale-105 transition-transform duration-700 ease-out drop-shadow-md ${isOutOfStock ? 'grayscale brightness-90 opacity-80' : ''}`}
         />

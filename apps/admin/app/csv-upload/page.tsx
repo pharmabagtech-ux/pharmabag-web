@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { useSuggestions, useCreateSuggestion, useUpdateSuggestion, useDeleteSuggestion } from "@/hooks/useAdmin";
 import { apiClient } from "@/lib/apiClient";
 import SeoFieldsPanel, { type SeoFieldsValue } from "@/components/seo/SeoFieldsPanel";
+import { uploadSuggestionImage as uploadSuggestionImageApi } from "@/api/admin.api";
 
 const EMPTY_SEO: SeoFieldsValue = { metaTitle: "", metaDescription: "", metaKeywords: [], canonicalUrl: "", ogImage: "" };
 
@@ -26,6 +27,12 @@ export default function MasterCatalogPage() {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "", description: "" });
   const [seo, setSeo] = useState<SeoFieldsValue>(EMPTY_SEO);
+  /**
+   * Product image SEO. `fileName` / `altText` hold current values; blanks
+   * mean the automatic default (<name>-pharmabag / "<name> - PharmaBag").
+   * `file` is a newly chosen upload, sent after the PATCH.
+   */
+  const [img, setImg] = useState<{ url: string; altText: string; fileName: string; origFileName: string; file: File | null }>({ url: "", altText: "", fileName: "", origFileName: "", file: null });
 
   const suggestions: any[] = Array.isArray(suggestionsData) ? suggestionsData : (suggestionsData?.data ?? []);
   const total = suggestionsData?.total ?? suggestions.length;
@@ -44,8 +51,15 @@ export default function MasterCatalogPage() {
     setEditing(null);
     setForm({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "", description: "" });
     setSeo(EMPTY_SEO);
+    setImg({ url: "", altText: "", fileName: "", origFileName: "", file: null });
     setShowModal(true);
   };
+
+  const imageBaseName = (url: string) =>
+    (url.split("/").pop() || "").replace(/\.[a-z0-9]{2,5}$/i, "");
+
+  const autoImageName = (name: string) =>
+    `${(name || "product").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}-pharmabag`;
 
   const openEdit = (item: any) => {
     setEditing(item);
@@ -66,6 +80,9 @@ export default function MasterCatalogPage() {
       canonicalUrl: "",
       ogImage: item.ogImage ?? "",
     });
+    const image = item.images?.[0];
+    const base = image?.url ? imageBaseName(image.url) : "";
+    setImg({ url: image?.url ?? "", altText: image?.altText ?? "", fileName: base, origFileName: base, file: null });
     setShowModal(true);
   };
 
@@ -93,8 +110,26 @@ export default function MasterCatalogPage() {
             metaTitle: seo.metaTitle,
             metaDescription: seo.metaDescription,
             ogImage: seo.ogImage,
+            // Only when a current image exists and no replacement upload is
+            // queued (the upload endpoint takes these itself). Empty alt
+            // clears the override back to "<name> - PharmaBag"; file name is
+            // sent only when actually changed (a rename copies on S3).
+            ...(img.url && !img.file
+              ? {
+                  imageAltText: img.altText,
+                  ...(img.fileName.trim() && img.fileName.trim() !== img.origFileName
+                    ? { imageFileName: img.fileName.trim() }
+                    : {}),
+                }
+              : {}),
           },
         });
+        if (img.file) {
+          await uploadSuggestionImageApi(editing.id, img.file, {
+            fileName: img.fileName.trim() || autoImageName(form.name),
+            altText: img.altText.trim() || undefined,
+          });
+        }
         toast.success("Catalog entry updated");
       } else {
         await createSuggestion.mutateAsync(payload);
@@ -560,6 +595,49 @@ export default function MasterCatalogPage() {
                   showKeywords={false}
                   showCanonical={false}
                 />
+              </div>
+            )}
+            {editing && (
+              <div className="col-span-2 space-y-3 rounded-xl border border-border p-4">
+                <p className="text-sm font-semibold">Product Image</p>
+                <div className="flex items-start gap-4">
+                  {img.file ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={URL.createObjectURL(img.file)} alt="New product image preview" className="h-24 w-24 rounded-lg border border-border object-contain bg-white" />
+                  ) : img.url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={img.url} alt="Current product image" className="h-24 w-24 rounded-lg border border-border object-contain bg-white" />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-border text-xs text-muted-foreground">No image</div>
+                  )}
+                  <div className="flex-1 space-y-3">
+                    <Input
+                      label="Alt Text"
+                      placeholder={`${form.name || "Product name"} - PharmaBag (automatic)`}
+                      value={img.altText}
+                      onChange={e => setImg(v => ({ ...v, altText: e.target.value }))}
+                    />
+                    <Input
+                      label="Image File Name"
+                      placeholder={`${autoImageName(form.name)} (automatic)`}
+                      value={img.fileName}
+                      onChange={e => setImg(v => ({ ...v, fileName: e.target.value }))}
+                    />
+                    <label className="block text-xs text-muted-foreground">
+                      {img.url ? "Replace image" : "Upload image"} (JPG/PNG/WebP/AVIF, max 5 MB)
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/avif"
+                        className="mt-1 block w-full text-xs"
+                        onChange={e => setImg(v => ({ ...v, file: e.target.files?.[0] ?? null }))}
+                      />
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      Leave alt text or file name blank to use the automatic
+                      form: product name with &quot;PharmaBag&quot; at the end.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>

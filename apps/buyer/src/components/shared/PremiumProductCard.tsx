@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { productImageAlt } from '@/lib/seo/image-alt';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, ArrowUpRight, Trash2, Share2, RotateCw } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
@@ -330,7 +331,7 @@ export default function PremiumProductCard({
           {hasValidImage ? (
             <Image
               src={image}
-              alt={name}
+              alt={productImageAlt(name)}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
               className={`object-contain transition-all duration-300 ${isOutOfStock ? 'grayscale brightness-90 opacity-80' : ''}`}

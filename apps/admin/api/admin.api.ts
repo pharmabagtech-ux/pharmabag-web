@@ -366,6 +366,23 @@ export async function updateSuggestion(id: string, payload: Record<string, any>)
   return data.data;
 }
 
+export async function uploadSuggestionImage(
+  id: string,
+  file: File,
+  opts: { fileName?: string; altText?: string } = {},
+) {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (opts.fileName) formData.append("fileName", opts.fileName);
+  if (opts.altText) formData.append("altText", opts.altText);
+  const { data } = await apiClient.post<{ data: any }>(
+    `/admin/suggestions/${id}/image`,
+    formData,
+    { timeout: 60_000 },
+  );
+  return data.data;
+}
+
 export async function deleteSuggestion(id: string) {
   const { data } = await apiClient.delete<{ data: any }>(`/admin/suggestions/${id}`);
   return data.data;
