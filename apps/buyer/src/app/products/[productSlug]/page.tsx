@@ -219,6 +219,11 @@ export default async function ProductPage({ params }: PageProps) {
       inStock: (listing?.stock ?? 0) > 0,
       sellerCount: product.listings?.length ?? 0,
       minOrderQuantity: listing?.moq ?? null,
+      // All live sellers' net rates: 2+ turns the offers node into an
+      // AggregateOffer with the real low/high range and offer count.
+      offerPrices: (product.listings ?? [])
+        .map((l) => l.price)
+        .filter((n): n is number => typeof n === 'number' && n > 0),
     }),
     /**
      * `Drug` alongside `Product`: they win different surfaces. Product ranks
