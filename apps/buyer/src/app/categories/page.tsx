@@ -32,7 +32,8 @@ const CROMBS = [
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
-    title: 'Medicine Categories — Wholesale Pharmaceutical Range',
+    // 52 chars overflowed the 48-char clamp and shipped a literal "…".
+    title: 'Wholesale Medicine Categories',
     description: `Browse every wholesale medicine category on ${SITE_NAME}: ethical and generic medicines, nutraceuticals and ayurvedic products, organised by dosage form — tablets, syrups, injections, capsules and more.`,
     path: routes.categories(),
     keywords: [
