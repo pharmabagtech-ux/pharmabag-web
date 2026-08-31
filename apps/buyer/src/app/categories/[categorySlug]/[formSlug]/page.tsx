@@ -136,7 +136,10 @@ export default async function DosageFormPage({ params, searchParams }: PageProps
   if (total === 0) notFound();
 
   const path = routes.dosageForm(category.slug, form.slug);
-  const url = absoluteUrl(path);
+  // Matches the canonical: on page 2+ this node describes THAT page, not
+  // page 1. They disagreed before, so the schema claimed every paginated
+  // view was the first one.
+  const url = absoluteUrl(page > 1 ? `${path}?page=${page}` : path);
 
   const crumbs = [
     { name: 'Home', path: routes.home() },

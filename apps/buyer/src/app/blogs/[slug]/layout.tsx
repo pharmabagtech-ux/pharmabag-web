@@ -77,6 +77,38 @@ async function fetchPost(slug: string): Promise<BlogPost | 'not-found' | null> {
   }
 }
 
+/**
+ * The post's body as plain text.
+ *
+ * The page itself is a client component, so this text never reaches the served
+ * HTML — it is fetched in the browser. Passing it to the Article schema is what
+ * makes the content readable by crawlers that do not run JavaScript, which is
+ * most of the AI crawlers robots.txt deliberately welcomes.
+ *
+ * Capped generously: long enough for any realistic article, short enough that a
+ * runaway post cannot bloat the document.
+ */
+const ARTICLE_BODY_MAX = 20000;
+
+function bodyText(post: BlogPost): string {
+  const raw =
+    typeof post.content === 'string' ? post.content : post.content?.text ?? '';
+  if (!raw.trim()) return '';
+  const text = raw
+    // Block-level tags become spaces so words do not run together.
+    .replace(/<(br|\/p|\/div|\/li|\/h[1-6])[^>]*>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text.length > ARTICLE_BODY_MAX ? text.slice(0, ARTICLE_BODY_MAX).trim() : text;
+}
+
 /** Best available summary: explicit meta, then excerpt, then body text. */
 function describe(post: BlogPost): string {
   if (post.metaDescription?.trim()) return post.metaDescription.trim();
@@ -162,6 +194,7 @@ export default async function BlogPostLayout({
         post.author?.name && post.author.name.toLowerCase() !== 'unknown'
           ? post.author.name
           : null,
+      articleBody: bodyText(post),
     }),
   );
 
