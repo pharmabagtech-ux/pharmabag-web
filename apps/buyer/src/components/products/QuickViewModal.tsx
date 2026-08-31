@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { productImageAlt } from '@/lib/seo/image-alt';
 import { X, Share2, Loader2, Bookmark, Truck, CheckCircle, Plus, Star, Bell, Package } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -133,7 +134,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                   <div className="relative aspect-square bg-[#f8fcf9] rounded-3xl border border-gray-100 flex items-center justify-center p-6 shadow-sm overflow-hidden group">
                      <Image
                         src={displayProduct.images?.[0] || displayProduct.image || '/products/pharma_bottle.png'}
-                        alt={displayProduct.name}
+                        alt={productImageAlt(displayProduct.name)}
                         fill
                         className="object-contain p-6 group-hover:scale-110 transition-transform duration-500"
                         priority
