@@ -38,7 +38,18 @@ COPY --from=builder /app/apps/${APP_NAME}/.next/standalone ./
 COPY --from=builder /app/apps/${APP_NAME}/.next/static ./apps/${APP_NAME}/.next/static
 COPY --from=builder /app/apps/${APP_NAME}/public ./apps/${APP_NAME}/public
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Everything copied above lands root-owned, but the server runs as appuser.
+# Next's image optimiser writes its optimised variants to
+# .next/cache/images at RUNTIME — with no writable directory it fails
+# silently, never caches, and re-encodes every image on every request.
+# That is exactly what the live box was doing: `x-nextjs-cache: MISS` on
+# every request, including immediate repeats of the same URL.
+#
+# Creating the cache directory and handing it to appuser is the whole fix.
+# It must happen before the USER switch, while this stage is still root.
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+    && mkdir -p /app/apps/${APP_NAME}/.next/cache \
+    && chown -R appuser:appgroup /app/apps/${APP_NAME}/.next/cache
 USER appuser
 
 EXPOSE 3000
