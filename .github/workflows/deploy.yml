@@ -17,7 +17,22 @@ jobs:
       - name: Sync Project to EC2
         uses: burnett01/rsync-deployments@7.0.2
         with:
-          switches: -avz --exclude=".git" --exclude="node_modules" --exclude=".next"
+          # --delete matters: without it a file deleted from this repo stayed
+          # on the server forever and kept being compiled into every build.
+          # Removing apps/admin/app/blog left the old page live at /blog next
+          # to the new /blogs, because the server still had the source file.
+          #
+          # .env is excluded so it is never deleted — apps/buyer/.env and
+          # apps/seller/.env exist ONLY on the server, not in this repo.
+          # rsync does not delete excluded files, so they are safe; never add
+          # --delete-excluded here, that would wipe them.
+          switches: >-
+            -avz --delete
+            --exclude=".git"
+            --exclude="node_modules"
+            --exclude=".next"
+            --exclude=".env"
+            --exclude=".env.*"
           path: ./
           remote_path: /home/ubuntu/project-pharmabag-web/pharmabag-web/
           remote_host: ${{ secrets.SERVER_HOST }}
