@@ -14,7 +14,7 @@ import {
   type BlogPostPayload,
 } from "@/api/blog.api";
 
-export function useBlogPosts(params: { page?: number; search?: string; status?: string } = {}) {
+export function useBlogPosts(params: { page?: number; limit?: number; search?: string; status?: string } = {}) {
   return useQuery({ queryKey: ["admin", "blog", "posts", params], queryFn: () => getBlogPosts(params), staleTime: 30_000, retry: 1 });
 }
 export function useBlogPost(id: string) {

@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowRight, ArrowRightLeft, Plus, Search, Trash2, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, ArrowRight, ArrowRightLeft, Plus, Search, Trash2, X } from "lucide-react";
+import { AdminLayout } from "@/components/layout/admin-layout";
 import toast from "react-hot-toast";
 import { Badge, Button, Input, Modal, Skeleton, Tabs, EmptyState } from "@/components/ui";
 import {
@@ -32,9 +34,13 @@ export default function RedirectsPage() {
   const [dialog, setDialog] = useState<DialogState>({ open: false, from: "", fromLocked: false });
 
   return (
+    <AdminLayout>
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
+          <Link href="/seo" className="mb-1 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" /> Back to SEO
+          </Link>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
             <ArrowRightLeft className="h-6 w-6 text-primary" /> Redirects
           </h1>
@@ -61,6 +67,7 @@ export default function RedirectsPage() {
 
       <CreateRedirectDialog state={dialog} onClose={() => setDialog({ open: false, from: "", fromLocked: false })} />
     </div>
+    </AdminLayout>
   );
 }
 
