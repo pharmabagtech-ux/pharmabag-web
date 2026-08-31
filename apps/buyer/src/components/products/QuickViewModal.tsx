@@ -136,6 +136,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                         src={displayProduct.images?.[0] || displayProduct.image || '/products/pharma_bottle.png'}
                         alt={productImageAlt(displayProduct.name)}
                         fill
+                        sizes="(max-width: 768px) 80vw, 420px"
                         className="object-contain p-6 group-hover:scale-110 transition-transform duration-500"
                         priority
                       />

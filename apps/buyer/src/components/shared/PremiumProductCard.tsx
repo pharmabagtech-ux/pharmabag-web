@@ -333,7 +333,10 @@ export default function PremiumProductCard({
               src={image}
               alt={productImageAlt(name)}
               fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+              // Fixed width on desktop rather than 20vw: this image box is
+              // ~160px wide in the 5-column grid, so a viewport-relative value
+              // made a 1920px screen fetch a 384px variant to paint 160px.
+              sizes="(max-width: 640px) 40vw, (max-width: 1024px) 25vw, 200px"
               className={`object-contain transition-all duration-300 ${isOutOfStock ? 'grayscale brightness-90 opacity-80' : ''}`}
               onError={() => setImageError(true)}
             />

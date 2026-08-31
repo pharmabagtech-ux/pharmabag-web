@@ -86,14 +86,35 @@ const nextConfig = {
       { protocol: 'http', hostname: 'localhost' },
     ],
     /**
-     * AVIF first, WebP second. Product imagery is the heaviest payload on a
-     * listing page, so format negotiation is the single largest LCP lever
-     * available without touching any component.
+     * WebP only — AVIF output is deliberately OFF.
+     *
+     * Catalogue sources are ALREADY 800x800 AVIF, so the optimiser was
+     * decoding AVIF only to re-encode AVIF. Measured against the live box
+     * (2026-08-31), same source image, per request:
+     *
+     *   AVIF out @640w  1804 ms / 35.0 KB     AVIF out @256w  554 ms / 7.6 KB
+     *   WebP out @640w   508 ms / 43.7 KB     WebP out @256w  337 ms / 8.9 KB
+     *
+     * AVIF costs 3.5x the CPU to save about 1 KB. A product grid is dozens of
+     * those encodes at once on a single box, which is what made photos crawl.
+     * Every browser that decodes AVIF decodes WebP, so nothing regresses.
+     *
+     * Revisit only once the optimiser cache is proven to hit reliably: with a
+     * warm cache the encode is paid once and AVIF wins on bytes.
      */
-    formats: ['image/avif', 'image/webp'],
+    formats: ['image/webp'],
     deviceSizes: [360, 420, 640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    /** Cache optimised variants for a day instead of re-encoding per request. */
+    /**
+     * Cache optimised variants for a day instead of re-encoding per request.
+     *
+     * NOTE: as of 2026-08-31 the live server returns `x-nextjs-cache: MISS`
+     * on every request including immediate repeats, so this TTL is not
+     * currently taking effect (suspected: `output: 'standalone'` runs the
+     * server from .next/standalone, where the runtime image cache directory
+     * is not persisting). The nginx proxy cache in front of /_next/image is
+     * the durable fix; this stays correct for when the app cache works.
+     */
     minimumCacheTTL: 86400,
   },
 

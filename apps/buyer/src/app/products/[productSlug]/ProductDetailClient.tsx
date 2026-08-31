@@ -304,7 +304,10 @@ export default function ProductDetailClient({ params }: { params: { productSlug:
                       alt={productImageAlt(product.name, (imgs?.[0] as any)?.altText)}
                       fill
                       className="object-contain"
-                      sizes="(max-width: 768px) 100vw, 50vw"
+                      // The gallery is one column of a 3-column max-w-6xl grid,
+                      // painting at ~370px on desktop; 50vw was asking the
+                      // optimiser for a 640px variant to fill it.
+                      sizes="(max-width: 1024px) 90vw, 400px"
                       priority
                     />
                   );

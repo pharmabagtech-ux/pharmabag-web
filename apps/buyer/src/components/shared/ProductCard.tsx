@@ -27,6 +27,9 @@ export default function ProductCard({ name, price, image, stock, onClick }: Prod
           src={image}
           alt={productImageAlt(name)}
           fill
+          // Without `sizes`, `fill` makes Next assume 100vw and fetch a
+          // full-viewport variant for a card never wider than ~260px.
+          sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 240px"
           className={`object-contain p-1 transform group-hover:scale-105 transition-transform duration-700 ease-out drop-shadow-md ${isOutOfStock ? 'grayscale brightness-90 opacity-80' : ''}`}
         />
       </div>
