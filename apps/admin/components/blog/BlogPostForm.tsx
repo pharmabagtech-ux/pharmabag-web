@@ -106,7 +106,7 @@ export default function BlogPostForm({ post }: { post?: BlogPost }) {
       toast.error(e?.response?.data?.message || e?.message || "Save failed");
     const onSuccess = () => {
       toast.success(status === "PUBLISHED" ? "Published" : "Saved as draft");
-      router.push("/blog");
+      router.push("/blogs");
     };
 
     if (isEdit) updatePost.mutate({ id: post!.id, payload }, { onSuccess, onError });
@@ -118,7 +118,7 @@ export default function BlogPostForm({ post }: { post?: BlogPost }) {
   return (
     <div className="space-y-6 pb-28">
       <button
-        onClick={() => router.push("/blog")}
+        onClick={() => router.push("/blogs")}
         className="flex items-center gap-1 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" /> All posts
