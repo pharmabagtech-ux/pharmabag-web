@@ -16,7 +16,7 @@ import {
   webPageSchema,
   faqSchema,
 } from '@/lib/seo/schema';
-import { SITE_NAME, CONTACT } from '@/lib/seo/config';
+import { SITE_NAME, CONTACT, ENTITY_LINE } from '@/lib/seo/config';
 
 /**
  * Contact page.
@@ -104,11 +104,12 @@ export default async function ContactPage() {
         <SeoSection id="details" title="Contact details">
           <SpecTable
             rows={[
+              { label: 'Legal entity', value: ENTITY_LINE },
               { label: 'Email', value: CONTACT.email },
-              { label: 'Phone', value: CONTACT.telephone },
+              { label: 'Customer care', value: CONTACT.telephone },
               {
-                label: 'Based in',
-                value: `${CONTACT.addressLocality}, ${CONTACT.addressRegion}, India`,
+                label: 'Registered address',
+                value: `${CONTACT.streetAddress}, ${CONTACT.addressLocality}, ${CONTACT.addressRegion} ${CONTACT.postalCode}, India`,
               },
               {
                 label: 'Buyer eligibility',

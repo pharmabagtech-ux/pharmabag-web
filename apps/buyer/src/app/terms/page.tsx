@@ -66,14 +66,42 @@ export default function TermsPage() {
           </p>
         </header>
 
+        {/*
+          This previously said the seller of record is "not PharmaBag" for
+          EVERY order line. That is not accurate: PharmaBag is a brand of
+          Jaiswal Pharma, which also supplies stock through the platform, so on
+          those lines the operator IS the seller. Disclaiming liability the
+          operator actually carries is the one thing on this page worth getting
+          exactly right.
+        */}
         <SeoSection id="marketplace" title="What the platform is">
           <p>
-            {SITE_NAME} is a marketplace: it connects licensed business buyers
-            with verified pharmaceutical wholesalers, and provides ordering,
-            invoicing visibility and support. The seller of record for every
-            order line is the supplying wholesaler named on the GST invoice —
-            not {SITE_NAME}. Product listings, prices, schemes and stock are set
-            by the wholesalers who supply them.
+            {SITE_NAME} is a brand operated by {SITE_LEGAL_NAME}, a sole
+            proprietorship registered in Kolkata, West Bengal. The platform
+            connects licensed business buyers with verified pharmaceutical
+            wholesalers, and provides ordering, invoicing visibility and
+            support.
+          </p>
+          <p className="mt-3">
+            Goods are supplied in two ways, and the difference matters:
+          </p>
+          <ul className="mt-3 list-disc space-y-1.5 pl-5">
+            <li>
+              <strong>Supplied by {SITE_LEGAL_NAME}.</strong> On these listings
+              the operator of this platform is also the seller of record, and
+              carries a seller&apos;s responsibility for the goods.
+            </li>
+            <li>
+              <strong>Supplied by an independent wholesaler.</strong> On these
+              listings the seller of record is that wholesaler, who sets the
+              price, scheme and stock and is responsible for the goods.{' '}
+              {SITE_NAME} provides the platform, not the medicine.
+            </li>
+          </ul>
+          <p className="mt-3">
+            The seller of record for an order line is named on the GST invoice
+            for that line, and the supplying seller is shown against every
+            listing on the product page before you order.
           </p>
         </SeoSection>
 
@@ -137,6 +165,8 @@ export default function TermsPage() {
             links={[
               { label: 'Privacy Policy', href: routes.privacy() },
               { label: 'Shipping & Delivery', href: routes.shipping() },
+              { label: 'Return Policy', href: routes.returns() },
+              { label: 'Refund Policy', href: routes.refunds() },
               { label: 'Buyer FAQ', href: routes.faq() },
               { label: `About ${SITE_NAME}`, href: routes.about() },
             ]}

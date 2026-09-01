@@ -154,6 +154,8 @@ async function handleStatic() {
     { path: routes.privacy(), changeFrequency: 'monthly', priority: 0.4 },
     { path: routes.terms(), changeFrequency: 'monthly', priority: 0.4 },
     { path: routes.shipping(), changeFrequency: 'monthly', priority: 0.5 },
+    { path: routes.returns(), changeFrequency: 'monthly', priority: 0.5 },
+    { path: routes.refunds(), changeFrequency: 'monthly', priority: 0.5 },
   ];
   return xmlResponse(renderUrlSet(urls));
 }

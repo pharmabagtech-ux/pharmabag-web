@@ -24,6 +24,8 @@ export default function PremiumFooter() {
     { label: 'Terms & Conditions', href: '/terms' },
     { label: 'Privacy Policy', href: '/privacy' },
     { label: 'Shipping Policy', href: '/shipping' },
+    { label: 'Return Policy', href: '/returns' },
+    { label: 'Refund Policy', href: '/refunds' },
   ];
 
   return (

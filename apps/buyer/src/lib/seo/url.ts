@@ -80,6 +80,8 @@ export const routes = {
   privacy: () => '/privacy',
   terms: () => '/terms',
   shipping: () => '/shipping',
+  returns: () => '/returns',
+  refunds: () => '/refunds',
 } as const;
 
 /**
