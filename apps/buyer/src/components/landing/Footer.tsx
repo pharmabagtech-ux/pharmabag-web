@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { ENTITY_LINE } from '@/lib/seo/config';
 
 /**
  * The site footer.
@@ -27,6 +28,8 @@ export default function Footer() {
     { label: 'Suppliers by City', href: '/wholesale-medicine-suppliers' },
     { label: 'blog.pharmabag.in', href: '/blogs' },
     { label: 'Shipping & Delivery', href: '/shipping' },
+    { label: 'Return Policy', href: '/returns' },
+    { label: 'Refund Policy', href: '/refunds' },
     { label: 'Privacy', href: '/privacy' },
     { label: 'Terms', href: '/terms' },
   ];
@@ -49,6 +52,16 @@ export default function Footer() {
             </div>
           ))}
         </div>
+
+        {/*
+          The trading entity, named where a buyer or a regulator expects to
+          find it. PharmaBag is a brand, not a company — the company is the
+          sole proprietorship Jaiswal Pharma, and an e-commerce operator has to
+          identify itself.
+        */}
+        <p className="mt-4 text-center text-xs text-gray-500">
+          &copy; {new Date().getFullYear()} {ENTITY_LINE}. All rights reserved.
+        </p>
       </div>
     </footer>
   );
