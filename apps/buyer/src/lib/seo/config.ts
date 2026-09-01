@@ -20,7 +20,19 @@ export const SITE_URL = (
 ).replace(/\/+$/, '');
 
 export const SITE_NAME = 'PharmaBag';
-export const SITE_LEGAL_NAME = 'PharmaBag Technologies';
+
+/**
+ * The actual trading entity, confirmed by the owner 2026-09-01.
+ *
+ * This previously read "PharmaBag Technologies", which is not a real entity —
+ * and it was being published in the Organization JSON-LD, i.e. told to Google
+ * as the company's legal name. PharmaBag is a brand operated by the sole
+ * proprietorship Jaiswal Pharma.
+ */
+export const SITE_LEGAL_NAME = 'Jaiswal Pharma';
+
+/** Shown wherever the trading entity has to be named in full. */
+export const ENTITY_LINE = 'PharmaBag — A Unit of Jaiswal Pharma';
 
 /** Used as the `og:locale` and `<html lang>`; en-IN signals the target market. */
 export const SITE_LOCALE = 'en_IN';
@@ -60,36 +72,29 @@ export const CONTACT = {
   email: 'support@pharmabag.in',
 
   /**
-   * DELIBERATELY BLANK (decision taken 2026-08-02).
-   *
-   * The only number to hand was the account owner's personal mobile, and
-   * publishing that as the company's indexed sales line was declined. This is
-   * a considered omission, not an oversight — do not "helpfully" fill it with
-   * an admin's number.
-   *
-   * To add a real business line later: set it here in E.164 form
-   * (e.g. '+91-33-XXXXXXXX'). It flows automatically into the Organization
-   * node, the ContactPoint, LocalBusiness on every city page, and the /about
-   * and /contact tables — no other file needs touching.
+   * Customer-care line, supplied by the owner 2026-09-01 for publication.
+   * (It was deliberately blank before — no business number had been cleared
+   * for indexing.) Flows automatically into the Organization node, the
+   * ContactPoint, LocalBusiness on every city page, and the /about, /contact
+   * and policy pages.
    */
-  telephone: '',
+  telephone: '+91-98302-22674',
 
   /**
-   * City and state only, by decision (2026-08-02).
+   * Registered address of the proprietorship, supplied by the owner
+   * 2026-09-01. India's e-commerce rules require an operator to publish its
+   * principal geographic address, so this is no longer optional.
    *
-   * PharmaBag is a marketplace with no walk-in premises, so a street address
-   * adds nothing a buyer can use. Street and postcode stay blank rather than
-   * approximated: a wrong postal address is worse than none because Google
-   * can match it to the wrong place entity.
-   *
-   * Populate `streetAddress` + `postalCode` only if a Google Business Profile
-   * is ever wanted — that is the case where the full address earns its keep.
+   * ⚠️ Transcribed from the owner's message; "Word, 4" was read as "Ward 4".
+   * Have this confirmed against the GST registration before treating it as
+   * final — a wrong postal address is worse than none, because Google can
+   * match it to the wrong place entity.
    */
   addressLocality: 'Kolkata',
   addressRegion: 'West Bengal',
   addressCountry: 'IN',
-  streetAddress: '',
-  postalCode: '',
+  streetAddress: 'No. 13, 13A, Ground Floor, Ward 4, Ariff Road, Muchibazar, Daspara, Ultadanga',
+  postalCode: '700067',
 };
 
 export const SOCIAL_PROFILES: string[] = [

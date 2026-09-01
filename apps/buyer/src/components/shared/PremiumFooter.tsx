@@ -6,15 +6,26 @@ import { motion } from 'framer-motion';
 import { ShieldCheck, Globe, Zap } from 'lucide-react';
 
 export default function PremiumFooter() {
+  /**
+   * Six of these eight links pointed at `#` — the policy pages they were meant
+   * to reach already existed and nothing linked to them. Buyers could not find
+   * the terms they were agreeing to, and India's e-commerce rules require
+   * these to be reachable.
+   *
+   * The labels are the plain names people (and regulators) look for. The
+   * previous wording — "Governance Protocol" for Terms, "Consignment Returns"
+   * for the return policy — was not searchable by anyone looking for it.
+   */
   const footerLinks = [
-    { label: 'Intelligence Blogs', href: '/blogs' },
-    { label: 'Response Center', href: '/support' },
-    { label: 'Corporate Entity', href: '#' },
-    { label: 'Governance Protocol', href: '#' },
-    { label: 'Privacy Framework', href: '#' },
-    { label: 'Logistics Policy', href: '#' },
-    { label: 'Consignment Returns', href: '#' },
-    { label: 'Contact Interface', href: '#' },
+    { label: 'About Us', href: '/about' },
+    { label: 'Contact Us', href: '/contact' },
+    { label: 'Blog', href: '/blogs' },
+    { label: 'Support', href: '/support' },
+    { label: 'Terms & Conditions', href: '/terms' },
+    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Shipping Policy', href: '/shipping' },
+    { label: 'Return Policy', href: '/returns' },
+    { label: 'Refund Policy', href: '/refunds' },
   ];
 
   return (
@@ -87,13 +98,29 @@ export default function PremiumFooter() {
         </div>
 
         <div className="mt-24 pt-12 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8">
-           <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">
-             &copy; {new Date().getFullYear()} PHARMABAG INTELLIGENCE SYSTEMS. ALL PROTOCOLS RESERVED.
+           {/*
+             The trading entity, not a slogan. This previously read "PharmaBag
+             Intelligence Systems", which is not the legal entity behind the
+             site — the copyright line is the one place that has to name the
+             real one.
+           */}
+           <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">
+             &copy; {new Date().getFullYear()} PHARMABAG — A UNIT OF JAISWAL PHARMA. ALL RIGHTS RESERVED.
            </p>
+           {/*
+             These three slots claimed ISO 27001:2022, SOC 2 Type II and GDPR
+             compliance. ISO 27001 and SOC 2 are audited certifications a
+             company either holds or does not, and publishing them unearned is
+             a misrepresentation — a materially worse exposure than any dead
+             link. Replaced with statements this platform can actually stand
+             behind: licence verification and GST invoicing are both enforced
+             in onboarding and checkout. Restore the certification badges only
+             if the certificates genuinely exist.
+           */}
            <div className="flex items-center gap-10">
-              <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-none">ISO 27001:2022</p>
-              <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-none">GDPR COMPLIANT</p>
-              <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-none">SOC 2 TYPE II</p>
+              <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-none">DRUG LICENCE VERIFIED SELLERS</p>
+              <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-none">GST INVOICED</p>
+              <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-none">B2B ONLY</p>
            </div>
         </div>
       </div>
