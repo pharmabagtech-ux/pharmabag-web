@@ -1,10 +1,9 @@
 import Link from 'next/link';
 import Navbar from '@/components/landing/Navbar';
 import { Breadcrumbs, SeoSection, FaqList, LinkGrid, type SeoLink } from './SeoContent';
+import CollectionProductGrid from './CollectionProductGrid';
 import type { Faq } from '@/lib/seo/content';
 import type { CatalogProduct } from '@/lib/seo/catalog';
-import { routes } from '@/lib/seo/url';
-import { inr, bestListing } from '@/lib/seo/content';
 
 /**
  * Shared layout for every facet landing page (category, dosage form, brand,
@@ -40,60 +39,6 @@ export interface CollectionShellProps {
   /** Deep link into the interactive catalogue with this facet pre-applied. */
   browseHref?: string;
   browseLabel?: string;
-}
-
-/**
- * A crawlable product card.
- *
- * Plain `<a>` + server-rendered text. The interactive catalogue's cards are
- * drawn client-side, so before this existed a crawler following a category
- * link found no product links at all — which is why almost none of the 26,815
- * products were discoverable.
- */
-function ProductCard({ product }: { product: CatalogProduct }) {
-  const listing = bestListing(product);
-  const price = listing?.price ?? product.price ?? null;
-  const mrp = listing?.mrp ?? product.mrp ?? null;
-  const slug = product.slug?.trim();
-  if (!slug) return null;
-
-  return (
-    <li>
-      <Link
-        href={routes.product(slug)}
-        className="flex h-full flex-col justify-between gap-2 rounded-xl border border-slate-200 bg-white/80 p-4 transition hover:border-teal-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
-      >
-        <div>
-          <h3 className="text-sm font-semibold leading-snug text-slate-900">
-            {product.name}
-          </h3>
-          {product.chemicalComposition ? (
-            <p className="mt-1 line-clamp-2 text-xs text-slate-500">
-              {product.chemicalComposition}
-            </p>
-          ) : null}
-        </div>
-        <div className="mt-2 text-xs text-slate-600">
-          {product.manufacturer ? (
-            <p className="truncate font-medium text-slate-700">
-              {product.manufacturer}
-            </p>
-          ) : null}
-          {price ? (
-            <p className="mt-1">
-              <span className="font-bold text-teal-700">{inr(price)}</span>
-              <span className="text-slate-400"> /unit</span>
-              {mrp && mrp > price ? (
-                <span className="ml-1 text-slate-400 line-through">{inr(mrp)}</span>
-              ) : null}
-            </p>
-          ) : (
-            <p className="mt-1 text-slate-400">Request wholesale quote</p>
-          )}
-        </div>
-      </Link>
-    </li>
-  );
 }
 
 /**
@@ -216,38 +161,44 @@ export default function CollectionShell({
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
             {heading}
           </h1>
-          <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-700">
-            {intro}
-          </p>
           {totalProducts > 0 ? (
             <p className="mt-2 text-sm text-slate-500">
               {totalProducts.toLocaleString('en-IN')} products listed
               {totalPages > 1 ? ` · page ${page} of ${totalPages}` : ''}
             </p>
           ) : null}
+        </header>
+
+        {/*
+          The shopping grid comes FIRST, before any prose. Someone landing here
+          from a search or the nav is looking for products, not an essay; the
+          description and guidance sit under the grid where they still count
+          for relevance but cost nobody a scroll.
+        */}
+        {products.length > 0 ? (
+          <div className="mt-6">
+            <CollectionProductGrid products={products} />
+          </div>
+        ) : null}
+
+        <Pagination basePath={basePath} page={page} totalPages={totalPages} />
+
+        {/* Prose below the fold of the grid. */}
+        <div className="mx-auto w-full max-w-6xl px-4 pt-8 sm:px-6">
+          <p className="max-w-3xl text-base leading-relaxed text-slate-700">
+            {intro}
+          </p>
           {browseHref ? (
             <p className="mt-4">
               <Link
                 href={browseHref}
-                className="inline-flex items-center gap-1 rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+                className="inline-flex items-center gap-1 rounded-lg border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 transition hover:bg-teal-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
               >
                 {browseLabel} →
               </Link>
             </p>
           ) : null}
-        </header>
-
-        {products.length > 0 ? (
-          <SeoSection id="products" title="Products available at wholesale rates">
-            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </ul>
-          </SeoSection>
-        ) : null}
-
-        <Pagination basePath={basePath} page={page} totalPages={totalPages} />
+        </div>
 
         {body ? (
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">{body}</div>
