@@ -50,9 +50,6 @@ export interface BuildMetadataInput {
   publishedTime?: string;
   modifiedTime?: string;
   keywords?: string[];
-  /** rel=prev/next equivalents for paginated collections. */
-  prevPath?: string | null;
-  nextPath?: string | null;
 }
 
 export function buildMetadata(input: BuildMetadataInput): Metadata {
@@ -65,8 +62,6 @@ export function buildMetadata(input: BuildMetadataInput): Metadata {
     type = 'website',
     publishedTime,
     modifiedTime,
-    prevPath,
-    nextPath,
   } = input;
 
   /**
@@ -157,10 +152,17 @@ export function buildMetadata(input: BuildMetadataInput): Metadata {
       description: finalDescription,
       images: [typeof ogImage === 'string' ? ogImage : ogImage.url],
     },
-    other: {
-      ...(prevPath ? { 'link:prev': absoluteUrl(prevPath) } : {}),
-      ...(nextPath ? { 'link:next': absoluteUrl(nextPath) } : {}),
-    },
+    /**
+     * No rel=prev/next here on purpose.
+     *
+     * This used to accept prevPath/nextPath and emit them through Next's
+     * `other`, which produces `<meta name="link:prev">` — NOT `<link
+     * rel="prev">`, and meaningless to every crawler. Nothing ever passed
+     * them, so it emitted nothing; it was removed rather than left as an API
+     * that silently does the wrong thing if someone reaches for it. Google
+     * dropped rel=prev/next as an indexing signal in 2019; paginated pages
+     * here are discovered through real <a href> links and self-canonicals.
+     */
   };
 }
 

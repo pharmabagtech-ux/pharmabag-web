@@ -130,7 +130,11 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     limit: PAGE_SIZE,
   });
 
-  const url = absoluteUrl(routes.category(category.slug));
+  const basePath = routes.category(category.slug);
+  // Matches the canonical: on page 2+ this node describes THAT page, not
+  // page 1. They disagreed before, so the schema claimed every paginated
+  // view was the first one.
+  const url = absoluteUrl(page > 1 ? `${basePath}?page=${page}` : basePath);
   const crumbs = [
     { name: 'Home', path: routes.home() },
     { name: 'Categories', path: routes.categories() },

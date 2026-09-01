@@ -242,6 +242,27 @@ export interface ProductSchemaInput {
 }
 
 /**
+ * The ₹20,000 order floor, expressed as schema.org means it.
+ *
+ * This used to be emitted as `priceSpecification.minPrice`, which states "the
+ * lowest price for this item" — so a product priced at ₹178.16 also declared a
+ * minimum price of ₹20,000, a node contradicting itself 112-fold and readable
+ * as the product costing ₹20,000. `eligibleTransactionVolume` is the field for
+ * a minimum spend that qualifies an offer, which is what this actually is.
+ *
+ * VAT-inclusive because the minimum is assessed on the GST-inclusive line
+ * total, matching how checkout applies it.
+ */
+function minOrderVolume(currency: string): Json {
+  return {
+    '@type': 'PriceSpecification',
+    minPrice: MIN_ORDER_VALUE_INR,
+    priceCurrency: currency,
+    valueAddedTaxIncluded: true,
+  };
+}
+
+/**
  * Product + Offer.
  *
  * `priceValidUntil` is deliberately omitted rather than invented: wholesale
@@ -327,6 +348,16 @@ export function productSchema(p: ProductSchemaInput): Json {
           seller: { '@id': ORGANIZATION_ID },
           /** Signals B2B intent, which is the qualifying fact for this site. */
           eligibleCustomerType: 'https://schema.org/BusinessCustomer',
+          /** Same MOQ the single-Offer branch carries; it was missing here. */
+          eligibleQuantity:
+            typeof p.minOrderQuantity === 'number' && p.minOrderQuantity > 0
+              ? {
+                  '@type': 'QuantitativeValue',
+                  minValue: p.minOrderQuantity,
+                  unitCode: 'C62',
+                }
+              : undefined,
+          eligibleTransactionVolume: minOrderVolume(currency),
         })
       : hasOffer
       ? prune({
@@ -355,8 +386,8 @@ export function productSchema(p: ProductSchemaInput): Json {
             price: Number(p.price).toFixed(2),
             priceCurrency: currency,
             valueAddedTaxIncluded: false,
-            minPrice: MIN_ORDER_VALUE_INR,
           },
+          eligibleTransactionVolume: minOrderVolume(currency),
         })
       : undefined,
     aggregateRating: hasRating
@@ -515,13 +546,27 @@ export function articleSchema(input: {
   datePublished?: string;
   dateModified?: string;
   authorName?: string | null;
+  /**
+   * Plain-text article body.
+   *
+   * The post page is a client component, so the article text is fetched in the
+   * browser and never appears in the served HTML. Crawlers that do not execute
+   * JavaScript — which includes most AI crawlers this site deliberately
+   * welcomes in robots.txt — saw a headline and nothing else. Carrying the
+   * body here puts the actual content in the response in a field both search
+   * engines and answer engines read.
+   */
+  articleBody?: string | null;
 }): Json {
+  const body = input.articleBody?.trim();
   return prune({
     '@type': 'Article',
     '@id': `${input.url}#article`,
     headline: input.headline.slice(0, 110),
     url: input.url,
     description: input.description,
+    articleBody: body || undefined,
+    wordCount: body ? body.split(/\s+/).length : undefined,
     image: input.image ?? DEFAULT_OG_IMAGE.url,
     datePublished: input.datePublished,
     dateModified: input.dateModified ?? input.datePublished,
