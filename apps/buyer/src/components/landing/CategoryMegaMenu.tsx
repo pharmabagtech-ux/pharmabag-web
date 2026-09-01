@@ -49,14 +49,7 @@ export default function CategoryMegaMenu({ category, isOpen, onMouseEnter, onMou
                       {subCategories.map((sub) => (
                         <li key={sub.id}>
                           <Link 
-                            href={
-                              // Dosage-form pages (/categories/ayurvedic/syrup)
-                              // exist with their own metadata and product
-                              // lists; the uuid query URL had neither.
-                              (category as { slug?: string }).slug && (sub as { slug?: string }).slug
-                                ? `/categories/${(category as { slug?: string }).slug}/${(sub as { slug?: string }).slug}`
-                                : `/products?categoryId=${category.id}&subCategoryId=${sub.id}`
-                            }
+                            href={`/products?categoryId=${category.id}&subCategoryId=${sub.id}`}
                             className="text-[14px] text-gray-500 hover:text-sky-600 transition-colors duration-200"
                           >
                             {sub.name}

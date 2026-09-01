@@ -37,24 +37,6 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useScrollLock } from "@/hooks/useScrollLock";
 
-/**
- * Category links point at the SEO category page, not the filtered catalogue.
- *
- * These used to be `/products?categoryId=<uuid>` — a URL that canonicalises to
- * /products, ships no product links in its HTML and carries the generic
- * catalogue title, so the "Ayurvedic" page a crawler followed from the nav was
- * not a category page at all. `/categories/ayurvedic` already existed, with
- * its own title, H1, FAQ schema and server-rendered product list, and nothing
- * linked to it. The filtered grid is still one click away from that page.
- *
- * Falls back to the old URL if the API ever omits a slug, so navigation cannot
- * break on a data gap.
- */
-function categoryHref(category: Category): string {
-  const slug = (category as { slug?: string }).slug;
-  return slug ? `/categories/${slug}` : `/products?categoryId=${category.id}`;
-}
-
 export default function Navbar({
   onLoginClick,
   showUserActions = false,
@@ -239,7 +221,7 @@ export default function Navbar({
                   onMouseLeave={() => setActiveCategory(null)}
                 >
                   <Link
-                    href={categoryHref(category)}
+                    href={`/products?categoryId=${category.id}`}
                     className={`flex items-center gap-1.5 text-[14px] font-bold tracking-tight transition-colors duration-200 ${
                       activeCategory === category.id ? 'text-sky-600' : 'text-gray-600 hover:text-sky-600'
                     }`}
@@ -463,7 +445,7 @@ export default function Navbar({
               {categories.map((category: Category) => (
                 <Link
                   key={category.id}
-                  href={categoryHref(category)}
+                  href={`/products?categoryId=${category.id}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block px-4 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50 rounded-xl"
                 >
