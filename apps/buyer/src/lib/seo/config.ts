@@ -31,6 +31,16 @@ export const SITE_NAME = 'PharmaBag';
  */
 export const SITE_LEGAL_NAME = 'Jaiswal Pharma';
 
+/**
+ * Year the business started trading, per the owner (2026-09-01).
+ *
+ * The footer renders FOUNDED_YEAR-currentYear rather than just the current
+ * year: a copyright line showing only "2024" on a site being read in a later
+ * year reads as abandoned, and one showing only the current year says nothing
+ * about how long the business has existed.
+ */
+export const FOUNDED_YEAR = 2024;
+
 /** Shown wherever the trading entity has to be named in full. */
 export const ENTITY_LINE = 'PharmaBag — A Unit of Jaiswal Pharma';
 

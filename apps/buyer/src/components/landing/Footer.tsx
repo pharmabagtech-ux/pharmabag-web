@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ENTITY_LINE } from '@/lib/seo/config';
+import { ENTITY_LINE, FOUNDED_YEAR } from '@/lib/seo/config';
 
 /**
  * The site footer.
@@ -60,7 +60,9 @@ export default function Footer() {
           identify itself.
         */}
         <p className="mt-4 text-center text-xs text-gray-500">
-          &copy; {new Date().getFullYear()} {ENTITY_LINE}. All rights reserved.
+          &copy; {FOUNDED_YEAR}
+          {new Date().getFullYear() > FOUNDED_YEAR ? `–${new Date().getFullYear()}` : ''}{' '}
+          {ENTITY_LINE}. All rights reserved.
         </p>
       </div>
     </footer>
