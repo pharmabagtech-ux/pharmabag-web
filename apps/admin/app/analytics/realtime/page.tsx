@@ -31,7 +31,7 @@ export default function RealtimeAnalyticsPage() {
           )}
         </div>
 
-        <AnalyticsNav active="realtime" />
+        <AnalyticsNav />
 
         {realtime.isError && (
           <p className="text-sm text-red-600 dark:text-red-400">

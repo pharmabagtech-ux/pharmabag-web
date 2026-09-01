@@ -50,7 +50,7 @@ export default function TrafficAnalyticsPage() {
           <p className="text-sm text-muted-foreground mt-0.5">Visitor and session trends, bots excluded</p>
         </div>
 
-        <AnalyticsNav active="traffic" />
+        <AnalyticsNav />
 
         {traffic.isError && (
           <p className="text-sm text-red-600 dark:text-red-400">

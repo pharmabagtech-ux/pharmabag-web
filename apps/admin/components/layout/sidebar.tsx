@@ -2,18 +2,17 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, Users, Package, ClipboardList, BarChart3, Settings, LogOut, Shield, ChevronLeft, FolderTree, CreditCard, Banknote, Ticket, Bell, UserCog, FileSpreadsheet, Image, Gift, Layout, MessageSquare, PackagePlus, Newspaper, Globe } from "lucide-react";
+import { LayoutDashboard, Users, Package, ClipboardList, Settings, LogOut, Shield, ChevronLeft, FolderTree, CreditCard, Banknote, Ticket, Bell, UserCog, FileSpreadsheet, Image, Gift, Layout, MessageSquare, PackagePlus, Newspaper, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminAuth } from "@/store";
 import { useState } from "react";
 
 const NAV = [
+  // Dashboard covers Analytics too. They were separate entries rendering the
+  // same numbers from the same hook — seven of eleven stat cards duplicated —
+  // so the business view became the "Business" tab of the platform overview,
+  // with the visitor views (Traffic, Audience, Real-Time) as sibling tabs.
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  // A fully built Platform Analytics page (revenue/orders charts, top
-  // products, top sellers) existed with no way to reach it — same class of
-  // bug this nav already had once for Payments. BarChart3 was imported but
-  // unused, presumably left over from an earlier attempt at this exact entry.
-  { icon: BarChart3, label: "Analytics", href: "/analytics" },
   { icon: Users, label: "Users", href: "/users" },
   { icon: FileSpreadsheet, label: "Upload CSV File", href: "/csv-upload" },
   { icon: Package, label: "Products", href: "/products" },

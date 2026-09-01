@@ -36,7 +36,7 @@ export default function AudienceAnalyticsPage() {
           <p className="text-sm text-muted-foreground mt-0.5">Devices, browsers, and traffic quality</p>
         </div>
 
-        <AnalyticsNav active="audience" />
+        <AnalyticsNav />
 
         {audience.isError && (
           <p className="text-sm text-red-600 dark:text-red-400">
