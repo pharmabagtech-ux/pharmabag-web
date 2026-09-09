@@ -16,6 +16,12 @@ const NAV = [
   { icon: Users, label: "Users", href: "/users" },
   { icon: FileSpreadsheet, label: "Upload CSV File", href: "/csv-upload" },
   { icon: Package, label: "Products", href: "/products" },
+  // Categories is a complete screen (list, search, create with a parent picker,
+  // rename, delete) that was never in this nav, so the only way to reach it was
+  // to type the URL. Uploads used to paper over that by creating any category a
+  // CSV mentioned; now that they don't, this is where categories come from.
+  // Placed next to Products, since a category is a property of one.
+  { icon: FolderTree, label: "Categories", href: "/categories" },
   { icon: PackagePlus, label: "Product Requests", href: "/product-requests" },
   { icon: ClipboardList, label: "Orders", href: "/orders" },
   // Payments is where buyer payments are verified. It was a working page with
