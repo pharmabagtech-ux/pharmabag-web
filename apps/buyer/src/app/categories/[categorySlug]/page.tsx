@@ -11,9 +11,16 @@ import {
   collectionPageSchema,
   faqSchema,
 } from '@/lib/seo/schema';
-import { SITE_NAME } from '@/lib/seo/config';
+import { SITE_NAME, MIN_ORDER_VALUE_INR } from '@/lib/seo/config';
+import { inr } from '@/lib/seo/content';
 import { STATES } from '@/lib/seo/data/locations';
 import { categoryDefaults } from '@/lib/seo/defaults/category';
+import {
+  applyTokens,
+  fetchPageOverride,
+  preferOverride,
+  type PageTokens,
+} from '@/lib/seo/page-seo';
 
 /**
  * Category landing page — e.g. /categories/generic.
@@ -53,6 +60,19 @@ interface PageProps {
   searchParams: { page?: string };
 }
 
+/**
+ * Values an admin-written string may interpolate, so an edited sentence can
+ * still carry the live product count instead of freezing the number that
+ * happened to be true the day it was written.
+ */
+function categoryTokens(name: string, total: number): PageTokens {
+  return {
+    product_count: total.toLocaleString('en-IN'),
+    name,
+    min_order_value: inr(MIN_ORDER_VALUE_INR),
+  };
+}
+
 async function resolve(categorySlug: string) {
   // strict: an empty tree here would be misread as "category does not exist".
   const categories = await fetchCategories(true);
@@ -83,10 +103,16 @@ export async function generateMetadata({
 
   const pageSuffix = page > 1 ? ` — Page ${page}` : '';
   const defaults = categoryDefaults(category, total);
+  const override = await fetchPageOverride(routes.category(category.slug));
+  const tokens = categoryTokens(category.name, total);
 
   return buildMetadata({
-    title: `${defaults.title}${pageSuffix}`,
-    description: defaults.description,
+    title: `${preferOverride(override?.title, defaults.title, tokens)}${pageSuffix}`,
+    description: preferOverride(
+      override?.description,
+      defaults.description,
+      tokens,
+    ),
     /**
      * Paginated pages canonicalise to THEMSELVES, not back to page 1.
      * Pointing every page at page 1 is the classic error that removes the rest
@@ -121,7 +147,15 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
   const subs = category.subCategories ?? [];
   const defaults = categoryDefaults(category, total);
-  const faqs = defaults.faqs;
+
+  /**
+   * Admin overrides, applied field by field. Anything an admin has not written
+   * stays generated, so an edited H1 never costs the page its FAQs and a
+   * missing override never blanks anything.
+   */
+  const override = await fetchPageOverride(basePath);
+  const tokens = categoryTokens(category.name, total);
+  const faqs = override?.faq?.length ? override.faq : defaults.faqs;
 
   const jsonLd = graph(
     breadcrumbSchema(crumbs),
@@ -142,8 +176,18 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     <>
       <JsonLd json={jsonLd} />
       <CollectionShell
-        heading={defaults.h1}
-        intro={defaults.intro}
+        heading={preferOverride(override?.h1, defaults.h1, tokens)}
+        intro={preferOverride(override?.intro, defaults.intro, tokens)}
+        body={
+          override?.bodyHtml?.trim() ? (
+            <div
+              className="prose prose-slate max-w-3xl py-4"
+              dangerouslySetInnerHTML={{
+                __html: applyTokens(override.bodyHtml, tokens),
+              }}
+            />
+          ) : undefined
+        }
         crumbs={crumbs}
         products={products}
         totalProducts={total}
