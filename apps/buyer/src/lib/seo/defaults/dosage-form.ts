@@ -1,6 +1,7 @@
 import { SITE_NAME, MIN_ORDER_VALUE_INR } from '../config';
 import { inr } from '../content';
 import { FORM_GUIDANCE } from '../data/facet-guidance';
+import { categoryFormGuidance } from '../data/category-guidance';
 import type { PageDefaults } from './types';
 
 /**
@@ -46,8 +47,9 @@ export function formBlurb(form: string): string {
  * "Tablet" -> "Tablets"; already-plural names and acronyms (Drops, Lozenges,
  * PFS) stay as they are.
  */
-export function formGuidanceTitle(formName: string): string {
-  return `Buying ${/s$/i.test(formName) ? formName : `${formName}s`} at wholesale`;
+export function formGuidanceTitle(formName: string, categoryName?: string): string {
+  const plural = /s$/i.test(formName) ? formName : `${formName}s`;
+  return `Buying ${categoryName ? `${categoryName} ${plural}` : plural} at wholesale`;
 }
 
 export function dosageFormDefaults(
@@ -55,7 +57,16 @@ export function dosageFormDefaults(
   form: FormEntity,
   total: number,
 ): PageDefaults {
-  const guidance = FORM_GUIDANCE[form.name.toLowerCase()];
+  /*
+    Category-specific guidance first. FORM_GUIDANCE is keyed by form ALONE, so
+    every category stocking a form served byte-identical prose — the three
+    /tablet pages returned the same 610 characters, which is what a search
+    quality system reads as duplicate. The per-form text stays as a fallback so
+    a category added in the admin panel still gets a body rather than a bare
+    product list.
+  */
+  const combo = categoryFormGuidance(category.slug, form.slug);
+  const paragraphs = combo?.paragraphs ?? FORM_GUIDANCE[form.name.toLowerCase()];
 
   return {
     title: `${category.name} ${form.name} — Wholesale Price & Bulk Supply`,
@@ -80,6 +91,9 @@ export function dosageFormDefaults(
         question: `Are ${form.name.toLowerCase()} orders delivered across India?`,
         answer: `Yes. ${SITE_NAME} suppliers dispatch ${form.name.toLowerCase()} products to pharmacies, hospitals and distributors across all Indian states, with GST invoicing on every order.`,
       },
+      // The fourth question is specific to this category and form, so these
+      // pages stop sharing an identical FAQ set as well as identical prose.
+      ...(combo ? [combo.faq] : []),
     ],
     /*
       Hand-written procurement guidance per dosage form — the content that
@@ -87,8 +101,11 @@ export function dosageFormDefaults(
       swapped noun. Commercial knowledge only (storage, breakage, pack
       conventions, movement); nothing clinical.
     */
-    body: guidance
-      ? { title: formGuidanceTitle(form.name), paragraphs: guidance }
+    body: paragraphs
+      ? {
+          title: formGuidanceTitle(form.name, combo ? category.name : undefined),
+          paragraphs,
+        }
       : null,
   };
 }
