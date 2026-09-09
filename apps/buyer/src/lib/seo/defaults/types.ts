@@ -21,4 +21,13 @@ export interface PageDefaults {
   /** Opening paragraph above the product grid. */
   intro: string;
   faqs: Faq[];
+  /**
+   * Optional prose block rendered below the grid.
+   *
+   * Kept as a title plus plain paragraphs rather than HTML: the page renders
+   * it as real components, and `/api/page-defaults` serialises it to HTML for
+   * the admin editor. Storing it as markup here would force the page to
+   * dangerously-set its own generated content for no reason.
+   */
+  body?: { title: string; paragraphs: string[] } | null;
 }
