@@ -35,6 +35,9 @@ export default async function SiteLinkHub() {
 
   const topCities = ALL_CITIES.filter((c) => TIER_1_CITIES.includes(c.slug));
 
+  /** Categories that actually have sub-category pages to link to. */
+  const categoriesWithForms = categories.filter((c) => c.subCategories?.length);
+
   const columns: { title: string; links: { label: string; href: string }[] }[] = [
     {
       title: 'Shop by category',
@@ -125,6 +128,56 @@ export default async function SiteLinkHub() {
             </div>
           ))}
         </div>
+
+        {/*
+          Shop by dosage form.
+
+          The 31 category × form pages carry the deepest written content in the
+          catalogue and each has its own schema, yet nothing site-wide linked
+          to them — they were reachable only from their parent category page
+          and the sitemap. Brands, molecules, cities and states all had a
+          column here; the sub-categories had nothing.
+
+          Given its own full-width block rather than a seventh column: the
+          labels are two words and there are 31 of them, which in a 150px
+          column wraps badly and makes one column twice the height of its
+          neighbours.
+
+          Built from the SAME `fetchCategories()` result the hub already awaits
+          above, so it stays correct when a category is created in the admin
+          panel — no second, hand-maintained list to drift.
+        */}
+        {categoriesWithForms.length > 0 && (
+          <div className="mt-10 border-t border-slate-200 pt-8">
+            <h3 className="mb-4 text-xs font-bold uppercase tracking-wide text-slate-700">
+              Shop by dosage form
+            </h3>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+              {categoriesWithForms.map((category) => (
+                <div key={category.slug}>
+                  <Link
+                    href={routes.category(category.slug)}
+                    className="mb-2 block text-xs font-semibold text-slate-600 transition hover:text-teal-700 hover:underline"
+                  >
+                    {category.name}
+                  </Link>
+                  <ul className="space-y-1.5">
+                    {category.subCategories!.map((form) => (
+                      <li key={form.slug}>
+                        <Link
+                          href={`${routes.category(category.slug)}/${form.slug}`}
+                          className="text-xs leading-snug text-slate-500 transition hover:text-teal-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+                        >
+                          {category.name} {form.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
