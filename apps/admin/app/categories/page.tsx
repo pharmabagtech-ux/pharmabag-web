@@ -1,11 +1,12 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, Edit2, Trash2, FolderTree, ArrowRight, Loader2, ChevronDown, Layers } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, FolderTree, ArrowRight, Loader2, ChevronDown, Layers, FileText } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button, Input, Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import PageContentEditor from "@/components/seo/PageContentEditor";
 import {
   useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory,
   useSubCategories, useCreateSubCategory, useUpdateSubCategory, useDeleteSubCategory
@@ -49,6 +50,37 @@ export default function AdminCategoriesPage() {
   const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData?.categories ?? []);
   const subCategories = Array.isArray(subCatsData) ? subCatsData : (subCatsData?.subCategories ?? []);
 
+  /*
+    Page content — the storefront copy for this category's landing page — is
+    edited HERE rather than in a separate SEO tab. A category and the page it
+    creates are one thing to the person making it, and splitting them across
+    two screens meant creating a category in one place and writing its page in
+    another. SEO → Page content keeps the families that have no other home
+    (molecules, states, cities, brands).
+  */
+  const [seoTarget, setSeoTarget] = useState<{ path: string; label: string } | null>(null);
+
+  /** The storefront path a row's landing page lives at, or null if unresolvable. */
+  const pagePathFor = (item: any): string | null => {
+    if (!item?.slug) return null;
+    if (!item.categoryId) return `/categories/${item.slug}`;
+    // A sub-category page sits under its parent's slug, which the row may or
+    // may not carry depending on the endpoint — fall back to the parent list.
+    const parentSlug =
+      item.category?.slug ??
+      categories.find((c: any) => c.id === item.categoryId)?.slug;
+    return parentSlug ? `/categories/${parentSlug}/${item.slug}` : null;
+  };
+
+  const openSeoEditor = (item: any) => {
+    const path = pagePathFor(item);
+    if (!path) {
+      toast.error("Could not work out this page's address — reload and try again");
+      return;
+    }
+    setSeoTarget({ path, label: item.name });
+  };
+
   const openCreateModal = (type: "categories" | "subcategories") => {
     setAddType(type);
     setModalMode("create");
@@ -82,9 +114,18 @@ export default function AdminCategoriesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      /*
+        On create, the new row is handed straight to the page-content editor.
+        The landing page's address is derived from the slug, which does not
+        exist until the record is saved — so this is the earliest possible
+        moment to write its copy, and it keeps "add a category" and "write its
+        page" as one action instead of two screens.
+      */
+      let created: any = null;
+
       if (addType === "categories") {
         if (modalMode === "create") {
-          await createCat.mutateAsync({ name: formData.name });
+          created = await createCat.mutateAsync({ name: formData.name });
           toast.success("Category created");
         } else {
           await updateCat.mutateAsync({ id: editId, payload: { name: formData.name } });
@@ -93,7 +134,7 @@ export default function AdminCategoriesPage() {
       } else {
         if (!formData.categoryId) return toast.error("Select a parent category");
         if (modalMode === "create") {
-          await createSubCat.mutateAsync({ name: formData.name, categoryId: formData.categoryId });
+          created = await createSubCat.mutateAsync({ name: formData.name, categoryId: formData.categoryId });
           toast.success("Subcategory created");
         } else {
           await updateSubCat.mutateAsync({ id: editId, payload: { name: formData.name, categoryId: formData.categoryId } });
@@ -101,6 +142,11 @@ export default function AdminCategoriesPage() {
         }
       }
       closeModal();
+
+      if (created) {
+        const path = pagePathFor(created);
+        if (path) setSeoTarget({ path, label: created.name ?? formData.name });
+      }
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Operation failed");
     }
@@ -220,6 +266,10 @@ export default function AdminCategoriesPage() {
                     )}
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => openSeoEditor(item)} aria-label="Page content" title="Page content — heading, intro, description and FAQs"
+                          className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
+                          <FileText className="h-4 w-4" />
+                        </button>
                         <button onClick={() => openEditModal(item)} aria-label="Edit" title="Edit"
                           className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
                           <Edit2 className="h-4 w-4" />
@@ -250,8 +300,27 @@ export default function AdminCategoriesPage() {
                   {modalMode === "create" ? "Add" : "Edit"} {addType === "categories" ? "Category" : "Subcategory"}
                 </h2>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Enter the details for this {addType === "categories" ? "category" : "subcategory"}.
+                  {modalMode === "create"
+                    ? `Enter the details for this ${addType === "categories" ? "category" : "subcategory"}. Its page content opens next, ready to write.`
+                    : `Enter the details for this ${addType === "categories" ? "category" : "subcategory"}.`}
                 </p>
+                {modalMode === "edit" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const item =
+                        addType === "categories"
+                          ? categories.find((c: any) => c.id === editId)
+                          : subCategories.find((s: any) => s.id === editId);
+                      closeModal();
+                      if (item) openSeoEditor(item);
+                    }}
+                    className="mb-6 flex w-full items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-accent/40"
+                  >
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    Edit this page&apos;s content — heading, intro, description and FAQs
+                  </button>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {addType === "subcategories" && (
                     <div className="space-y-1.5">
@@ -276,6 +345,20 @@ export default function AdminCategoriesPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/*
+        The same editor SEO → Page content uses, opened against this row's
+        storefront path. One component, one saved record — so there is never a
+        question of which screen's copy is the live one.
+      */}
+      {seoTarget ? (
+        <PageContentEditor
+          path={seoTarget.path}
+          label={seoTarget.label}
+          onClose={() => setSeoTarget(null)}
+          onSaved={() => toast.success("Saved — live within about five minutes")}
+        />
+      ) : null}
     </AdminLayout>
   );
 }

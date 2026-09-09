@@ -22,8 +22,6 @@ import PageContentEditor from "@/components/seo/PageContentEditor";
  */
 
 const FAMILY_LABELS: Record<string, string> = {
-  CATEGORY: "Categories",
-  DOSAGE_FORM: "Dosage forms",
   MOLECULE: "Molecules",
   STATE: "States",
   CITY: "Cities",
@@ -31,15 +29,19 @@ const FAMILY_LABELS: Record<string, string> = {
   BRAND_CITY: "Brand × city",
 };
 
-const FAMILY_ORDER = [
-  "CATEGORY",
-  "DOSAGE_FORM",
-  "MOLECULE",
-  "STATE",
-  "CITY",
-  "BRAND",
-  "BRAND_CITY",
-];
+/**
+ * CATEGORY and DOSAGE_FORM are deliberately absent.
+ *
+ * A category and the page it creates are one thing to the person making it,
+ * so both are edited in the Categories tab, next to the category itself —
+ * creating one there opens its page content straight away. The families left
+ * here are the ones with no other home: they are derived from the catalogue
+ * rather than created by anyone, so this screen is the only place they exist.
+ *
+ * Both screens drive the same editor and write the same record, so this is
+ * about having one door per thing, not about capability.
+ */
+const FAMILY_ORDER = ["MOLECULE", "STATE", "CITY", "BRAND", "BRAND_CITY"];
 
 const PER_PAGE = 25;
 
@@ -50,7 +52,7 @@ export default function SeoPagesPage() {
   const { data: listed, isLoading, error } = useLandingPages();
   const { data: overrides } = usePageSeoMap();
 
-  const [family, setFamily] = useState("CATEGORY");
+  const [family, setFamily] = useState(FAMILY_ORDER[0]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 250);
   const [page, setPage] = useState(1);
@@ -58,7 +60,12 @@ export default function SeoPagesPage() {
     null,
   );
 
-  const pages = listed?.pages ?? [];
+  // Categories and dosage forms are edited in the Categories tab, so they are
+  // filtered out here too — otherwise the counts and the "custom" total on
+  // this screen would describe pages it does not list.
+  const pages = (listed?.pages ?? []).filter((p) =>
+    FAMILY_ORDER.includes(p.pageType),
+  );
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -110,6 +117,13 @@ export default function SeoPagesPage() {
             Heading, intro, description and FAQs for every landing page. Pages
             you have not edited are generated automatically — open one to see
             exactly what it says today.
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Category and dosage-form pages are edited in{" "}
+            <Link href="/categories" className="font-medium text-primary hover:underline">
+              Categories
+            </Link>
+            , alongside the category itself.
           </p>
         </div>
 
