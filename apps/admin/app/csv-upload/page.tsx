@@ -3,9 +3,9 @@ import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Search, Plus, Pencil, Trash2, Upload, FileSpreadsheet, Download, Info, CheckCircle2, XCircle, AlertCircle, FileDown } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
-import { Button, Badge, Input, Modal, Textarea, Pagination } from "@/components/ui";
+import { Button, Badge, Input, Modal, Select, Textarea, Pagination } from "@/components/ui";
 import toast from "react-hot-toast";
-import { useSuggestions, useCreateSuggestion, useUpdateSuggestion, useDeleteSuggestion } from "@/hooks/useAdmin";
+import { useSuggestions, useCreateSuggestion, useUpdateSuggestion, useDeleteSuggestion, useCategories } from "@/hooks/useAdmin";
 import { apiClient } from "@/lib/apiClient";
 import SeoFieldsPanel, { type SeoFieldsValue } from "@/components/seo/SeoFieldsPanel";
 import ProductContentFields, {
@@ -42,6 +42,18 @@ export default function MasterCatalogPage() {
     content section. Only fetched while EDITING an existing product — a product
     being created has no page yet, so there is nothing to read.
   */
+  /*
+    The taxonomy, for the category pickers. `findAllCategories` includes each
+    category's subcategories, so no second request is needed to populate the
+    dependent picker.
+  */
+  const { data: categoriesData } = useCategories();
+  const categories = Array.isArray(categoriesData)
+    ? categoriesData
+    : (categoriesData?.categories ?? []);
+  const subCategoryOptions =
+    categories.find((c: any) => c.id === form.category)?.subCategories ?? [];
+
   const editingSlug = showModal && editing?.slug ? `/products/${editing.slug}` : null;
   const {
     data: pageDefaults,
@@ -93,8 +105,10 @@ export default function MasterCatalogPage() {
       composition: item.chemicalComposition ?? item.composition ?? "", 
       mrp: String(item.mrp ?? ""), 
       gstPercent: String(item.gstPercent ?? ""),
-      category: item.categoryId || item.category?.id || item.category?.name || item.category || "",
-      subCategory: item.subCategoryId || item.subCategory?.id || item.subCategory?.name || item.subCategory || "",
+      // Ids only. The old fallback chain could land a category NAME in a field
+      // the API reads as an id, which then failed validation on save.
+      category: item.categoryId || item.category?.id || "",
+      subCategory: item.subCategoryId || item.subCategory?.id || "",
       description: item.description ?? ""
     });
     setSeo({
@@ -126,6 +140,14 @@ export default function MasterCatalogPage() {
   };
 
   const handleSave = async () => {
+    /*
+      Both are required columns on MasterProduct. Caught here so the failure
+      reads as "pick a category" rather than a validation error from the API.
+    */
+    if (!form.category || !form.subCategory) {
+      toast.error("Pick a category and sub-category");
+      return;
+    }
     try {
       const payload = { 
         name: form.name,
@@ -626,8 +648,40 @@ export default function MasterCatalogPage() {
             <div className="col-span-2">
               <Textarea label="Chemical Composition" placeholder="e.g. Paracetamol" value={form.composition} onChange={e => setForm(f => ({ ...f, composition: e.target.value }))} />
             </div>
-            <Input label="Category" placeholder="e.g. Tablets" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} />
-            <Input label="Sub-Category" placeholder="e.g. Pain Relief" value={form.subCategory} onChange={e => setForm(f => ({ ...f, subCategory: e.target.value }))} />
+            {/*
+              Pickers, not free text. These fields hold UUIDs and always did —
+              the inputs showed the raw id while the placeholder invited a name
+              like "Tablets", so the value was unreadable and anything typed
+              produced an invalid category reference.
+            */}
+            <Select
+              label="Category"
+              value={form.category}
+              onChange={e => {
+                const categoryId = e.target.value;
+                // Subcategories belong to one category, so an inherited
+                // selection from the previous category would be invalid.
+                setForm(f => ({ ...f, category: categoryId, subCategory: "" }));
+              }}
+            >
+              <option value="">Select a category…</option>
+              {categories.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </Select>
+            <Select
+              label="Sub-Category"
+              value={form.subCategory}
+              disabled={!form.category}
+              onChange={e => setForm(f => ({ ...f, subCategory: e.target.value }))}
+            >
+              <option value="">
+                {form.category ? "Select a sub-category…" : "Pick a category first"}
+              </option>
+              {subCategoryOptions.map((s: any) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </Select>
             <div className="col-span-2">
               <Textarea label="Description" placeholder="Detailed product description..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={4} />
             </div>
