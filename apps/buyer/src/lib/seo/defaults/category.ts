@@ -1,5 +1,6 @@
 import { SITE_NAME, MIN_ORDER_VALUE_INR } from '../config';
 import { inr } from '../content';
+import { categoryGuidance } from '../data/category-guidance';
 import type { PageDefaults } from './types';
 
 /**
@@ -40,6 +41,7 @@ export function categoryDefaults(
   total: number,
 ): PageDefaults {
   const subs = category.subCategories ?? [];
+  const guidance = categoryGuidance(category.slug);
 
   return {
     title: `${category.name} Medicines Wholesale Supplier`,
@@ -70,5 +72,14 @@ export function categoryDefaults(
         answer: `No. Wholesale net rates on ${SITE_NAME} are shown exclusive of GST. GST is applied at the rate applicable to each product and appears on the invoice issued by the supplying wholesaler.`,
       },
     ],
+    /*
+      Category pages carried an intro and FAQs but NO prose at all, while the
+      sub-category pages beneath them each had a body — the parent was the
+      thinner page of the two. This is the trade view of the category: how
+      buying decisions are actually made in it.
+    */
+    body: guidance
+      ? { title: `Buying ${category.name.toLowerCase()} at wholesale`, paragraphs: guidance }
+      : null,
   };
 }

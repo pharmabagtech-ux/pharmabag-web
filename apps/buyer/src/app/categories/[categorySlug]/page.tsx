@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import CollectionShell from '@/components/seo/CollectionShell';
+import { SeoSection } from '@/components/seo/SeoContent';
 import { fetchCategories, fetchProducts } from '@/lib/seo/catalog';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { routes, absoluteUrl } from '@/lib/seo/url';
@@ -179,6 +180,11 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         heading={preferOverride(override?.h1, defaults.h1, tokens)}
         intro={preferOverride(override?.intro, defaults.intro, tokens)}
         body={
+          /*
+            An admin-written body replaces the generated one; with neither, the
+            page shows no prose at all — which is what it did before this, while
+            every sub-category page beneath it had one.
+          */
           override?.bodyHtml?.trim() ? (
             <div
               className="prose prose-slate max-w-3xl py-4"
@@ -186,6 +192,14 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                 __html: applyTokens(override.bodyHtml, tokens),
               }}
             />
+          ) : defaults.body ? (
+            <SeoSection id="buying-guide" title={defaults.body.title}>
+              <div className="space-y-3">
+                {defaults.body.paragraphs.map((para) => (
+                  <p key={para.slice(0, 40)}>{para}</p>
+                ))}
+              </div>
+            </SeoSection>
           ) : undefined
         }
         crumbs={crumbs}
