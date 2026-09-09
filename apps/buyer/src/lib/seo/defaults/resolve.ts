@@ -214,9 +214,23 @@ export async function resolvePageDefaults(
  * catalogue size, and the count of what was dropped is returned so the UI can
  * say so rather than implying the list is complete.
  */
+/**
+ * The same threshold and cap `brands/[brandSlug]/[citySlug]` uses for
+ * `generateStaticParams`: at least 50 products, top 40 brands, crossed with
+ * the tier-1 cities.
+ *
+ * Not identical to the prerendered set, and deliberately so. The route applies
+ * its cap to the RAW manufacturer list, where several spellings of one company
+ * collapse to a single slug — 40 raw rows prerender as 434 paths, not 560.
+ * Deduping first lists 40 real brands instead of 31. Those extra pages are not
+ * broken: the route renders params it did not prerender on demand, so they are
+ * live pages that simply were not built ahead of time.
+ */
+const BRAND_CITY_MIN_PRODUCTS = 50;
+const BRAND_CITY_MAX_BRANDS = 40;
+
 export async function listLandingPages(
   brandLimit = 200,
-  brandCityLimit = 20,
 ): Promise<{
   pages: ResolvedPage[];
   brandsOmitted: number;
@@ -277,10 +291,15 @@ export async function listLandingPages(
     .filter((m) => m.name?.trim())
     .sort((a, b) => (b.productCount ?? 0) - (a.productCount ?? 0));
 
-  const bySlug = new Map<string, { name: string; slug: string }>();
+  const bySlug = new Map<
+    string,
+    { name: string; slug: string; productCount: number }
+  >();
   for (const m of ranked) {
     const slug = facetSlug(m.name);
-    if (!bySlug.has(slug)) bySlug.set(slug, { name: m.name, slug });
+    if (!bySlug.has(slug)) {
+      bySlug.set(slug, { name: m.name, slug, productCount: m.productCount ?? 0 });
+    }
   }
   const uniqueBrands = Array.from(bySlug.values());
   const brands = uniqueBrands.slice(0, brandLimit);
@@ -294,16 +313,19 @@ export async function listLandingPages(
   }
 
   /*
-    Brand x city is a cross product: every brand added here multiplies by the
-    tier-1 city count. Expanding all of them produced 2,800 rows nobody will
-    ever hand-write, which buries the pages that matter. Only the largest
-    brands are expanded, and the remainder is reported rather than hidden.
+    Brand x city exists only for the brands the route prerenders — see the
+    constants above. Listing every brand crossed with every city would invent
+    thousands of URLs that 404.
   */
   const cities = TIER_1_CITIES.map((slug) =>
     ALL_CITIES.find((c) => c.slug === slug),
   ).filter((c): c is (typeof ALL_CITIES)[number] => Boolean(c));
 
-  for (const brand of brands.slice(0, brandCityLimit)) {
+  const brandCityBrands = uniqueBrands
+    .filter((b) => b.productCount >= BRAND_CITY_MIN_PRODUCTS)
+    .slice(0, BRAND_CITY_MAX_BRANDS);
+
+  for (const brand of brandCityBrands) {
     for (const city of cities) {
       pages.push({
         pageType: 'BRAND_CITY',
@@ -316,7 +338,7 @@ export async function listLandingPages(
   return {
     pages,
     brandsOmitted: Math.max(0, uniqueBrands.length - brands.length),
-    brandCityOmitted:
-      Math.max(0, brands.length - brandCityLimit) * cities.length,
+    // Brand-city is complete by construction, so nothing is hidden here.
+    brandCityOmitted: 0,
   };
 }
