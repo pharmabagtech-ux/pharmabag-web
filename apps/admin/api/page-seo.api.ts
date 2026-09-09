@@ -108,6 +108,24 @@ export async function listLandingPages(): Promise<{
   return res.json();
 }
 
+/**
+ * Thrown when the storefront does not generate a page at this path.
+ *
+ * Distinct from a fetch failure on purpose. A 404 here is not an error to
+ * apologise for — it means the page is not live yet, which is a normal state
+ * for a category or dosage form nobody has assigned products to. Telling the
+ * operator "could not read the page" in that case is simply wrong, and it is
+ * what a blank editor used to say.
+ */
+export class PageNotGeneratedError extends Error {
+  readonly path: string;
+  constructor(path: string) {
+    super(`No generated landing page at ${path}`);
+    this.name = "PageNotGeneratedError";
+    this.path = path;
+  }
+}
+
 export async function getPageDefaults(path: string): Promise<{
   pageType: string;
   label: string;
@@ -117,6 +135,7 @@ export async function getPageDefaults(path: string): Promise<{
   const res = await fetch(
     `${STOREFRONT_ORIGIN}/api/seo/page-defaults?path=${encodeURIComponent(path)}`,
   );
+  if (res.status === 404) throw new PageNotGeneratedError(path);
   if (!res.ok) throw new Error(`Storefront returned ${res.status}`);
   return res.json();
 }

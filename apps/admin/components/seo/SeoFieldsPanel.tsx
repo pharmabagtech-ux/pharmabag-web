@@ -4,6 +4,7 @@ import { ChevronDown, Search, UploadCloud, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { Input, Textarea } from "@/components/ui";
 import { uploadBlogImage } from "@/api/blog.api";
+import CurrentCopy from "@/components/seo/CurrentCopy";
 import { cn } from "@/lib/utils";
 
 export interface SeoFieldsValue {
@@ -25,6 +26,17 @@ interface Props {
   /** Hide fields a surface doesn't support (products omit keywords + canonical). */
   showKeywords?: boolean;
   showCanonical?: boolean;
+  /** Generated keywords, for the same read-and-take-over treatment. */
+  fallbackKeywords?: string[];
+  /**
+   * Show the generated wording under each field, with a one-click take-over.
+   *
+   * Off by default so the blog and product callers are untouched. On for the
+   * landing-page editor, where "what does this page say right now?" is the
+   * first question an editor has, and a grey placeholder was answering it
+   * badly — invisible on a long intro, and gone the moment you type.
+   */
+  showCurrentCopy?: boolean;
 }
 
 function Counter({ len, min, max }: { len: number; min: number; max: number }) {
@@ -49,6 +61,8 @@ export default function SeoFieldsPanel({
   previewUrl,
   showKeywords = true,
   showCanonical = true,
+  fallbackKeywords = [],
+  showCurrentCopy = false,
 }: Props) {
   const [open, setOpen] = useState(true);
   const [keywordDraft, setKeywordDraft] = useState("");
@@ -83,6 +97,9 @@ export default function SeoFieldsPanel({
               <Counter len={value.metaTitle.length} min={15} max={60} />
             </div>
             <Input value={value.metaTitle} placeholder={fallbackTitle} onChange={(e) => set({ metaTitle: e.target.value })} />
+            {showCurrentCopy && (
+              <CurrentCopy text={fallbackTitle} onUse={() => set({ metaTitle: fallbackTitle })} />
+            )}
           </div>
 
           <div>
@@ -91,6 +108,12 @@ export default function SeoFieldsPanel({
               <Counter len={value.metaDescription.length} min={50} max={160} />
             </div>
             <Textarea rows={3} value={value.metaDescription} placeholder={fallbackDescription} onChange={(e) => set({ metaDescription: e.target.value })} />
+            {showCurrentCopy && (
+              <CurrentCopy
+                text={fallbackDescription}
+                onUse={() => set({ metaDescription: fallbackDescription })}
+              />
+            )}
           </div>
 
           {showKeywords && (
@@ -120,6 +143,19 @@ export default function SeoFieldsPanel({
                   }}
                 />
               </div>
+              {showCurrentCopy && fallbackKeywords.length > 0 && (
+                <CurrentCopy
+                  label="Generated for this page"
+                  text={fallbackKeywords.join(", ")}
+                  onUse={() =>
+                    set({
+                      metaKeywords: Array.from(
+                        new Set([...value.metaKeywords, ...fallbackKeywords]),
+                      ),
+                    })
+                  }
+                />
+              )}
             </div>
           )}
 
