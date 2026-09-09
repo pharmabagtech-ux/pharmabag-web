@@ -16,6 +16,25 @@ import { SITE_NAME, MIN_ORDER_VALUE_INR } from '@/lib/seo/config';
 import { inr } from '@/lib/seo/content';
 import { ALL_CITIES, findCity } from '@/lib/seo/data/locations';
 import { MOLECULES } from '@/lib/seo/data/molecules';
+import { cityDefaults } from '@/lib/seo/defaults/city';
+import {
+  applyTokens,
+  fetchPageOverride,
+  preferOverride,
+  type PageTokens,
+} from '@/lib/seo/page-seo';
+
+/**
+ * Values an admin-written string may interpolate, so an edited sentence keeps
+ * the live catalogue count instead of freezing the number it was written with.
+ */
+function cityTokens(name: string, total: number): PageTokens {
+  return {
+    product_count: total.toLocaleString('en-IN'),
+    name,
+    min_order_value: inr(MIN_ORDER_VALUE_INR),
+  };
+}
 
 /**
  * City supplier page — e.g.
@@ -56,17 +75,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { state, city } = found;
   const { total } = await fetchProducts({ page: 1, limit: 1 });
 
+  const defaults = cityDefaults(city, state, total);
+  const override = await fetchPageOverride(routes.city(state.slug, city.slug));
+  const tokens = cityTokens(city.name, total);
+
   return buildMetadata({
-    title: `Wholesale Medicine Suppliers in ${city.name} — Bulk Distributors`,
-    description: `Buy medicines in bulk in ${city.name}, ${state.name}. ${total.toLocaleString('en-IN')} products from verified wholesalers on ${SITE_NAME}, with wholesale net rates, GST invoicing and delivery across ${city.name}.`,
+    title: preferOverride(override?.title, defaults.title, tokens),
+    description: preferOverride(
+      override?.description,
+      defaults.description,
+      tokens,
+    ),
     path: routes.city(state.slug, city.slug),
-    keywords: [
-      `wholesale medicine supplier ${city.name}`,
-      `medicine distributor ${city.name}`,
-      `pharmaceutical wholesaler ${city.name}`,
-      `bulk medicine ${city.name}`,
-      `medical distributor ${city.name} ${state.name}`,
-    ],
+    keywords: defaults.keywords,
   });
 }
 
@@ -91,24 +112,10 @@ export default async function CityPage({ params }: PageProps) {
     { name: city.name, path },
   ];
 
-  const faqs = [
-    {
-      question: `Who supplies wholesale medicines in ${city.name}?`,
-      answer: `${SITE_NAME} lists verified pharmaceutical wholesalers supplying ${city.name} and the wider ${state.name} market, with ${total.toLocaleString('en-IN')} products available at wholesale net rates. Every supplier holds a valid drug licence and GST registration.`,
-    },
-    {
-      question: `How quickly can medicines be delivered in ${city.name}?`,
-      answer: `Dispatch times depend on the supplying wholesaler and the destination. Orders to ${city.name} are shipped to the buyer's registered business address with a GST invoice, and the expected dispatch window is shown at checkout before the order is confirmed.`,
-    },
-    {
-      question: `What licence do I need to buy wholesale medicines in ${city.name}?`,
-      answer: `A valid drug licence issued by the ${state.name} drug control authority is required, along with GST registration or a PAN. ${SITE_NAME} verifies these once during onboarding, after which wholesale rates become visible and orders can be placed.`,
-    },
-    {
-      question: `What is the minimum order value for buyers in ${city.name}?`,
-      answer: `Each order line must reach ${inr(MIN_ORDER_VALUE_INR)} including GST, the same across India. Individual products also carry a minimum order quantity in units set by the supplying wholesaler.`,
-    },
-  ];
+  const defaults = cityDefaults(city, state, total);
+  const override = await fetchPageOverride(path);
+  const tokens = cityTokens(city.name, total);
+  const faqs = override?.faq?.length ? override.faq : defaults.faqs;
 
   const description = `Verified wholesale medicine suppliers serving ${city.name}, ${state.name}, with ${total.toLocaleString('en-IN')} pharmaceutical products for bulk purchase.`;
 
@@ -135,16 +142,22 @@ export default async function CityPage({ params }: PageProps) {
     .sort((a, b) => (b.productCount ?? 0) - (a.productCount ?? 0))
     .slice(0, 12);
 
-  const intro = `${SITE_NAME} connects pharmacies, hospitals, clinics and distributors in ${city.name} with verified pharmaceutical wholesalers across India. ${
-    city.note ? `${city.note} ` : ''
-  }Licensed buyers in ${city.name} can order from ${total.toLocaleString('en-IN')} products at wholesale net rates, with GST invoicing and delivery to their registered business address in ${state.name}.`;
-
   return (
     <>
       <JsonLd json={jsonLd} />
       <CollectionShell
-        heading={`Wholesale medicine suppliers in ${city.name}, ${state.name}`}
-        intro={intro}
+        heading={preferOverride(override?.h1, defaults.h1, tokens)}
+        intro={preferOverride(override?.intro, defaults.intro, tokens)}
+        body={
+          override?.bodyHtml?.trim() ? (
+            <div
+              className="prose prose-slate max-w-3xl py-4"
+              dangerouslySetInnerHTML={{
+                __html: applyTokens(override.bodyHtml, tokens),
+              }}
+            />
+          ) : undefined
+        }
         crumbs={crumbs}
         products={products}
         totalProducts={total}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  FileText,
   Globe,
   Link2,
   Newspaper,
@@ -18,6 +19,13 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useBlogPosts } from "@/hooks/useBlog";
 
 const SECTIONS = [
+  {
+    href: "/seo/pages",
+    title: "Page content",
+    description:
+      "The heading, intro, body and FAQs on every category, dosage form, molecule, city, state and brand page. Pages you have not edited generate their own text — open one to read it and take over.",
+    icon: FileText,
+  },
   {
     href: "/seo/settings",
     title: "Site settings",

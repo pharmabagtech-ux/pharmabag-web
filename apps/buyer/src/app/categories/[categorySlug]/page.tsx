@@ -14,6 +14,13 @@ import {
 import { SITE_NAME, MIN_ORDER_VALUE_INR } from '@/lib/seo/config';
 import { inr } from '@/lib/seo/content';
 import { STATES } from '@/lib/seo/data/locations';
+import { categoryDefaults } from '@/lib/seo/defaults/category';
+import {
+  applyTokens,
+  fetchPageOverride,
+  preferOverride,
+  type PageTokens,
+} from '@/lib/seo/page-seo';
 
 /**
  * Category landing page — e.g. /categories/generic.
@@ -53,29 +60,24 @@ interface PageProps {
   searchParams: { page?: string };
 }
 
+/**
+ * Values an admin-written string may interpolate, so an edited sentence can
+ * still carry the live product count instead of freezing the number that
+ * happened to be true the day it was written.
+ */
+function categoryTokens(name: string, total: number): PageTokens {
+  return {
+    product_count: total.toLocaleString('en-IN'),
+    name,
+    min_order_value: inr(MIN_ORDER_VALUE_INR),
+  };
+}
+
 async function resolve(categorySlug: string) {
   // strict: an empty tree here would be misread as "category does not exist".
   const categories = await fetchCategories(true);
   const category = categories.find((c) => c.slug === categorySlug);
   return { categories, category };
-}
-
-/** Short, honest description of what each trade category means. */
-function categoryBlurb(name: string): string {
-  const key = name.toLowerCase();
-  if (key.includes('ethical')) {
-    return 'Ethical products are branded prescription medicines promoted to doctors and dispensed against a prescription.';
-  }
-  if (key.includes('generic')) {
-    return 'Generic products are medicines sold under their salt name or as branded generics, typically at a lower price point than the originator brand.';
-  }
-  if (key.includes('nutraceutical')) {
-    return 'Nutraceuticals cover food-supplement products such as vitamins, minerals, protein supplements and health tonics.';
-  }
-  if (key.includes('ayurvedic')) {
-    return 'Ayurvedic products are traditional medicine formulations licensed under the AYUSH framework.';
-  }
-  return `${name} products supplied at wholesale rates.`;
 }
 
 export async function generateMetadata({
@@ -100,22 +102,24 @@ export async function generateMetadata({
   });
 
   const pageSuffix = page > 1 ? ` — Page ${page}` : '';
+  const defaults = categoryDefaults(category, total);
+  const override = await fetchPageOverride(routes.category(category.slug));
+  const tokens = categoryTokens(category.name, total);
 
   return buildMetadata({
-    title: `${category.name} Medicines Wholesale Supplier${pageSuffix}`,
-    description: `Buy ${category.name.toLowerCase()} medicines in bulk from verified Indian wholesalers on ${SITE_NAME}. ${total.toLocaleString('en-IN')} products with wholesale net rates, GST invoicing and pan-India delivery.`,
+    title: `${preferOverride(override?.title, defaults.title, tokens)}${pageSuffix}`,
+    description: preferOverride(
+      override?.description,
+      defaults.description,
+      tokens,
+    ),
     /**
      * Paginated pages canonicalise to THEMSELVES, not back to page 1.
      * Pointing every page at page 1 is the classic error that removes the rest
      * of a catalogue from the index.
      */
     path: page > 1 ? `${routes.category(category.slug)}?page=${page}` : routes.category(category.slug),
-    keywords: [
-      `${category.name} medicines wholesale`,
-      `${category.name} medicine distributor`,
-      `bulk ${category.name.toLowerCase()} medicine supplier India`,
-      'pharmaceutical wholesaler',
-    ],
+    keywords: defaults.keywords,
   });
 }
 
@@ -142,25 +146,16 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   ];
 
   const subs = category.subCategories ?? [];
+  const defaults = categoryDefaults(category, total);
 
-  const faqs = [
-    {
-      question: `How many ${category.name.toLowerCase()} medicines are available on ${SITE_NAME}?`,
-      answer: `${SITE_NAME} lists ${total.toLocaleString('en-IN')} ${category.name.toLowerCase()} products from verified wholesale suppliers across India, spanning ${subs.length} dosage forms including ${subs.slice(0, 5).map((s) => s.name.toLowerCase()).join(', ')}.`,
-    },
-    {
-      question: `What is the minimum order for ${category.name.toLowerCase()} medicines?`,
-      answer: `Each order line must reach ${inr(MIN_ORDER_VALUE_INR)} including GST. The per-unit minimum order quantity is set by the supplying wholesaler and is shown on every product page.`,
-    },
-    {
-      question: `Who can buy ${category.name.toLowerCase()} medicines in bulk on ${SITE_NAME}?`,
-      answer: `${SITE_NAME} sells only to businesses: retail pharmacies, hospitals, clinics, nursing homes and distributors. Buyers complete a one-time verification with a valid drug licence and GST or PAN details before they can place an order.`,
-    },
-    {
-      question: `Is GST included in the wholesale rates shown?`,
-      answer: `No. Wholesale net rates on ${SITE_NAME} are shown exclusive of GST. GST is applied at the rate applicable to each product and appears on the invoice issued by the supplying wholesaler.`,
-    },
-  ];
+  /**
+   * Admin overrides, applied field by field. Anything an admin has not written
+   * stays generated, so an edited H1 never costs the page its FAQs and a
+   * missing override never blanks anything.
+   */
+  const override = await fetchPageOverride(basePath);
+  const tokens = categoryTokens(category.name, total);
+  const faqs = override?.faq?.length ? override.faq : defaults.faqs;
 
   const jsonLd = graph(
     breadcrumbSchema(crumbs),
@@ -177,14 +172,22 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     faqSchema(faqs),
   );
 
-  const intro = `${SITE_NAME} lists ${total.toLocaleString('en-IN')} ${category.name.toLowerCase()} medicines for wholesale and bulk purchase across India. ${categoryBlurb(category.name)} Every listing is placed by a verified supplier and shows the wholesale net rate, minimum order quantity and applicable GST.`;
-
   return (
     <>
       <JsonLd json={jsonLd} />
       <CollectionShell
-        heading={`${category.name} medicines — wholesale suppliers in India`}
-        intro={intro}
+        heading={preferOverride(override?.h1, defaults.h1, tokens)}
+        intro={preferOverride(override?.intro, defaults.intro, tokens)}
+        body={
+          override?.bodyHtml?.trim() ? (
+            <div
+              className="prose prose-slate max-w-3xl py-4"
+              dangerouslySetInnerHTML={{
+                __html: applyTokens(override.bodyHtml, tokens),
+              }}
+            />
+          ) : undefined
+        }
         crumbs={crumbs}
         products={products}
         totalProducts={total}

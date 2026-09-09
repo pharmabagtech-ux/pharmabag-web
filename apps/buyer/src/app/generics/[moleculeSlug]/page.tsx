@@ -22,6 +22,13 @@ import {
   MOLECULES,
 } from '@/lib/seo/data/molecules';
 import { CLASS_GUIDANCE } from '@/lib/seo/data/facet-guidance';
+import { moleculeDefaults } from '@/lib/seo/defaults/molecule';
+import {
+  applyTokens,
+  fetchPageOverride,
+  preferOverride,
+  type PageTokens,
+} from '@/lib/seo/page-seo';
 
 /**
  * Molecule landing page — e.g. /generics/amoxicillin.
@@ -57,6 +64,18 @@ interface PageProps {
   searchParams: { page?: string };
 }
 
+/**
+ * Values an admin-written string may interpolate, so an edited sentence keeps
+ * the live product count instead of freezing the number it was written with.
+ */
+function moleculeTokens(name: string, total: number): PageTokens {
+  return {
+    product_count: total.toLocaleString('en-IN'),
+    name,
+    min_order_value: inr(MIN_ORDER_VALUE_INR),
+  };
+}
+
 export async function generateMetadata({
   params,
   searchParams,
@@ -78,18 +97,29 @@ export async function generateMetadata({
     limit: 1,
   });
   const path = routes.generic(molecule.slug);
+  /*
+    Head-only stats. The title and description quote nothing but the total, so
+    the price and brand figures the body uses are not fetched here — this
+    request deliberately reads one row.
+  */
+  const defaults = moleculeDefaults(molecule, {
+    total,
+    minPrice: null,
+    maxPrice: null,
+    brands: [],
+  });
+  const override = await fetchPageOverride(path);
+  const tokens = moleculeTokens(molecule.name, total);
 
   return buildMetadata({
-    title: `${molecule.name} Medicines — Brands & Wholesale Price${page > 1 ? ` — Page ${page}` : ''}`,
-    description: `${total.toLocaleString('en-IN')} ${molecule.name} medicines available at wholesale on ${SITE_NAME}. Compare brands, manufacturers, net rates and minimum order quantities for bulk purchase across India.`,
+    title: `${preferOverride(override?.title, defaults.title, tokens)}${page > 1 ? ` — Page ${page}` : ''}`,
+    description: preferOverride(
+      override?.description,
+      defaults.description,
+      tokens,
+    ),
     path: page > 1 ? `${path}?page=${page}` : path,
-    keywords: [
-      `${molecule.name} medicines`,
-      `${molecule.name} brands India`,
-      `${molecule.name} wholesale price`,
-      `${molecule.name} generic supplier`,
-      `${molecule.therapeuticClass} wholesale`,
-    ],
+    keywords: defaults.keywords,
   });
 }
 
@@ -176,36 +206,15 @@ export default async function MoleculePage({ params, searchParams }: PageProps) 
     { label: 'Minimum Order Value', value: `${inr(MIN_ORDER_VALUE_INR)} per order line, incl. GST` },
   ];
 
-  const faqs = [
-    {
-      question: `Which brands contain ${molecule.name}?`,
-      answer: `${SITE_NAME} lists ${total.toLocaleString('en-IN')} products containing ${molecule.name}${
-        brands.length
-          ? `, from manufacturers including ${brands.slice(0, 6).map(([b]) => b).join(', ')}`
-          : ''
-      }. Each brand is shown with its wholesale net rate so equivalents can be compared directly.`,
-    },
-    ...(minPrice
-      ? [
-          {
-            question: `What is the wholesale price of ${molecule.name} medicines?`,
-            answer: `${molecule.name} products on ${SITE_NAME} currently start from ${inr(minPrice)} per unit exclusive of GST${
-              maxPrice && maxPrice !== minPrice
-                ? `, ranging up to ${inr(maxPrice)} per unit depending on brand, strength and pack size`
-                : ''
-            }. Rates are set by verified wholesale suppliers and change with the schemes they offer.`,
-          },
-        ]
-      : []),
-    {
-      question: `What therapeutic class does ${molecule.name} belong to?`,
-      answer: `${molecule.name} is classified under ${molecule.therapeuticClass.toLowerCase()} products in the ${SITE_NAME} catalogue. Classification here is for trade and procurement navigation and is not a substitute for the prescribing information.`,
-    },
-    {
-      question: `Can I buy ${molecule.name} medicines in bulk?`,
-      answer: `Yes. ${SITE_NAME} supplies ${molecule.name} products in bulk to retail pharmacies, hospitals, clinics and distributors across India. Buyers verify once with a valid drug licence and GST or PAN details, after which orders are placed online with GST invoicing and pan-India delivery. Each order line must reach ${inr(MIN_ORDER_VALUE_INR)} including GST.`,
-    },
-  ];
+  const defaults = moleculeDefaults(molecule, {
+    total,
+    minPrice,
+    maxPrice,
+    brands: brands.map(([b]) => b),
+  });
+  const override = await fetchPageOverride(path);
+  const tokens = moleculeTokens(molecule.name, total);
+  const faqs = override?.faq?.length ? override.faq : defaults.faqs;
 
   const jsonLd = graph(
     breadcrumbSchema(crumbs),
@@ -240,10 +249,8 @@ export default async function MoleculePage({ params, searchParams }: PageProps) 
     <>
       <JsonLd json={jsonLd} />
       <CollectionShell
-        heading={`${molecule.name} medicines — brands and wholesale prices`}
-        intro={`${molecule.name} is a ${molecule.therapeuticClass.toLowerCase()} molecule. ${SITE_NAME} lists ${total.toLocaleString('en-IN')} products containing ${molecule.name} from verified wholesale suppliers across India${
-          minPrice ? `, with net rates starting from ${inr(minPrice)} per unit exclusive of GST` : ''
-        }. Every listing shows the brand, manufacturer, wholesale rate and minimum order quantity so equivalent brands can be compared directly.`}
+        heading={preferOverride(override?.h1, defaults.h1, tokens)}
+        intro={preferOverride(override?.intro, defaults.intro, tokens)}
         crumbs={crumbs}
         products={products}
         totalProducts={total}
@@ -271,7 +278,23 @@ export default async function MoleculePage({ params, searchParams }: PageProps) 
               sharing one template intro. Commercial observations only: how
               the class TRADES, never how it treats.
             */}
-            {CLASS_GUIDANCE[molecule.therapeuticClass] ? (
+            {override?.bodyHtml?.trim() ? (
+              /*
+                An admin-written body replaces this hand-written prose block
+                and nothing else. The spec table above and the live-rate
+                comparison below are generated from real listings, so they
+                stay whatever anyone types here — losing them to an edit would
+                cost the page the one thing no competitor can reproduce.
+              */
+              <SeoSection id="stocking-notes" title={`About ${molecule.name}`}>
+                <div
+                  className="prose prose-slate max-w-3xl text-sm"
+                  dangerouslySetInnerHTML={{
+                    __html: applyTokens(override.bodyHtml, tokens),
+                  }}
+                />
+              </SeoSection>
+            ) : CLASS_GUIDANCE[molecule.therapeuticClass] ? (
               <SeoSection
                 id="stocking-notes"
                 title={`Stocking ${molecule.therapeuticClass.toLowerCase()} products`}
