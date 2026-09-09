@@ -14,6 +14,25 @@ import {
 } from '@/lib/seo/schema';
 import { SITE_NAME, MIN_ORDER_VALUE_INR } from '@/lib/seo/config';
 import { inr } from '@/lib/seo/content';
+import { brandCityDefaults } from '@/lib/seo/defaults/brand';
+import {
+  applyTokens,
+  fetchPageOverride,
+  preferOverride,
+  type PageTokens,
+} from '@/lib/seo/page-seo';
+
+/**
+ * Values an admin-written string may interpolate, so an edited sentence keeps
+ * the live listing count instead of freezing the number it was written with.
+ */
+function brandCityTokens(name: string, total: number): PageTokens {
+  return {
+    product_count: total.toLocaleString('en-IN'),
+    name,
+    min_order_value: inr(MIN_ORDER_VALUE_INR),
+  };
+}
 import { ALL_CITIES, TIER_1_CITIES } from '@/lib/seo/data/locations';
 
 /**
@@ -81,16 +100,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     });
   }
 
+  const path = routes.brandInCity(params.brandSlug, params.citySlug);
+  const defaults = brandCityDefaults(brand, city, brand.productCount ?? 0);
+  const override = await fetchPageOverride(path);
+  const tokens = brandCityTokens(brand.name, brand.productCount ?? 0);
+
   return buildMetadata({
-    title: `${brand.name} Distributor in ${city.name} — Wholesale Price`,
-    description: `Buy ${brand.name} products at wholesale rates in ${city.name}, ${city.state.name}. ${(brand.productCount ?? 0).toLocaleString('en-IN')} listings from verified distributors on ${SITE_NAME}, with GST invoicing and delivery across ${city.name}.`,
-    path: routes.brandInCity(params.brandSlug, params.citySlug),
-    keywords: [
-      `${brand.name} distributor ${city.name}`,
-      `${brand.name} wholesale ${city.name}`,
-      `${brand.name} stockist ${city.name}`,
-      `${brand.name} supplier ${city.state.name}`,
-    ],
+    title: preferOverride(override?.title, defaults.title, tokens),
+    description: preferOverride(
+      override?.description,
+      defaults.description,
+      tokens,
+    ),
+    path,
+    keywords: defaults.keywords,
   });
 }
 
@@ -123,20 +146,10 @@ export default async function BrandCityPage({ params }: PageProps) {
     { name: city.name, path },
   ];
 
-  const faqs = [
-    {
-      question: `How do I buy ${brand.name} products wholesale in ${city.name}?`,
-      answer: `Register on ${SITE_NAME} as a business buyer with a valid drug licence and GST or PAN details. Once verified, ${total.toLocaleString('en-IN')} ${brand.name} products become available at wholesale net rates, with delivery to your registered address in ${city.name}, ${city.state.name}.`,
-    },
-    {
-      question: `Is there a ${brand.name} stockist in ${city.name}?`,
-      answer: `${SITE_NAME} is an online B2B marketplace rather than a physical stockist. ${brand.name} products are supplied by verified wholesalers on the platform and shipped to buyers in ${city.name}, so a local stockist relationship is not required to order.`,
-    },
-    {
-      question: `What is the minimum order for ${brand.name} products in ${city.name}?`,
-      answer: `Each order line must reach ${inr(MIN_ORDER_VALUE_INR)} including GST. Individual ${brand.name} listings also carry their own minimum order quantity in units, shown on each product page.`,
-    },
-  ];
+  const defaults = brandCityDefaults(brand, city, total);
+  const override = await fetchPageOverride(path);
+  const tokens = brandCityTokens(brand.name, total);
+  const faqs = override?.faq?.length ? override.faq : defaults.faqs;
 
   const description = `${brand.name} pharmaceutical products available at wholesale rates to licensed buyers in ${city.name}, ${city.state.name}.`;
 
@@ -169,10 +182,18 @@ export default async function BrandCityPage({ params }: PageProps) {
     <>
       <JsonLd json={jsonLd} />
       <CollectionShell
-        heading={`${brand.name} distributor in ${city.name} — wholesale supply`}
-        intro={`Licensed pharmacies, hospitals and distributors in ${city.name}, ${city.state.name} can buy ${brand.name} products in bulk through ${SITE_NAME}. ${
-          city.note ? `${city.note} ` : ''
-        }${total.toLocaleString('en-IN')} ${brand.name} listings are available at wholesale net rates from verified suppliers, invoiced with GST and delivered to your registered business address.`}
+        heading={preferOverride(override?.h1, defaults.h1, tokens)}
+        intro={preferOverride(override?.intro, defaults.intro, tokens)}
+        body={
+          override?.bodyHtml?.trim() ? (
+            <div
+              className="prose prose-slate max-w-3xl py-4"
+              dangerouslySetInnerHTML={{
+                __html: applyTokens(override.bodyHtml, tokens),
+              }}
+            />
+          ) : undefined
+        }
         crumbs={crumbs}
         products={products}
         totalProducts={total}

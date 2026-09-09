@@ -14,6 +14,13 @@ import {
 } from '@/lib/seo/schema';
 import { SITE_NAME, MIN_ORDER_VALUE_INR } from '@/lib/seo/config';
 import { inr } from '@/lib/seo/content';
+import { brandDefaults } from '@/lib/seo/defaults/brand';
+import {
+  applyTokens,
+  fetchPageOverride,
+  preferOverride,
+  type PageTokens,
+} from '@/lib/seo/page-seo';
 import { STATES, TIER_1_CITIES, ALL_CITIES } from '@/lib/seo/data/locations';
 
 /**
@@ -54,6 +61,18 @@ interface PageProps {
  * slug and preferring the entry with the most products keeps one canonical
  * page per brand instead of splitting authority across near-duplicates.
  */
+/**
+ * Values an admin-written string may interpolate, so an edited sentence keeps
+ * the live product count instead of freezing the number it was written with.
+ */
+function brandTokens(name: string, total: number): PageTokens {
+  return {
+    product_count: total.toLocaleString('en-IN'),
+    name,
+    min_order_value: inr(MIN_ORDER_VALUE_INR),
+  };
+}
+
 async function resolveBrand(brandSlug: string) {
   // strict: an empty list here would be misread as "brand does not exist".
   const manufacturers = await fetchManufacturers(true);
@@ -83,18 +102,24 @@ export async function generateMetadata({
 
   const page = Math.max(1, Number(searchParams?.page) || 1);
   const path = routes.brand(params.brandSlug);
+  /*
+    Head-only: the product list is not fetched here, so the dosage-form spread
+    the intro uses is unavailable and unnecessary — title and description quote
+    the manufacturer's own count.
+  */
+  const defaults = brandDefaults(brand, brand.productCount ?? 0, []);
+  const override = await fetchPageOverride(path);
+  const tokens = brandTokens(brand.name, brand.productCount ?? 0);
 
   return buildMetadata({
-    title: `${brand.name} — Wholesale Price List${page > 1 ? ` — Page ${page}` : ''}`,
-    description: `Buy ${brand.name} medicines at wholesale rates on ${SITE_NAME}. ${(brand.productCount ?? 0).toLocaleString('en-IN')} products from verified distributors, with net rates, MOQ, GST invoicing and pan-India delivery.`,
+    title: `${preferOverride(override?.title, defaults.title, tokens)}${page > 1 ? ` — Page ${page}` : ''}`,
+    description: preferOverride(
+      override?.description,
+      defaults.description,
+      tokens,
+    ),
     path: page > 1 ? `${path}?page=${page}` : path,
-    keywords: [
-      `${brand.name} wholesale`,
-      `${brand.name} distributor`,
-      `${brand.name} price list`,
-      `${brand.name} bulk supplier India`,
-      `${brand.name} products`,
-    ],
+    keywords: defaults.keywords,
   });
 }
 
@@ -133,26 +158,10 @@ export default async function BrandPage({ params, searchParams }: PageProps) {
     .sort((a, b) => b[1] - a[1])
     .map(([name]) => name);
 
-  const faqs = [
-    {
-      question: `How many ${brand.name} products are available at wholesale on ${SITE_NAME}?`,
-      answer: `${SITE_NAME} lists ${total.toLocaleString('en-IN')} ${brand.name} products from verified wholesale suppliers${
-        forms.length ? `, covering dosage forms such as ${forms.slice(0, 4).join(', ').toLowerCase()}` : ''
-      }. Each listing shows the supplier's wholesale net rate and minimum order quantity.`,
-    },
-    {
-      question: `How do I become a ${brand.name} distributor or buy in bulk?`,
-      answer: `${SITE_NAME} is a B2B marketplace, so ${brand.name} products are bought from verified wholesale suppliers rather than through a direct distributorship. Register as a buyer with a valid drug licence and GST or PAN details to see wholesale rates and place bulk orders.`,
-    },
-    {
-      question: `What is the minimum order value for ${brand.name} products?`,
-      answer: `Each order line must reach ${inr(MIN_ORDER_VALUE_INR)} including GST. Individual ${brand.name} listings also carry their own minimum order quantity in units, shown on the product page.`,
-    },
-    {
-      question: `Are ${brand.name} products genuine and licence-verified?`,
-      answer: `Every supplier listing ${brand.name} products on ${SITE_NAME} is verified with a valid drug licence and GST registration before being permitted to sell. Orders are invoiced with GST by the supplying wholesaler.`,
-    },
-  ];
+  const defaults = brandDefaults(brand, total, forms);
+  const override = await fetchPageOverride(path);
+  const tokens = brandTokens(brand.name, total);
+  const faqs = override?.faq?.length ? override.faq : defaults.faqs;
 
   const jsonLd = graph(
     breadcrumbSchema(crumbs),
@@ -201,12 +210,18 @@ export default async function BrandPage({ params, searchParams }: PageProps) {
     <>
       <JsonLd json={jsonLd} />
       <CollectionShell
-        heading={`${brand.name} — wholesale price list and bulk supply`}
-        intro={`${SITE_NAME} lists ${total.toLocaleString('en-IN')} ${brand.name} products available for wholesale and bulk purchase across India${
-          forms.length
-            ? `, spanning ${forms.slice(0, 4).join(', ').toLowerCase()} and other dosage forms`
-            : ''
-        }. Rates are set by verified wholesale suppliers holding valid drug licences, shown as net rates exclusive of GST, with the minimum order quantity stated on every listing.`}
+        heading={preferOverride(override?.h1, defaults.h1, tokens)}
+        intro={preferOverride(override?.intro, defaults.intro, tokens)}
+        body={
+          override?.bodyHtml?.trim() ? (
+            <div
+              className="prose prose-slate max-w-3xl py-4"
+              dangerouslySetInnerHTML={{
+                __html: applyTokens(override.bodyHtml, tokens),
+              }}
+            />
+          ) : undefined
+        }
         crumbs={crumbs}
         products={products}
         totalProducts={total}
