@@ -72,6 +72,17 @@ export interface CatalogProduct {
   metaTitle?: string | null;
   metaDescription?: string | null;
   ogImage?: string | null;
+
+  /**
+   * Admin-set ON-PAGE content overrides, from the catalogue edit modal.
+   *
+   * `pageIntro` replaces the generated "About <product>" paragraph; `faq`
+   * replaces the generated FAQ list — including the FAQPage structured data,
+   * so what a reader sees and what Google is told never disagree. Null across
+   * the catalogue until an admin writes one.
+   */
+  pageIntro?: string | null;
+  faq?: { question: string; answer: string }[] | null;
 }
 
 /** A seller's offer against a catalogue product. */

@@ -3,11 +3,17 @@ import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Search, Plus, Pencil, Trash2, Upload, FileSpreadsheet, Download, Info, CheckCircle2, XCircle, AlertCircle, FileDown } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
-import { Button, Badge, Input, Modal, Textarea, Pagination } from "@/components/ui";
+import { Button, Badge, Input, Modal, Select, Textarea, Pagination } from "@/components/ui";
 import toast from "react-hot-toast";
-import { useSuggestions, useCreateSuggestion, useUpdateSuggestion, useDeleteSuggestion } from "@/hooks/useAdmin";
+import { useSuggestions, useCreateSuggestion, useUpdateSuggestion, useDeleteSuggestion, useCategories } from "@/hooks/useAdmin";
 import { apiClient } from "@/lib/apiClient";
 import SeoFieldsPanel, { type SeoFieldsValue } from "@/components/seo/SeoFieldsPanel";
+import ProductContentFields, {
+  EMPTY_PRODUCT_CONTENT,
+  type ProductContent,
+} from "@/components/products/ProductContentFields";
+import { usePageDefaults } from "@/hooks/usePageSeo";
+import type { FaqPair } from "@/api/page-seo.api";
 import { uploadSuggestionImage as uploadSuggestionImageApi } from "@/api/admin.api";
 
 const EMPTY_SEO: SeoFieldsValue = { metaTitle: "", metaDescription: "", metaKeywords: [], canonicalUrl: "", ogImage: "" };
@@ -27,6 +33,33 @@ export default function MasterCatalogPage() {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "", description: "" });
   const [seo, setSeo] = useState<SeoFieldsValue>(EMPTY_SEO);
+  const [content, setContent] = useState<ProductContent>(EMPTY_PRODUCT_CONTENT);
+  const [faq, setFaq] = useState<FaqPair[]>([]);
+  const [useCustomFaq, setUseCustomFaq] = useState(false);
+
+  /*
+    What the live product page says right now, used for the placeholders in the
+    content section. Only fetched while EDITING an existing product — a product
+    being created has no page yet, so there is nothing to read.
+  */
+  /*
+    The taxonomy, for the category pickers. `findAllCategories` includes each
+    category's subcategories, so no second request is needed to populate the
+    dependent picker.
+  */
+  const { data: categoriesData } = useCategories();
+  const categories = Array.isArray(categoriesData)
+    ? categoriesData
+    : (categoriesData?.categories ?? []);
+  const subCategoryOptions =
+    categories.find((c: any) => c.id === form.category)?.subCategories ?? [];
+
+  const editingSlug = showModal && editing?.slug ? `/products/${editing.slug}` : null;
+  const {
+    data: pageDefaults,
+    isLoading: defaultsLoading,
+    error: defaultsError,
+  } = usePageDefaults(editingSlug);
   /**
    * Product image SEO. `fileName` / `altText` hold current values; blanks
    * mean the automatic default (<name>-pharmabag / "<name> - PharmaBag").
@@ -51,6 +84,9 @@ export default function MasterCatalogPage() {
     setEditing(null);
     setForm({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "", description: "" });
     setSeo(EMPTY_SEO);
+    setContent(EMPTY_PRODUCT_CONTENT);
+    setFaq([]);
+    setUseCustomFaq(false);
     setImg({ url: "", altText: "", fileName: "", origFileName: "", file: null });
     setShowModal(true);
   };
@@ -69,8 +105,10 @@ export default function MasterCatalogPage() {
       composition: item.chemicalComposition ?? item.composition ?? "", 
       mrp: String(item.mrp ?? ""), 
       gstPercent: String(item.gstPercent ?? ""),
-      category: item.categoryId || item.category?.id || item.category?.name || item.category || "",
-      subCategory: item.subCategoryId || item.subCategory?.id || item.subCategory?.name || item.subCategory || "",
+      // Ids only. The old fallback chain could land a category NAME in a field
+      // the API reads as an id, which then failed validation on save.
+      category: item.categoryId || item.category?.id || "",
+      subCategory: item.subCategoryId || item.subCategory?.id || "",
       description: item.description ?? ""
     });
     setSeo({
@@ -80,6 +118,21 @@ export default function MasterCatalogPage() {
       canonicalUrl: "",
       ogImage: item.ogImage ?? "",
     });
+    /*
+      The catalogue list already returns every one of these columns — the modal
+      simply never showed them, so they could only ever be set by a CSV import.
+    */
+    setContent({
+      pageIntro: item.pageIntro ?? "",
+      directionsForUse: item.directionsForUse ?? "",
+      safetyAdvice: item.safetyAdvice ?? "",
+      therapeuticClass: item.therapeuticClass ?? "",
+      sideEffects: item.sideEffects ?? "",
+      packSize: item.packSize ?? "",
+      storageAndHandling: item.storageAndHandling ?? "",
+    });
+    setFaq(Array.isArray(item.faq) ? item.faq : []);
+    setUseCustomFaq(Array.isArray(item.faq) && item.faq.length > 0);
     const image = item.images?.[0];
     const base = image?.url ? imageBaseName(image.url) : "";
     setImg({ url: image?.url ?? "", altText: image?.altText ?? "", fileName: base, origFileName: base, file: null });
@@ -87,6 +140,14 @@ export default function MasterCatalogPage() {
   };
 
   const handleSave = async () => {
+    /*
+      Both are required columns on MasterProduct. Caught here so the failure
+      reads as "pick a category" rather than a validation error from the API.
+    */
+    if (!form.category || !form.subCategory) {
+      toast.error("Pick a category and sub-category");
+      return;
+    }
     try {
       const payload = { 
         name: form.name,
@@ -96,20 +157,34 @@ export default function MasterCatalogPage() {
         gstPercent: form.gstPercent ? Number(form.gstPercent) : undefined,
         categoryId: form.category,
         subCategoryId: form.subCategory,
-        description: form.description
+        description: form.description,
+        /*
+          Page content and head overrides now ride BOTH paths. Create used to
+          drop them silently: it shares the update DTO, so validation accepted
+          them and the write ignored them. Empty string is meaningful — it
+          clears a field so the storefront generates that part again.
+        */
+        pageIntro: content.pageIntro,
+        directionsForUse: content.directionsForUse,
+        safetyAdvice: content.safetyAdvice,
+        therapeuticClass: content.therapeuticClass,
+        sideEffects: content.sideEffects,
+        packSize: content.packSize,
+        storageAndHandling: content.storageAndHandling,
+        metaTitle: seo.metaTitle,
+        metaDescription: seo.metaDescription,
+        ogImage: seo.ogImage,
+        // An empty array clears the override so the generated FAQs return.
+        faq: useCustomFaq
+          ? faq.filter((f) => f.question.trim() && f.answer.trim())
+          : [],
       };
-      
+
       if (editing) {
-        // SEO overrides ride only the UPDATE path (the create DTO has no such
-        // fields). Empty string is meaningful: it CLEARS an override back to
-        // the storefront's generated head.
         await updateSuggestion.mutateAsync({
           id: editing.id,
           payload: {
             ...payload,
-            metaTitle: seo.metaTitle,
-            metaDescription: seo.metaDescription,
-            ogImage: seo.ogImage,
             // Only when a current image exists and no replacement upload is
             // queued (the upload endpoint takes these itself). Empty alt
             // clears the override back to "<name> - PharmaBag"; file name is
@@ -573,11 +648,60 @@ export default function MasterCatalogPage() {
             <div className="col-span-2">
               <Textarea label="Chemical Composition" placeholder="e.g. Paracetamol" value={form.composition} onChange={e => setForm(f => ({ ...f, composition: e.target.value }))} />
             </div>
-            <Input label="Category" placeholder="e.g. Tablets" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} />
-            <Input label="Sub-Category" placeholder="e.g. Pain Relief" value={form.subCategory} onChange={e => setForm(f => ({ ...f, subCategory: e.target.value }))} />
+            {/*
+              Pickers, not free text. These fields hold UUIDs and always did —
+              the inputs showed the raw id while the placeholder invited a name
+              like "Tablets", so the value was unreadable and anything typed
+              produced an invalid category reference.
+            */}
+            <Select
+              label="Category"
+              value={form.category}
+              onChange={e => {
+                const categoryId = e.target.value;
+                // Subcategories belong to one category, so an inherited
+                // selection from the previous category would be invalid.
+                setForm(f => ({ ...f, category: categoryId, subCategory: "" }));
+              }}
+            >
+              <option value="">Select a category…</option>
+              {categories.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </Select>
+            <Select
+              label="Sub-Category"
+              value={form.subCategory}
+              disabled={!form.category}
+              onChange={e => setForm(f => ({ ...f, subCategory: e.target.value }))}
+            >
+              <option value="">
+                {form.category ? "Select a sub-category…" : "Pick a category first"}
+              </option>
+              {subCategoryOptions.map((s: any) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </Select>
             <div className="col-span-2">
               <Textarea label="Description" placeholder="Detailed product description..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={4} />
             </div>
+            {/*
+              Everything the product page shows, in one place. Available while
+              CREATING too: the API persists content and head fields on create
+              now, where it previously accepted and discarded them.
+            */}
+            <ProductContentFields
+              value={content}
+              onChange={setContent}
+              faq={faq}
+              onFaqChange={setFaq}
+              useCustomFaq={useCustomFaq}
+              onUseCustomFaqChange={setUseCustomFaq}
+              defaults={pageDefaults?.defaults}
+              defaultsLoading={defaultsLoading}
+              defaultsError={Boolean(defaultsError)}
+            />
+
             {editing && (
               <div className="col-span-2">
                 {/*

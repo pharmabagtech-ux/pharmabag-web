@@ -105,6 +105,12 @@ export interface PageTokens {
   product_count?: string | number;
   name?: string;
   min_order_value?: string;
+  /**
+   * Product pages add commercial tokens of their own (`price`, `mrp`, `moq`,
+   * `manufacturer`, `composition`), so the set is open rather than a closed
+   * union. Each page decides which tokens it can resolve.
+   */
+  [token: string]: string | number | undefined;
 }
 
 /**
