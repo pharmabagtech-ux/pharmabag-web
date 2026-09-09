@@ -1,6 +1,7 @@
 import {
   fetchCategories,
   fetchManufacturers,
+  fetchProduct,
   fetchProducts,
 } from '../catalog';
 import { facetSlug, routes } from '../url';
@@ -18,6 +19,7 @@ import { moleculeDefaults } from './molecule';
 import { stateDefaults } from './state';
 import { cityDefaults } from './city';
 import { brandDefaults, brandCityDefaults } from './brand';
+import { productDefaults } from './product';
 import type { PageDefaults } from './types';
 
 /**
@@ -30,6 +32,7 @@ import type { PageDefaults } from './types';
  */
 
 export type PageType =
+  | 'PRODUCT'
   | 'CATEGORY'
   | 'DOSAGE_FORM'
   | 'MOLECULE'
@@ -81,6 +84,23 @@ export async function resolvePageDefaults(
 ): Promise<({ defaults: PageDefaults } & ResolvedPage) | null> {
   const parts = segments(path);
   if (parts.length === 0) return null;
+
+  /*
+    Products are resolved one at a time and never listed: there are 26,815 of
+    them, so an index would be useless in a picker and enormous on the wire.
+    The admin edits a product from the catalogue screen it already has, which
+    knows the slug.
+  */
+  if (parts[0] === 'products' && parts.length === 2) {
+    const product = await fetchProduct(parts[1]);
+    if (!product) return null;
+    return {
+      pageType: 'PRODUCT',
+      label: product.name,
+      path: routes.product(product.slug?.trim() || parts[1]),
+      defaults: productDefaults(product),
+    };
+  }
 
   if (parts[0] === 'categories' && parts.length >= 2) {
     const categories = await fetchCategories();

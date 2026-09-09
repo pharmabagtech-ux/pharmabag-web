@@ -8,6 +8,12 @@ import toast from "react-hot-toast";
 import { useSuggestions, useCreateSuggestion, useUpdateSuggestion, useDeleteSuggestion } from "@/hooks/useAdmin";
 import { apiClient } from "@/lib/apiClient";
 import SeoFieldsPanel, { type SeoFieldsValue } from "@/components/seo/SeoFieldsPanel";
+import ProductContentFields, {
+  EMPTY_PRODUCT_CONTENT,
+  type ProductContent,
+} from "@/components/products/ProductContentFields";
+import { usePageDefaults } from "@/hooks/usePageSeo";
+import type { FaqPair } from "@/api/page-seo.api";
 import { uploadSuggestionImage as uploadSuggestionImageApi } from "@/api/admin.api";
 
 const EMPTY_SEO: SeoFieldsValue = { metaTitle: "", metaDescription: "", metaKeywords: [], canonicalUrl: "", ogImage: "" };
@@ -27,6 +33,21 @@ export default function MasterCatalogPage() {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "", description: "" });
   const [seo, setSeo] = useState<SeoFieldsValue>(EMPTY_SEO);
+  const [content, setContent] = useState<ProductContent>(EMPTY_PRODUCT_CONTENT);
+  const [faq, setFaq] = useState<FaqPair[]>([]);
+  const [useCustomFaq, setUseCustomFaq] = useState(false);
+
+  /*
+    What the live product page says right now, used for the placeholders in the
+    content section. Only fetched while EDITING an existing product — a product
+    being created has no page yet, so there is nothing to read.
+  */
+  const editingSlug = showModal && editing?.slug ? `/products/${editing.slug}` : null;
+  const {
+    data: pageDefaults,
+    isLoading: defaultsLoading,
+    error: defaultsError,
+  } = usePageDefaults(editingSlug);
   /**
    * Product image SEO. `fileName` / `altText` hold current values; blanks
    * mean the automatic default (<name>-pharmabag / "<name> - PharmaBag").
@@ -51,6 +72,9 @@ export default function MasterCatalogPage() {
     setEditing(null);
     setForm({ name: "", manufacturer: "", composition: "", mrp: "", gstPercent: "", category: "", subCategory: "", description: "" });
     setSeo(EMPTY_SEO);
+    setContent(EMPTY_PRODUCT_CONTENT);
+    setFaq([]);
+    setUseCustomFaq(false);
     setImg({ url: "", altText: "", fileName: "", origFileName: "", file: null });
     setShowModal(true);
   };
@@ -80,6 +104,21 @@ export default function MasterCatalogPage() {
       canonicalUrl: "",
       ogImage: item.ogImage ?? "",
     });
+    /*
+      The catalogue list already returns every one of these columns — the modal
+      simply never showed them, so they could only ever be set by a CSV import.
+    */
+    setContent({
+      pageIntro: item.pageIntro ?? "",
+      directionsForUse: item.directionsForUse ?? "",
+      safetyAdvice: item.safetyAdvice ?? "",
+      therapeuticClass: item.therapeuticClass ?? "",
+      sideEffects: item.sideEffects ?? "",
+      packSize: item.packSize ?? "",
+      storageAndHandling: item.storageAndHandling ?? "",
+    });
+    setFaq(Array.isArray(item.faq) ? item.faq : []);
+    setUseCustomFaq(Array.isArray(item.faq) && item.faq.length > 0);
     const image = item.images?.[0];
     const base = image?.url ? imageBaseName(image.url) : "";
     setImg({ url: image?.url ?? "", altText: image?.altText ?? "", fileName: base, origFileName: base, file: null });
@@ -96,20 +135,34 @@ export default function MasterCatalogPage() {
         gstPercent: form.gstPercent ? Number(form.gstPercent) : undefined,
         categoryId: form.category,
         subCategoryId: form.subCategory,
-        description: form.description
+        description: form.description,
+        /*
+          Page content and head overrides now ride BOTH paths. Create used to
+          drop them silently: it shares the update DTO, so validation accepted
+          them and the write ignored them. Empty string is meaningful — it
+          clears a field so the storefront generates that part again.
+        */
+        pageIntro: content.pageIntro,
+        directionsForUse: content.directionsForUse,
+        safetyAdvice: content.safetyAdvice,
+        therapeuticClass: content.therapeuticClass,
+        sideEffects: content.sideEffects,
+        packSize: content.packSize,
+        storageAndHandling: content.storageAndHandling,
+        metaTitle: seo.metaTitle,
+        metaDescription: seo.metaDescription,
+        ogImage: seo.ogImage,
+        // An empty array clears the override so the generated FAQs return.
+        faq: useCustomFaq
+          ? faq.filter((f) => f.question.trim() && f.answer.trim())
+          : [],
       };
-      
+
       if (editing) {
-        // SEO overrides ride only the UPDATE path (the create DTO has no such
-        // fields). Empty string is meaningful: it CLEARS an override back to
-        // the storefront's generated head.
         await updateSuggestion.mutateAsync({
           id: editing.id,
           payload: {
             ...payload,
-            metaTitle: seo.metaTitle,
-            metaDescription: seo.metaDescription,
-            ogImage: seo.ogImage,
             // Only when a current image exists and no replacement upload is
             // queued (the upload endpoint takes these itself). Empty alt
             // clears the override back to "<name> - PharmaBag"; file name is
@@ -578,6 +631,23 @@ export default function MasterCatalogPage() {
             <div className="col-span-2">
               <Textarea label="Description" placeholder="Detailed product description..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={4} />
             </div>
+            {/*
+              Everything the product page shows, in one place. Available while
+              CREATING too: the API persists content and head fields on create
+              now, where it previously accepted and discarded them.
+            */}
+            <ProductContentFields
+              value={content}
+              onChange={setContent}
+              faq={faq}
+              onFaqChange={setFaq}
+              useCustomFaq={useCustomFaq}
+              onUseCustomFaqChange={setUseCustomFaq}
+              defaults={pageDefaults?.defaults}
+              defaultsLoading={defaultsLoading}
+              defaultsError={Boolean(defaultsError)}
+            />
+
             {editing && (
               <div className="col-span-2">
                 {/*

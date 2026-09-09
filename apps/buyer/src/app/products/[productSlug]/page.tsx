@@ -11,6 +11,8 @@ import {
   type SeoLink,
 } from '@/components/seo/SeoContent';
 import { fetchProduct, fetchProducts } from '@/lib/seo/catalog';
+import { productTokens } from '@/lib/seo/defaults/product';
+import { applyTokens } from '@/lib/seo/page-seo';
 import { report404 } from '@/lib/track-404';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { routes, absoluteUrl, facetSlug } from '@/lib/seo/url';
@@ -159,8 +161,21 @@ export default async function ProductPage({ params }: PageProps) {
   const listing = bestListing(product);
   const form = dosageForm(product);
   const specs = productSpecs(product);
-  const faqs = productFaqs(product);
-  const summary = productSummary(product);
+  /*
+    Admin overrides from the catalogue edit modal, applied field by field.
+    Tokens keep an admin-written sentence quoting the LIVE rate and MOQ
+    instead of whatever they were on the day it was typed.
+  */
+  const tokens = productTokens(product);
+  const faqs = product.faq?.length
+    ? product.faq.map((f) => ({
+        question: applyTokens(f.question, tokens),
+        answer: applyTokens(f.answer, tokens),
+      }))
+    : productFaqs(product);
+  const summary = product.pageIntro?.trim()
+    ? applyTokens(product.pageIntro.trim(), tokens)
+    : productSummary(product);
 
   /** Priced listings for the crawlable seller-comparison table (API-ranked). */
   const pricedListings = (product.listings ?? []).filter(
