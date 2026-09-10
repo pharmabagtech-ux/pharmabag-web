@@ -301,18 +301,34 @@ export default function CollectionShell({
         <Navbar showUserActions />
       )}
       <main className="w-full pb-28 pt-6 lg:pb-16 lg:pt-28">
-        <Breadcrumbs crumbs={crumbs} />
+        <Breadcrumbs crumbs={crumbs} width={productWidth} />
 
-        <header className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6">
-          {/* Exactly one H1 per page — the primary topical signal. */}
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
-            {heading}
-          </h1>
-          <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-700">
-            {intro}
-          </p>
-          {shopping ? (
-            <p className="mt-2 text-sm text-slate-500">
+        <header className={`${CONTENT_WIDTH[productWidth]} pt-4`}>
+          {/*
+            Shopping pages put the heading and intro in a left column and
+            leave the right half empty — deliberately, as the slot a banner
+            will go into. Until that exists it is genuinely blank rather than
+            a placeholder box, because an empty bordered rectangle reads as
+            something failing to load.
+
+            The copy is left-aligned with the grid below it rather than
+            centred in a 1152px column, so the two share one left edge and the
+            page does not jog sideways as you scroll into the products.
+
+            One column on phones and tablets: there is no room to hold a
+            banner beside the text, so the text simply uses the full width.
+          */}
+          <div className={shopping ? 'lg:grid lg:grid-cols-12 lg:gap-8' : undefined}>
+            <div className={shopping ? 'lg:col-span-7 xl:col-span-6' : undefined}>
+              {/* Exactly one H1 per page — the primary topical signal. */}
+              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+                {heading}
+              </h1>
+              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-700">
+                {intro}
+              </p>
+              {shopping ? (
+                <p className="mt-2 text-sm text-slate-500">
               {/*
                 On desktop the count lives in the filter bar, beside the
                 controls that change it. On mobile those controls are behind
@@ -326,38 +342,52 @@ export default function CollectionShell({
                 {totalProducts === 1 ? 'product' : 'products'}
                 {totalPages > 1 ? ' · ' : ''}
               </span>
-              {totalPages > 1 ? `Page ${page} of ${totalPages}` : ''}
-              {filters && isFiltered(filters) ? (
-                <span className="lg:hidden">
-                  {' · '}
-                  <span className="font-semibold text-teal-700">filtered</span>
-                  {' · '}
-                  <Link
-                    href={basePath}
-                    scroll={false}
-                    className="font-semibold text-teal-700 underline underline-offset-2"
-                  >
-                    clear
-                  </Link>
-                </span>
+                  {totalPages > 1 ? `Page ${page} of ${totalPages}` : ''}
+                  {filters && isFiltered(filters) ? (
+                    <span className="lg:hidden">
+                      {' · '}
+                      <span className="font-semibold text-teal-700">filtered</span>
+                      {' · '}
+                      <Link
+                        href={basePath}
+                        scroll={false}
+                        className="font-semibold text-teal-700 underline underline-offset-2"
+                      >
+                        clear
+                      </Link>
+                    </span>
+                  ) : null}
+                </p>
+              ) : totalProducts > 0 ? (
+                <p className="mt-2 text-sm text-slate-500">
+                  {totalProducts.toLocaleString('en-IN')} products listed
+                  {totalPages > 1 ? ` · page ${page} of ${totalPages}` : ''}
+                </p>
               ) : null}
-            </p>
-          ) : totalProducts > 0 ? (
-            <p className="mt-2 text-sm text-slate-500">
-              {totalProducts.toLocaleString('en-IN')} products listed
-              {totalPages > 1 ? ` · page ${page} of ${totalPages}` : ''}
-            </p>
-          ) : null}
-          {browseHref && !shopping ? (
-            <p className="mt-4">
-              <Link
-                href={browseHref}
-                className="inline-flex items-center gap-1 rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
-              >
-                {browseLabel} →
-              </Link>
-            </p>
-          ) : null}
+              {browseHref && !shopping ? (
+                <p className="mt-4">
+                  <Link
+                    href={browseHref}
+                    className="inline-flex items-center gap-1 rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+                  >
+                    {browseLabel} →
+                  </Link>
+                </p>
+              ) : null}
+            </div>
+
+            {/*
+              Reserved for a banner. Empty on purpose — see the note above.
+              `aria-hidden` because there is nothing here to announce yet, and
+              a screen reader should not be told about an empty region.
+            */}
+            {shopping ? (
+              <div
+                aria-hidden="true"
+                className="hidden lg:col-span-5 lg:block xl:col-span-6"
+              />
+            ) : null}
+          </div>
         </header>
 
         {shopping ? (
