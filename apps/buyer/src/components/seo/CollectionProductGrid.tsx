@@ -55,7 +55,13 @@ export default function CollectionProductGrid({
   if (!products.length) return null;
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5 lg:grid-cols-4 xl:grid-cols-5">
+    /*
+      Three across at `lg`, not four: the filter sidebar takes ~250px out of
+      the row from that breakpoint up, and keeping the catalogue's column count
+      squeezed the cards until the name truncated to a few characters and the
+      MRP/MOQ/rate row collapsed onto one line.
+    */
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5 xl:grid-cols-4">
       {products.map((product) => {
         const slug = product.slug?.trim();
         if (!slug) return null;
