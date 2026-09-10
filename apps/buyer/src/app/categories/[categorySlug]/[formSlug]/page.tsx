@@ -229,7 +229,9 @@ export default async function DosageFormPage({ params, searchParams }: PageProps
             />
           ) : defaults.body ? (
             <SeoSection id="buying-guide" title={defaults.body.title}>
-              <div className="space-y-3 text-sm leading-relaxed text-slate-700">
+              {/* A measure for the prose: the page is full width now, and a
+                  paragraph running the whole way across is hard to read. */}
+              <div className="max-w-3xl space-y-3 text-sm leading-relaxed text-slate-700">
                 {defaults.body.paragraphs.map((para) => (
                   <p key={para.slice(0, 32)}>{para}</p>
                 ))}
