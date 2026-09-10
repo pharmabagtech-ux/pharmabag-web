@@ -48,7 +48,9 @@ export function cityDefaults(
 
   return {
     title: `Wholesale Medicine Suppliers in ${city.name} — Bulk Distributors`,
-    description: `Buy medicines in bulk in ${city.name}, ${state.name}. ${total.toLocaleString('en-IN')} products from verified wholesalers on ${SITE_NAME}, with wholesale net rates, GST invoicing and delivery across ${city.name}.`,
+    description: profile
+      ? `Buy medicines in bulk in ${city.name} — ${profile.role}. ${total.toLocaleString('en-IN')} products from verified wholesalers on ${SITE_NAME}, at net rates with GST invoicing.`
+      : `Buy medicines in bulk in ${city.name}, ${state.name}. ${total.toLocaleString('en-IN')} products from verified wholesalers on ${SITE_NAME}, with wholesale net rates, GST invoicing and delivery across ${city.name}.`,
     keywords: [
       `wholesale medicine supplier ${city.name}`,
       `medicine distributor ${city.name}`,
@@ -73,13 +75,28 @@ export function cityDefaults(
         }
       : null,
     faqs: [
+      /*
+        The FAQs are the largest block of text on these pages, so leaving them
+        generic left siblings ~88% identical even after the intro and body were
+        rewritten — measured, not assumed. They now carry the city's own facts
+        wherever a profile supplies them, which is what actually moves the
+        number, while every answer stays true for the city it is on.
+      */
       {
         question: `Who supplies wholesale medicines in ${city.name}?`,
-        answer: `${SITE_NAME} lists verified pharmaceutical wholesalers supplying ${city.name} and the wider ${state.name} market, with ${total.toLocaleString('en-IN')} products available at wholesale net rates. Every supplier holds a valid drug licence and GST registration.`,
+        answer: `${SITE_NAME} lists verified pharmaceutical wholesalers supplying ${city.name} and the wider ${state.name} market, with ${total.toLocaleString('en-IN')} products available at wholesale net rates. Every supplier holds a valid drug licence and GST registration.${
+          profile
+            ? ` Buying here does not depend on a counter in the local market: ${city.name} is ${profile.role}, and stock can be sourced from verified wholesalers anywhere in India.`
+            : ''
+        }`,
       },
       {
         question: `How quickly can medicines be delivered in ${city.name}?`,
-        answer: `Dispatch times depend on the supplying wholesaler and the destination. Orders to ${city.name} are shipped to the buyer's registered business address with a GST invoice, and the expected dispatch window is shown at checkout before the order is confirmed.`,
+        answer: `Dispatch times depend on the supplying wholesaler and the destination. Orders to ${city.name} are shipped to the buyer's registered business address with a GST invoice, and the expected dispatch window is shown at checkout before the order is confirmed.${
+          profile?.demand
+            ? ` Buyers here often plan around ${profile.demand}, so ordering ahead of peak demand is worth doing.`
+            : ''
+        }`,
       },
       {
         question: `What licence do I need to buy wholesale medicines in ${city.name}?`,
