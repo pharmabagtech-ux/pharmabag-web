@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Filter, SlidersHorizontal, ChevronRight, LayoutGrid, List, Truck, ShieldCheck, ArrowUpDown, Check } from 'lucide-react';
+import { X, Filter, SlidersHorizontal, ChevronRight, LayoutGrid, List, Truck, ShieldCheck, ArrowUpDown, Check } from 'lucide-react';
 import Image from 'next/image';
 import Navbar from '@/components/landing/Navbar';
 import LoginModal from '@/components/landing/LoginModal';
@@ -279,16 +279,18 @@ function ProductsPageContent() {
                 )}
               </div>
 
-              <div className="relative w-full sm:max-w-[260px]">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-                  placeholder="Search products..."
-                  className="w-full bg-white/70 backdrop-blur-md border border-white/60 rounded-full py-2.5 pl-10 pr-4 text-[13px] font-medium text-gray-800 placeholder-gray-400 outline-none focus:ring-1 focus:ring-emerald-400 shadow-sm transition-all hover:bg-white"
-                />
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              </div>
+              {/*
+                The search box that used to sit here has moved into the
+                header, where it is on every page instead of only this one. It
+                was also a SECOND, different search on the pages that already
+                showed the header one — two inputs, two behaviours, and this
+                one had no type-ahead.
+
+                `searchTerm` still drives this page: the header search
+                navigates to /products?search=..., which the effect above
+                reads back into state. The breadcrumb to the left still shows
+                the active term, so a searched view is still labelled as one.
+              */}
             </div>
 
             <AnimatePresence mode="wait" initial={false}>

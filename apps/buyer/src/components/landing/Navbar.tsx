@@ -194,6 +194,7 @@ export default function Navbar({
             </Link>
           </div>
 
+          {/* Search — phones, where it takes the whole middle of the bar. */}
           <div className="lg:hidden flex-1 mx-2">
             <SearchBar />
           </div>
@@ -242,6 +243,25 @@ export default function Navbar({
 
             {/* Right Shadow Gradient */}
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none transition-opacity duration-300" />
+          </div>
+
+          {/*
+            Search — desktop.
+
+            It lived on /products only, as a pill floating under the header,
+            which meant every other page on the site had no way to search at
+            all above `lg`. In the bar it is on every page, and it is the same
+            component the phone layout already uses, so the type-ahead, the
+            recent searches and the Enter-to-full-results behaviour are shared
+            rather than reimplemented.
+
+            Fixed width and `flex-shrink-0`: the category strip beside it is
+            `flex-1 min-w-0` and will give up space first, which is right —
+            that strip already scrolls, and a search box that shrinks to a few
+            characters on a laptop is worse than a slightly shorter menu.
+          */}
+          <div className="hidden lg:block w-[220px] xl:w-[280px] flex-shrink-0 mr-3">
+            <SearchBar />
           </div>
 
           {/* RIGHT SIDE ICONS */}
