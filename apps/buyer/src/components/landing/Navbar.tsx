@@ -260,7 +260,7 @@ export default function Navbar({
             that strip already scrolls, and a search box that shrinks to a few
             characters on a laptop is worse than a slightly shorter menu.
           */}
-          <div className="hidden lg:block w-[220px] xl:w-[280px] flex-shrink-0 mr-3">
+          <div className="hidden lg:block w-[260px] xl:w-[340px] flex-shrink-0 mr-3">
             <SearchBar />
           </div>
 
