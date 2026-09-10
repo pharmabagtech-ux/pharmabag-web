@@ -364,12 +364,15 @@ export default async function ProductPage({ params }: PageProps) {
         </SeoSection>
 
         {/*
-          Server-rendered seller comparison — the crawlable twin of the
-          interactive listing rows above (and of the AggregateOffer schema).
-          Same information the client UI already shows buyers on this page,
-          so nothing new is exposed; what changes is that crawlers and AI
-          engines can finally see the comparison. Listings arrive from the
-          API already ranked by net price (rankListingsByNetPrice).
+          Server-rendered offer comparison — the crawlable twin of the
+          interactive listing rows above (and of the AggregateOffer schema),
+          so crawlers and AI engines can see the price comparison.
+
+          Sellers are numbered, not named: identity is stripped from the data
+          in `fetchProduct` and is not even in this component's type. Listings
+          arrive from the API already ranked by net price
+          (rankListingsByNetPrice), so "Verified seller 1" is always the
+          cheapest — the numbering carries the ranking, not an identity.
         */}
         {pricedListings.length > 0 ? (
           <SeoSection
@@ -393,10 +396,23 @@ export default async function ProductPage({ params }: PageProps) {
                     return (
                       <tr key={l.id} className="border-b border-slate-100 last:border-0">
                         <td className="py-2 pr-3 text-slate-700">
-                          {l.seller?.companyName ?? `Seller ${i + 1}`}
-                          {l.seller?.city ? (
-                            <span className="text-slate-400"> · {l.seller.city}</span>
-                          ) : null}
+                          {/*
+                            Sellers are numbered, never named.
+
+                            PharmaBag is the counterparty a buyer transacts
+                            with; who actually holds the stock is not theirs to
+                            see, and a named supplier plus a city is enough for
+                            a buyer to go around the marketplace entirely. This
+                            table used to print `companyName · city`, which was
+                            server-rendered — so it was readable logged-out and
+                            crawlable — across every product with a live
+                            listing.
+
+                            The comparison itself is unaffected: rate, MRP,
+                            scheme and min quantity are what make the table
+                            worth crawling, and none of them identify anyone.
+                          */}
+                          Verified seller {i + 1}
                           {i === 0 ? (
                             <span className="ml-2 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700">
                               Lowest rate
