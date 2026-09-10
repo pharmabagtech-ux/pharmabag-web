@@ -171,7 +171,20 @@ export default function SearchBar() {
                         </div>
                         <div className="flex-1 text-left">
                           <p className="text-sm font-bold text-gray-900 truncate">{product.name}</p>
-                          <p className="text-xs text-gray-400 font-medium">₹{product.price.toLocaleString('en-IN')}</p>
+                          {/*
+                            `price` is null for any product with no seller
+                            listing — 26,687 of the 26,815 in the catalogue —
+                            and calling `.toLocaleString()` on it threw
+                            "Cannot read properties of null", which killed the
+                            whole dropdown as soon as one unpriced result
+                            appeared. Since suggestions are not filtered by
+                            sellability, that was almost every search.
+                          */}
+                          <p className="text-xs text-gray-400 font-medium">
+                            {typeof product.price === 'number'
+                              ? `₹${product.price.toLocaleString('en-IN')}`
+                              : 'Rate on request'}
+                          </p>
                         </div>
                         <ArrowRight className="w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </button>
