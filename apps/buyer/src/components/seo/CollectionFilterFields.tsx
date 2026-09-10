@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, ChevronDown } from 'lucide-react';
 import { useManufacturers } from '@/hooks/useProducts';
 import {
   SORT_OPTIONS,
@@ -14,13 +14,14 @@ import {
 /**
  * The sort / manufacturer / discount controls themselves.
  *
- * Extracted because a collection page shows them in two places — the desktop
- * bar above the grid, and the drawer behind the navbar's filter button on
+ * Extracted because a collection page shows them in two places — the sticky
+ * sidebar on desktop and the drawer behind the navbar's filter button on
  * mobile — and two copies of a control that writes to the URL is how the two
  * come to disagree about what "no sort" means.
  *
- * Only the styling differs between the two, so `variant` picks the class names
- * and everything else is shared.
+ * Both variants render the same stack of cards, deliberately matching the
+ * catalogue's sidebar at /products so the two pages do not teach a buyer two
+ * different filter UIs. Only the container around them differs.
  */
 export default function CollectionFilterFields({
   filters,
@@ -30,7 +31,7 @@ export default function CollectionFilterFields({
 }: {
   filters: Filters;
   basePath: string;
-  variant: 'bar' | 'drawer';
+  variant: 'sidebar' | 'drawer';
   /** Fired after a control writes to the URL. The drawer uses it to close. */
   onApply?: () => void;
 }) {
@@ -52,12 +53,11 @@ export default function CollectionFilterFields({
   /**
    * These controls are driven by the URL, which means the checked/selected
    * state only becomes true once the server has re-rendered. Bound directly to
-   * the prop, a tap on the checkbox visibly does nothing until the round-trip
-   * finishes — it reads as a broken control, and on a phone that round-trip is
-   * the slowest.
+   * the prop, a tap visibly does nothing until the round-trip finishes — it
+   * reads as a broken control, and on a phone that round-trip is the slowest.
    *
    * So the control follows a local draft immediately and the server's answer
-   * overwrites it when it lands. `isPending` dims the group meanwhile, so a
+   * overwrites it when it lands. `isPending` dims the stack meanwhile, so a
    * slow response looks like waiting rather than like nothing happening.
    */
   const [draft, setDraft] = useState<Filters>(filters);
@@ -80,30 +80,60 @@ export default function CollectionFilterFields({
     onApply?.();
   };
 
-  const drawer = variant === 'drawer';
+  const card =
+    'rounded-2xl border border-white/60 bg-white/80 p-5 shadow-sm backdrop-blur-xl';
+  const heading =
+    'mb-4 text-[11px] font-bold uppercase tracking-widest text-gray-800';
+  const select =
+    'w-full cursor-pointer appearance-none rounded-lg border border-gray-100 bg-gray-50/50 p-3 pr-9 text-xs font-bold text-gray-700 outline-none focus:ring-1 focus:ring-emerald-400';
 
-  const label = drawer
-    ? 'text-[11px] font-bold uppercase tracking-widest text-gray-800'
-    : 'mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-500';
-
-  const select = drawer
-    ? 'w-full cursor-pointer appearance-none rounded-lg border border-gray-100 bg-gray-50/50 p-3 text-xs font-medium text-gray-700 outline-none focus:ring-1 focus:ring-emerald-400'
-    : 'w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600';
-
-  /** Dims the group while the server is producing the filtered page. */
-  const busy = isPending ? 'opacity-60 transition-opacity' : 'transition-opacity';
-
-  const card = drawer
-    ? 'rounded-2xl border border-white/60 bg-white/80 p-5 shadow-sm backdrop-blur-xl'
-    : 'min-w-0 flex-1 sm:max-w-[220px]';
+  /** Drawn rather than native, to match the catalogue's sidebar. */
+  const Radio = ({
+    checked,
+    label,
+    onChange,
+  }: {
+    checked: boolean;
+    label: string;
+    onChange: () => void;
+  }) => (
+    <label className="group flex cursor-pointer items-center gap-3 py-1.5">
+      <input
+        type="radio"
+        name={`discount-${variant}`}
+        className="sr-only"
+        checked={checked}
+        onChange={onChange}
+      />
+      <span
+        className={`flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors ${
+          checked
+            ? 'border-lime-500'
+            : 'border-gray-300 group-hover:border-lime-500'
+        }`}
+      >
+        {checked ? <span className="h-2 w-2 rounded-full bg-lime-500" /> : null}
+      </span>
+      <span
+        className={`text-sm font-medium transition-colors ${
+          checked ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'
+        }`}
+      >
+        {label}
+      </span>
+    </label>
+  );
 
   return (
-    <>
-      <div className={`${card} ${busy}`} aria-busy={isPending}>
-        <label htmlFor={`sort-${variant}`} className={label}>
-          Sort by
-        </label>
-        <div className={drawer ? 'relative mt-3' : 'relative'}>
+    <div
+      className={`space-y-4 transition-opacity ${isPending ? 'opacity-60' : ''}`}
+      aria-busy={isPending}
+    >
+      <div className={card}>
+        <h3 className={heading}>
+          <label htmlFor={`sort-${variant}`}>Sort by</label>
+        </h3>
+        <div className="relative">
           <select
             id={`sort-${variant}`}
             className={select}
@@ -118,70 +148,67 @@ export default function CollectionFilterFields({
               </option>
             ))}
           </select>
-          {drawer ? (
-            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
-              <ArrowUpDown className="h-3.5 w-3.5" strokeWidth={2.5} />
-            </div>
-          ) : null}
+          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+            <ArrowUpDown className="h-3.5 w-3.5" strokeWidth={2.5} />
+          </div>
         </div>
       </div>
 
-      <div
-        className={`${drawer ? card : 'min-w-0 flex-1 sm:max-w-[280px]'} ${busy}`}
-        aria-busy={isPending}
-      >
-        <label htmlFor={`manufacturer-${variant}`} className={label}>
-          Manufacturer
-        </label>
-        <select
-          id={`manufacturer-${variant}`}
-          className={drawer ? `${select} mt-3` : select}
-          value={draft.manufacturer ?? ''}
-          onChange={(e) =>
-            apply({ ...draft, manufacturer: e.target.value || null })
-          }
-        >
-          <option value="">All manufacturers</option>
-          {/*
-            Before the list loads, the applied value still has to be a real
-            option or the select would snap back to "All manufacturers" and
-            silently misrepresent what the page is showing.
-          */}
-          {draft.manufacturer &&
-          !manufacturers.some((m) => m.name === draft.manufacturer) ? (
-            <option value={draft.manufacturer}>{draft.manufacturer}</option>
-          ) : null}
-          {manufacturers.map((m) => (
-            <option key={m.id} value={m.name}>
-              {m.name.length > 40 ? `${m.name.slice(0, 40)}…` : m.name}
-            </option>
-          ))}
-        </select>
+      <div className={card}>
+        <h3 className={heading}>
+          <label htmlFor={`manufacturer-${variant}`}>Manufacturer</label>
+        </h3>
+        <div className="relative">
+          <select
+            id={`manufacturer-${variant}`}
+            className={select}
+            value={draft.manufacturer ?? ''}
+            onChange={(e) =>
+              apply({ ...draft, manufacturer: e.target.value || null })
+            }
+          >
+            <option value="">All manufacturers</option>
+            {/*
+              Before the list loads, the applied value still has to be a real
+              option or the select would snap back to "All manufacturers" and
+              silently misrepresent what the page is showing.
+            */}
+            {draft.manufacturer &&
+            !manufacturers.some((m) => m.name === draft.manufacturer) ? (
+              <option value={draft.manufacturer}>{draft.manufacturer}</option>
+            ) : null}
+            {manufacturers.map((m) => (
+              <option key={m.id} value={m.name}>
+                {m.name.length > 34 ? `${m.name.slice(0, 34)}…` : m.name}
+              </option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+            <ChevronDown className="h-4 w-4" strokeWidth={2.5} />
+          </div>
+        </div>
       </div>
 
-      <label
-        className={
-          drawer
-            ? `${card} ${busy} flex cursor-pointer select-none items-center gap-3`
-            : `${busy} flex cursor-pointer select-none items-center gap-2 py-2 sm:pb-2.5`
-        }
-      >
-        <input
-          type="checkbox"
-          className="h-4 w-4 rounded border-slate-300 text-teal-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
-          checked={draft.discountOnly}
-          onChange={(e) => apply({ ...draft, discountOnly: e.target.checked })}
+      <div className={card}>
+        {/*
+          Worded "Discount offers only", not the catalogue's "Discount PTR
+          Only": this filter is applied by the API through `isDiscounted`,
+          which covers every scheme type, not only the three PTR ones. The
+          catalogue filters its already-loaded page client-side, so its
+          narrower label is accurate there and would be a lie here.
+        */}
+        <h3 className={heading}>Discount type</h3>
+        <Radio
+          checked={!draft.discountOnly}
+          label="All"
+          onChange={() => apply({ ...draft, discountOnly: false })}
         />
-        <span
-          className={
-            drawer
-              ? 'text-sm font-bold text-gray-800'
-              : 'text-sm font-medium text-slate-700'
-          }
-        >
-          Discount offers only
-        </span>
-      </label>
-    </>
+        <Radio
+          checked={draft.discountOnly}
+          label="Discount offers only"
+          onChange={() => apply({ ...draft, discountOnly: true })}
+        />
+      </div>
+    </div>
   );
 }

@@ -131,11 +131,18 @@ function Pagination({
   page,
   totalPages,
   filters,
+  align = 'page',
 }: {
   basePath: string;
   page: number;
   totalPages: number;
   filters?: Filters;
+  /**
+   * `page` centres it in its own full-width container. `left` drops that
+   * container because the caller already sits inside one — nesting the two
+   * would indent the page links away from the grid they belong to.
+   */
+  align?: 'page' | 'left';
 }) {
   if (totalPages <= 1) return null;
   /**
@@ -158,7 +165,11 @@ function Pagination({
   return (
     <nav
       aria-label="Pagination"
-      className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6"
+      className={
+        align === 'left'
+          ? 'w-full pt-8'
+          : 'mx-auto w-full max-w-6xl px-4 py-6 sm:px-6'
+      }
     >
       <ul className="flex flex-wrap items-center justify-center gap-2 text-sm">
         {page > 1 ? (
@@ -329,59 +340,98 @@ export default function CollectionShell({
         </header>
 
         {shopping ? (
-          <>
-            {/* `hidden lg:block` here too, or the spacer alone would leave a
-                gap on mobile where the bar used to be. */}
-            <div className="hidden pt-5 lg:block">
+          /*
+            Two columns on desktop: the sticky filter sidebar and the products.
+            The sidebar sticks INSIDE this row, so it follows the scroll for
+            exactly as long as there are products beside it and then stops —
+            rather than hanging over the buying guide and FAQs below.
+
+            Written out rather than reusing `SeoSection` because that component
+            owns its own `max-w-6xl` container, and here the container has to
+            wrap both columns. The heading markup and ids are the same, so the
+            document structure is unchanged.
+          */
+          <section
+            id="products"
+            aria-labelledby="products-heading"
+            className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6"
+          >
+            <div className="flex gap-6 xl:gap-8">
               <CollectionFilters
                 filters={filters ?? NO_FILTERS}
                 basePath={basePath}
                 total={totalProducts}
               />
+
+              {/* `min-w-0`, or the grid's contents refuse to shrink and push
+                  the whole row wider than the viewport. */}
+              <div className="min-w-0 flex-1">
+                <h2
+                  id="products-heading"
+                  className="mb-4 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl"
+                >
+                  Products available at wholesale rates
+                </h2>
+
+                {products.length > 0 ? (
+                  <CollectionProductGrid products={products} />
+                ) : (
+                  /*
+                    A filter combination with no matches is a dead end unless
+                    the page says so and offers the way out. Silently rendering
+                    an empty grid reads as a broken page.
+                  */
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-8 text-center">
+                    <p className="text-sm font-semibold text-slate-700">
+                      No products match these filters.
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Not every manufacturer stocks this category.
+                    </p>
+                    <Link
+                      href={basePath}
+                      className="mt-4 inline-flex items-center rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
+                    >
+                      Clear filters
+                    </Link>
+                  </div>
+                )}
+
+                {/* Inside the column, so the sidebar stays pinned alongside
+                    the page links rather than stopping above them. */}
+                <Pagination
+                  basePath={basePath}
+                  page={page}
+                  totalPages={totalPages}
+                  filters={filters}
+                  align="left"
+                />
+              </div>
             </div>
+          </section>
+        ) : (
+          <>
+            {products.length > 0 ? (
+              <SeoSection
+                id="products"
+                title="Products available at wholesale rates"
+              >
+                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {products.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </ul>
+              </SeoSection>
+            ) : null}
 
-            <SeoSection id="products" title="Products available at wholesale rates">
-              {products.length > 0 ? (
-                <CollectionProductGrid products={products} />
-              ) : (
-                /*
-                  A filter combination with no matches is a dead end unless the
-                  page says so and offers the way out. Silently rendering an
-                  empty grid reads as a broken page.
-                */
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-8 text-center">
-                  <p className="text-sm font-semibold text-slate-700">
-                    No products match these filters.
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Not every manufacturer stocks this category.
-                  </p>
-                  <Link
-                    href={basePath}
-                    className="mt-4 inline-flex items-center rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
-                  >
-                    Clear filters
-                  </Link>
-                </div>
-              )}
-            </SeoSection>
+            <Pagination
+              basePath={basePath}
+              page={page}
+              totalPages={totalPages}
+              filters={filters}
+            />
           </>
-        ) : products.length > 0 ? (
-          <SeoSection id="products" title="Products available at wholesale rates">
-            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </ul>
-          </SeoSection>
-        ) : null}
-
-        <Pagination
-          basePath={basePath}
-          page={page}
-          totalPages={totalPages}
-          filters={filters}
-        />
+        )}
 
         {/*
           In shopping mode this page IS the catalogue, so the deep link stops
