@@ -85,6 +85,38 @@ export const routes = {
 } as const;
 
 /**
+ * Where the navigation should send someone who clicks a category.
+ *
+ * `/categories/<slug>` rather than `/products?categoryId=<uuid>` because the
+ * query URL is not a page: it canonicalises to bare `/products`, carries the
+ * generic catalogue title with the category name nowhere in the head, and
+ * renders its grid client-side so a crawler following it finds no products at
+ * all. Every category link on the site pointed there, which meant the whole
+ * category navigation led to a dead end for search.
+ *
+ * The slug is optional on the API's category schema, so both helpers fall back
+ * to the old query URL. Navigation must not break on a data gap — an ugly URL
+ * is survivable, a link to nowhere is not.
+ */
+export function categoryHref(category: {
+  id: string;
+  slug?: string;
+}): string {
+  return category.slug
+    ? routes.category(category.slug)
+    : `${routes.products()}?categoryId=${category.id}`;
+}
+
+export function subCategoryHref(
+  category: { id: string; slug?: string },
+  sub: { id: string; slug?: string },
+): string {
+  return category.slug && sub.slug
+    ? routes.dosageForm(category.slug, sub.slug)
+    : `${routes.products()}?categoryId=${category.id}&subCategoryId=${sub.id}`;
+}
+
+/**
  * Strips tracking and view-state params from a URL before it is used as a
  * canonical, so `?page=2&sort=price&utm_source=x` does not fragment one page's
  * authority across dozens of near-duplicate URLs.

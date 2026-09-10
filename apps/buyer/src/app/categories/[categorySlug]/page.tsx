@@ -22,6 +22,13 @@ import {
   preferOverride,
   type PageTokens,
 } from '@/lib/seo/page-seo';
+import {
+  parseFilters,
+  filterQuery,
+  isFiltered,
+  collectionHref,
+  type CollectionSearchParams,
+} from '@/lib/seo/collection-filters';
 
 /**
  * Category landing page — e.g. /categories/generic.
@@ -58,7 +65,7 @@ export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: { categorySlug: string };
-  searchParams: { page?: string };
+  searchParams: CollectionSearchParams;
 }
 
 /**
@@ -96,6 +103,7 @@ export async function generateMetadata({
   }
 
   const page = Math.max(1, Number(searchParams?.page) || 1);
+  const filters = parseFilters(searchParams);
   const { total } = await fetchProducts({
     categoryId: category.id,
     page: 1,
@@ -106,6 +114,7 @@ export async function generateMetadata({
   const defaults = categoryDefaults(category, total);
   const override = await fetchPageOverride(routes.category(category.slug));
   const tokens = categoryTokens(category.name, total);
+  const basePath = routes.category(category.slug);
 
   return buildMetadata({
     title: `${preferOverride(override?.title, defaults.title, tokens)}${pageSuffix}`,
@@ -118,8 +127,16 @@ export async function generateMetadata({
      * Paginated pages canonicalise to THEMSELVES, not back to page 1.
      * Pointing every page at page 1 is the classic error that removes the rest
      * of a catalogue from the index.
+     *
+     * A *filtered* view is different in kind from a paginated one: sort x
+     * manufacturer x discount is a combinatorial space over the same products,
+     * so each one self-canonicalises AND carries `noindex, follow` below.
+     * Canonicalising them onto the clean URL instead would be the wrong tool —
+     * a canonical is a statement that two URLs are the same page, and
+     * "Ayurvedic, Cipla only" is not the same page as "Ayurvedic".
      */
-    path: page > 1 ? `${routes.category(category.slug)}?page=${page}` : routes.category(category.slug),
+    path: collectionHref(basePath, filters, page),
+    index: !isFiltered(filters),
     keywords: defaults.keywords,
   });
 }
@@ -129,17 +146,19 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   if (!category) notFound();
 
   const page = Math.max(1, Number(searchParams?.page) || 1);
+  const filters = parseFilters(searchParams);
   const { products, total, totalPages } = await fetchProducts({
     categoryId: category.id,
     page,
     limit: PAGE_SIZE,
+    ...filterQuery(filters),
   });
 
   const basePath = routes.category(category.slug);
   // Matches the canonical: on page 2+ this node describes THAT page, not
   // page 1. They disagreed before, so the schema claimed every paginated
   // view was the first one.
-  const url = absoluteUrl(page > 1 ? `${basePath}?page=${page}` : basePath);
+  const url = absoluteUrl(collectionHref(basePath, filters, page));
   const crumbs = [
     { name: 'Home', path: routes.home() },
     { name: 'Categories', path: routes.categories() },
@@ -147,7 +166,19 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   ];
 
   const subs = category.subCategories ?? [];
-  const defaults = categoryDefaults(category, total);
+
+  /**
+   * The prose describes the CATEGORY, so it counts the category — not whatever
+   * the visitor has filtered down to. Without this, ticking "discount offers
+   * only" rewrote the opening line to "PharmaBag lists 2 ayurvedic medicines",
+   * which is both wrong and the kind of sentence that ends up quoted in a
+   * search result. The filtered count belongs in the filter bar, and that is
+   * where `totalProducts` puts it.
+   */
+  const categoryTotal = isFiltered(filters)
+    ? (await fetchProducts({ categoryId: category.id, page: 1, limit: 1 })).total
+    : total;
+  const defaults = categoryDefaults(category, categoryTotal);
 
   /**
    * Admin overrides, applied field by field. Anything an admin has not written
@@ -155,7 +186,9 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
    * missing override never blanks anything.
    */
   const override = await fetchPageOverride(basePath);
-  const tokens = categoryTokens(category.name, total);
+  // Admin copy interpolates `{{product_count}}`; same reasoning as `defaults`
+  // above — it is a sentence about the category, not about the active filter.
+  const tokens = categoryTokens(category.name, categoryTotal);
   const faqs = override?.faq?.length ? override.faq : defaults.faqs;
 
   const jsonLd = graph(
@@ -205,11 +238,17 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         crumbs={crumbs}
         products={products}
         totalProducts={total}
-        basePath={routes.category(category.slug)}
+        basePath={basePath}
         page={page}
         totalPages={totalPages}
+        /*
+          This page is where the navigation now sends a buyer, so it has to be
+          able to take an order, not just describe the category.
+        */
+        shopping
+        filters={filters}
         browseHref={`${routes.products()}?category=${encodeURIComponent(category.name)}`}
-        browseLabel={`Browse ${category.name} in the catalogue`}
+        browseLabel="More filters in the full catalogue"
         faqs={faqs}
         linkSections={[
           ...(subs.length

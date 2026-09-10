@@ -57,6 +57,101 @@ async function refreshMap(): Promise<void> {
   }
 }
 
+/**
+ * Category id -> slug, for retiring the old `/products?categoryId=<uuid>` URLs.
+ *
+ * Separate from the redirect map above because it is only ever consulted when
+ * such a URL is actually requested — normal traffic pays nothing for it. Four
+ * rows, refreshed at most hourly.
+ */
+let categoryMap: Map<string, { slug: string; subs: Map<string, string> }> | null =
+  null;
+let categoriesFetchedAt = 0;
+const CATEGORY_TTL_MS = 3_600_000;
+
+async function refreshCategories(): Promise<void> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2_000);
+    const res = await fetch(`${API_BASE}/products/categories`, {
+      signal: controller.signal,
+      headers: { accept: 'application/json' },
+    });
+    clearTimeout(timer);
+    if (!res.ok) return; // keep whatever we had
+    const body = await res.json();
+    const rows: {
+      id: string;
+      slug?: string;
+      subCategories?: { id: string; slug?: string }[];
+    }[] = body?.data ?? [];
+    if (Array.isArray(rows)) {
+      categoryMap = new Map(
+        rows
+          .filter((c) => c?.id && c?.slug)
+          .map((c) => [
+            c.id,
+            {
+              slug: c.slug as string,
+              subs: new Map(
+                (c.subCategories ?? [])
+                  .filter((s) => s?.id && s?.slug)
+                  .map((s) => [s.id, s.slug as string]),
+              ),
+            },
+          ]),
+      );
+    }
+  } catch {
+    // Fall through to the query URL, which still renders.
+  } finally {
+    categoriesFetchedAt = Date.now();
+  }
+}
+
+/**
+ * The old category URL, permanently moved to the category page.
+ *
+ * `/products?categoryId=<uuid>` was where every category link in the
+ * navigation used to point. It is not a page in its own right — it
+ * canonicalises to bare `/products` — so anything that ever linked to it was
+ * pointing at a URL that could not rank. A 308 moves that history onto
+ * `/categories/<slug>` and, more importantly, stops the two URLs competing to
+ * be the site's answer for "ayurvedic medicines wholesale".
+ *
+ * Returns null (i.e. render normally) whenever the mapping is not certain: an
+ * unknown id, a category with no slug, or an API that could not be reached.
+ * A redirect that guesses is worse than an ugly URL.
+ */
+async function categoryRedirect(url: URL): Promise<string | null> {
+  if (url.pathname.replace(/\/+$/, '') !== '/products') return null;
+
+  const categoryId = url.searchParams.get('categoryId');
+  if (!categoryId) return null;
+
+  /**
+   * A search inside a category is a genuine catalogue query, not a category
+   * landing page, and the destination has no free-text search. Redirecting it
+   * would silently throw away what the visitor typed.
+   */
+  if (url.searchParams.get('search')) return null;
+
+  if (Date.now() - categoriesFetchedAt > CATEGORY_TTL_MS) {
+    await refreshCategories();
+  }
+
+  const category = categoryMap?.get(categoryId);
+  if (!category) return null;
+
+  const subId = url.searchParams.get('subCategoryId');
+  const subSlug = subId ? category.subs.get(subId) : undefined;
+  if (subId && !subSlug) return `/categories/${category.slug}`;
+
+  return subSlug
+    ? `/categories/${category.slug}/${subSlug}`
+    : `/categories/${category.slug}`;
+}
+
 /** Mirror of the API's normalizePath, reduced to what a live URL needs. */
 function normalize(pathname: string): string {
   let p = pathname.toLowerCase();
@@ -87,6 +182,18 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
       ? hit.to
       : new URL(hit.to, request.url);
     return NextResponse.redirect(target, hit.status);
+  }
+
+  /**
+   * Checked after the admin map so a hand-written redirect always wins, and
+   * only for URLs that actually carry `categoryId` — everything else returns
+   * from `categoryRedirect` without a fetch or a map lookup.
+   */
+  const toCategory = await categoryRedirect(request.nextUrl);
+  if (toCategory) {
+    // 301, matching the admin map's default, so every permanent move on this
+    // site reports as the same thing in Search Console and in audit tools.
+    return NextResponse.redirect(new URL(toCategory, request.url), 301);
   }
 
   return NextResponse.next({ request: { headers } });

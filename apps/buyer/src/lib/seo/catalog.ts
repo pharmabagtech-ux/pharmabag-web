@@ -129,6 +129,8 @@ export interface ProductQuery {
   limit?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  /** Restrict to products carrying a scheme/PTR discount. */
+  isDiscounted?: boolean;
 }
 
 /** Raised when a fetch a page cannot render without has failed. */
@@ -212,6 +214,7 @@ function buildQuery(q: ProductQuery): string {
   params.set('limit', String(Math.min(100, Math.max(1, q.limit ?? 24))));
   if (q.sortBy) params.set('sortBy', q.sortBy);
   if (q.sortOrder) params.set('sortOrder', q.sortOrder);
+  if (q.isDiscounted) params.set('isDiscounted', 'true');
   return params.toString();
 }
 
