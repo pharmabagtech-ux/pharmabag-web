@@ -79,10 +79,20 @@ export default function SearchBar() {
 
   return (
     <div ref={containerRef} className="relative flex-1 max-w-[200px] xs:max-w-[280px] sm:max-w-md lg:max-w-none">
-      <div className={`flex items-center gap-1.5 xs:gap-2 px-2.5 xs:px-4 py-1.5 xs:py-2 rounded-full border transition-all ${
-        isFocused ? 'bg-white border-lime-300 shadow-lg shadow-lime-100/50 w-full' : 'bg-white/60 border-transparent w-full'
+      {/*
+        At rest this was `bg-white/60` with a transparent border, sitting on a
+        white bar — so the site's only search read as a faint grey hint rather
+        than a control, and it is now the ONLY search on the site since the
+        homepage hero one was removed. It gets a real fill, a real border and a
+        visible icon so it is findable at a glance; focus keeps the lime accent
+        it already had, with a ring so the state change is obvious.
+      */}
+      <div className={`flex w-full items-center gap-2 rounded-full border px-3 xs:px-4 py-2 xs:py-2.5 transition-all ${
+        isFocused
+          ? 'bg-white border-lime-400 ring-2 ring-lime-100 shadow-md'
+          : 'bg-slate-50 border-slate-200 shadow-sm hover:bg-white hover:border-slate-300'
       }`}>
-        <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        <Search className={`w-4 h-4 flex-shrink-0 transition-colors ${isFocused ? 'text-lime-600' : 'text-slate-500'}`} />
         <input
           ref={inputRef}
           value={query}
@@ -94,7 +104,8 @@ export default function SearchBar() {
             }
           }}
           placeholder="Search products..."
-          className="w-full bg-transparent text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none"
+          aria-label="Search products"
+          className="w-full bg-transparent text-sm font-medium text-gray-900 placeholder:text-slate-500 focus:outline-none"
         />
         {query && (
           <button onClick={() => setQuery('')} className="text-gray-400 hover:text-gray-600">
