@@ -97,12 +97,22 @@ export interface CatalogListing {
   moq?: number | null;
   expiryDate?: string | null;
   images?: string[] | null;
+  /**
+   * Deliberately NOT the shape the API sends.
+   *
+   * `/products/:slug` returns `companyName`, `city` and `state` on this object.
+   * Buyers must never see who the seller is — PharmaBag is the counterparty,
+   * and a supplier's name plus their city is enough for a buyer to go around
+   * the marketplace. Leaving those fields off the type means a server
+   * component cannot render them by accident; `fetchProduct` also strips them
+   * at runtime, so they never reach the HTML or the RSC payload either.
+   *
+   * The id stays (an opaque UUID, needed to tell listings apart) and so does
+   * the rating, which carries no identity.
+   */
   seller?: {
     id: string;
-    companyName?: string | null;
     rating?: number | null;
-    city?: string | null;
-    state?: string | null;
   } | null;
 }
 
@@ -315,6 +325,34 @@ export async function fetchSitemapProducts(q: {
  *    shell for every unknown OR unreachable product — a soft-404 that also
  *    meant a two-second API blip could tell Google a live product was gone.
  */
+/**
+ * Drops seller identity from a product before it leaves this module.
+ *
+ * The API sends `seller.companyName`, `.city` and `.state` on every listing.
+ * Nothing on the buyer site may show them, so they are removed here rather
+ * than relied upon to be ignored at each call site — a field that is present
+ * is a field that eventually gets rendered, and this one was: the product
+ * page's seller-comparison table printed "COMPANY NAME · City" on every
+ * product with a live listing, server-rendered and therefore crawlable.
+ *
+ * Stripping at the boundary also keeps the names out of the RSC payload, so
+ * they are not in "view source" even where nothing displays them.
+ *
+ * This is the BUYER site only. The seller portal and the admin panel need the
+ * real names and are untouched.
+ */
+function redactSellers(product: CatalogProduct): CatalogProduct {
+  if (!Array.isArray(product.listings)) return product;
+  return {
+    ...product,
+    listings: product.listings.map((listing) => {
+      if (!listing.seller) return listing;
+      const { id, rating } = listing.seller as { id: string; rating?: number | null };
+      return { ...listing, seller: { id, rating } };
+    }),
+  };
+}
+
 export async function fetchProduct(
   slugOrId: string,
 ): Promise<CatalogProduct | null> {
@@ -345,7 +383,7 @@ export async function fetchProduct(
       const data = (body?.data ?? body) as CatalogProduct | null;
       // A 200 whose payload carries no product is the API's other way of
       // saying "not found" — treat it the same as a 404.
-      return data && data.id ? data : null;
+      return data && data.id ? redactSellers(data) : null;
     } catch (error) {
       lastError = error;
     } finally {
