@@ -50,6 +50,21 @@ export interface PageSeoOverride {
 export type PageSeoMap = Record<string, PageSeoOverride>;
 
 /**
+ * Whether an editor has given this page prose of its own.
+ *
+ * Decides whether a page that would otherwise be a near-duplicate of its
+ * siblings has earned a place in the index. Deliberately looks at the BODY and
+ * the intro rather than the title: a rewritten meta title makes a page look
+ * different in a search result without making it any less of a duplicate,
+ * which is the opposite of what this gate is for.
+ */
+export function hasWrittenContent(
+  override: PageSeoOverride | null | undefined,
+): boolean {
+  return Boolean(override?.bodyHtml?.trim() || override?.intro?.trim());
+}
+
+/**
  * Mirrors `PageSeoService.normalizePath` on the API side EXACTLY.
  *
  * If the two ever disagree — a trailing slash, a capital letter — a saved

@@ -22,6 +22,7 @@ import { SeoSection } from '@/components/seo/SeoContent';
 import {
   applyTokens,
   fetchPageOverride,
+  hasWrittenContent,
   preferOverride,
   type PageTokens,
 } from '@/lib/seo/page-seo';
@@ -91,12 +92,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ),
     path: routes.city(state.slug, city.slug),
     /*
-      A city with no written profile has nothing to say that its 89 siblings do
-      not — measured at 90-92% identical — so it is kept out of the index
-      rather than competing as a near-duplicate. Writing a profile in
-      `data/city-profiles.ts` re-indexes it, with no other change needed.
+      A city with nothing distinct to say is kept out of the index rather than
+      competing as a near-duplicate of its 89 siblings, which measured 90-92%
+      identical.
+
+      "Something distinct" means EITHER a trade profile in
+      `data/city-profiles.ts` OR prose an editor has written for this page in
+      the admin panel. That second half matters: without it, writing genuinely
+      original content for a city in the admin would leave the page noindexed
+      anyway, and the only way back into the index would be a code change —
+      which is not something an editor can be expected to know.
     */
-    index: Boolean(profile),
+    index: Boolean(profile) || hasWrittenContent(override),
     keywords: defaults.keywords,
   });
 }
