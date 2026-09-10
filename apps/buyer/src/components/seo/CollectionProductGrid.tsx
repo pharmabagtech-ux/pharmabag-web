@@ -56,12 +56,14 @@ export default function CollectionProductGrid({
 
   return (
     /*
-      Three across at `lg`, not four: the filter sidebar takes ~250px out of
-      the row from that breakpoint up, and keeping the catalogue's column count
-      squeezed the cards until the name truncated to a few characters and the
-      MRP/MOQ/rate row collapsed onto one line.
+      Column counts are set against the space actually left over, not against
+      the viewport: the filter sidebar takes ~250px out of the row from `lg`
+      up. Adding a column too early squeezes the cards until the name truncates
+      to a few characters and the MRP/MOQ/rate row collapses onto one line,
+      which is what happened when this kept the catalogue's counts while the
+      page was still capped at 1152px.
     */
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5 xl:grid-cols-4 2xl:grid-cols-5 min-[1800px]:grid-cols-6">
       {products.map((product) => {
         const slug = product.slug?.trim();
         if (!slug) return null;

@@ -227,7 +227,9 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             />
           ) : defaults.body ? (
             <SeoSection id="buying-guide" title={defaults.body.title}>
-              <div className="space-y-3">
+              {/* A measure for the prose: the page is full width now, and a
+                  paragraph running the whole way across is hard to read. */}
+              <div className="max-w-3xl space-y-3">
                 {defaults.body.paragraphs.map((para) => (
                   <p key={para.slice(0, 40)}>{para}</p>
                 ))}

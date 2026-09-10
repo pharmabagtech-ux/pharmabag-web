@@ -15,6 +15,27 @@ import type { SpecRow, Faq } from '@/lib/seo/content';
  * robots is both a policy risk and a wasted rendering budget.
  */
 
+/**
+ * The page gutter, in two sizes.
+ *
+ * `default` (1152px) is the right measure for a page that is mostly prose —
+ * long lines of body text are genuinely harder to read, which is why these
+ * landing pages were built to it.
+ *
+ * `wide` is for the collection pages once they became shopping pages: a
+ * product grid is not prose, and capping it at 1152px left a wide monitor
+ * showing four cards with several hundred empty pixels down each side. It
+ * matches the catalogue at /products, which has no cap at all. Readability is
+ * protected where it actually matters instead — the paragraphs inside carry
+ * their own `max-w`, so text never runs the full width of a 2560px screen.
+ */
+export const CONTENT_WIDTH = {
+  default: 'mx-auto w-full max-w-6xl px-4 sm:px-6',
+  wide: 'mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-12',
+} as const;
+
+export type ContentWidth = keyof typeof CONTENT_WIDTH;
+
 /** Semantic section wrapper with a proper heading level. */
 export function SeoSection({
   id,
@@ -22,18 +43,20 @@ export function SeoSection({
   headingLevel = 2,
   children,
   className = '',
+  width = 'default',
 }: {
   id?: string;
   title: string;
   headingLevel?: 2 | 3;
   children: React.ReactNode;
   className?: string;
+  width?: ContentWidth;
 }) {
   const Heading = (headingLevel === 2 ? 'h2' : 'h3') as 'h2' | 'h3';
   return (
     <section
       id={id}
-      className={`mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 ${className}`}
+      className={`${CONTENT_WIDTH[width]} py-8 ${className}`}
       aria-labelledby={id ? `${id}-heading` : undefined}
     >
       <Heading
@@ -185,12 +208,14 @@ export function LinkGrid({
  */
 export function Breadcrumbs({
   crumbs,
+  width = 'default',
 }: {
   crumbs: { name: string; path: string }[];
+  width?: ContentWidth;
 }) {
   if (crumbs.length === 0) return null;
   return (
-    <nav aria-label="Breadcrumb" className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6">
+    <nav aria-label="Breadcrumb" className={`${CONTENT_WIDTH[width]} pt-4`}>
       <ol className="flex flex-wrap items-center gap-1 text-xs text-slate-500">
         {crumbs.map((crumb, i) => {
           const isLast = i === crumbs.length - 1;
