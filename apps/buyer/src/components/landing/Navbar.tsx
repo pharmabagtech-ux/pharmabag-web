@@ -29,6 +29,7 @@ import NotificationDrawer from "@/components/notifications/NotificationDrawer";
 import SearchBar from "@/components/shared/SearchBar";
 
 import { useAuth, type Category } from "@pharmabag/api-client";
+import { categoryHref } from "@/lib/seo/url";
 import { useCart } from "@/hooks/useCart";
 import { localCart } from "@/lib/local-cart";
 import { useQueryClient } from "@tanstack/react-query";
@@ -221,7 +222,7 @@ export default function Navbar({
                   onMouseLeave={() => setActiveCategory(null)}
                 >
                   <Link
-                    href={`/products?categoryId=${category.id}`}
+                    href={categoryHref(category)}
                     className={`flex items-center gap-1.5 text-[14px] font-bold tracking-tight transition-colors duration-200 ${
                       activeCategory === category.id ? 'text-sky-600' : 'text-gray-600 hover:text-sky-600'
                     }`}
@@ -445,7 +446,7 @@ export default function Navbar({
               {categories.map((category: Category) => (
                 <Link
                   key={category.id}
-                  href={`/products?categoryId=${category.id}`}
+                  href={categoryHref(category)}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block px-4 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50 rounded-xl"
                 >

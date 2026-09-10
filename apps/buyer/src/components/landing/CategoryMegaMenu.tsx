@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type Category } from '@pharmabag/api-client';
+import { subCategoryHref } from '@/lib/seo/url';
 import { ArrowRight } from 'lucide-react';
 
 interface CategoryMegaMenuProps {
@@ -48,8 +49,8 @@ export default function CategoryMegaMenu({ category, isOpen, onMouseEnter, onMou
                     <ul className={`grid ${subCategories.length > 10 ? 'grid-cols-2' : 'grid-cols-1'} gap-x-8 gap-y-3`}>
                       {subCategories.map((sub) => (
                         <li key={sub.id}>
-                          <Link 
-                            href={`/products?categoryId=${category.id}&subCategoryId=${sub.id}`}
+                          <Link
+                            href={subCategoryHref(category, sub)}
                             className="text-[14px] text-gray-500 hover:text-sky-600 transition-colors duration-200"
                           >
                             {sub.name}

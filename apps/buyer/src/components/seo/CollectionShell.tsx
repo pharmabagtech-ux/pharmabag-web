@@ -1,10 +1,17 @@
 import Link from 'next/link';
 import Navbar from '@/components/landing/Navbar';
 import { Breadcrumbs, SeoSection, FaqList, LinkGrid, type SeoLink } from './SeoContent';
+import CollectionFilters from './CollectionFilters';
+import CollectionProductGrid from './CollectionProductGrid';
 import type { Faq } from '@/lib/seo/content';
 import type { CatalogProduct } from '@/lib/seo/catalog';
 import { routes } from '@/lib/seo/url';
 import { inr, bestListing } from '@/lib/seo/content';
+import {
+  collectionHref,
+  NO_FILTERS,
+  type CollectionFilters as Filters,
+} from '@/lib/seo/collection-filters';
 
 /**
  * Shared layout for every facet landing page (category, dosage form, brand,
@@ -40,6 +47,19 @@ export interface CollectionShellProps {
   /** Deep link into the interactive catalogue with this facet pre-applied. */
   browseHref?: string;
   browseLabel?: string;
+  /**
+   * Render the real shopping grid (images, prices, add-to-cart) with filters
+   * above it, instead of the crawl-only text list.
+   *
+   * Opt-in rather than automatic: it is switched on for the collections the
+   * navigation points at, where a visitor arrives intending to buy. The
+   * remaining facet pages (state, city, brand-in-city) keep the text list
+   * until each is looked at on its own terms — a shared shell makes it one
+   * line to change, and that is exactly why it should not change silently.
+   */
+  shopping?: boolean;
+  /** Active filter state. Required when `shopping`; drives every page link. */
+  filters?: Filters;
 }
 
 /**
@@ -108,13 +128,25 @@ function Pagination({
   basePath,
   page,
   totalPages,
+  filters,
 }: {
   basePath: string;
   page: number;
   totalPages: number;
+  filters?: Filters;
 }) {
   if (totalPages <= 1) return null;
-  const href = (p: number) => (p <= 1 ? basePath : `${basePath}?page=${p}`);
+  /**
+   * Page links carry the active filters. Without this, paging out of a
+   * filtered view silently drops the filter and shows the visitor a different
+   * set of products than the one they were looking through.
+   */
+  const href = (p: number) =>
+    filters
+      ? collectionHref(basePath, filters, p)
+      : p <= 1
+        ? basePath
+        : `${basePath}?page=${p}`;
 
   const windowed: number[] = [];
   for (let p = Math.max(1, page - 2); p <= Math.min(totalPages, page + 2); p++) {
@@ -204,7 +236,19 @@ export default function CollectionShell({
   totalPages = 1,
   browseHref,
   browseLabel = 'Open in catalogue',
+  shopping = false,
+  filters,
 }: CollectionShellProps) {
+  /**
+   * Shopping mode still leads with the H1 and the intro.
+   *
+   * Pushing every word below the grid is the reflex, and it is wrong twice
+   * over: a page whose first text is 48 product names reads as a bare list to
+   * a crawler, and a buyer landing from a search result gets no confirmation
+   * they are in the right place. Two or three sentences cost nothing and
+   * answer both. Everything longer — the buying guide, FAQs, link hubs — does
+   * move below the products.
+   */
   return (
     <>
       <Navbar showUserActions />
@@ -221,11 +265,18 @@ export default function CollectionShell({
           </p>
           {totalProducts > 0 ? (
             <p className="mt-2 text-sm text-slate-500">
-              {totalProducts.toLocaleString('en-IN')} products listed
-              {totalPages > 1 ? ` · page ${page} of ${totalPages}` : ''}
+              {/* In shopping mode the live count sits in the filter bar, next
+                  to the controls that change it. */}
+              {shopping
+                ? totalPages > 1
+                  ? `Page ${page} of ${totalPages}`
+                  : ''
+                : `${totalProducts.toLocaleString('en-IN')} products listed${
+                    totalPages > 1 ? ` · page ${page} of ${totalPages}` : ''
+                  }`}
             </p>
           ) : null}
-          {browseHref ? (
+          {browseHref && !shopping ? (
             <p className="mt-4">
               <Link
                 href={browseHref}
@@ -237,7 +288,43 @@ export default function CollectionShell({
           ) : null}
         </header>
 
-        {products.length > 0 ? (
+        {shopping ? (
+          <>
+            <div className="pt-5">
+              <CollectionFilters
+                filters={filters ?? NO_FILTERS}
+                basePath={basePath}
+                total={totalProducts}
+              />
+            </div>
+
+            <SeoSection id="products" title="Products available at wholesale rates">
+              {products.length > 0 ? (
+                <CollectionProductGrid products={products} />
+              ) : (
+                /*
+                  A filter combination with no matches is a dead end unless the
+                  page says so and offers the way out. Silently rendering an
+                  empty grid reads as a broken page.
+                */
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-8 text-center">
+                  <p className="text-sm font-semibold text-slate-700">
+                    No products match these filters.
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Not every manufacturer stocks this category.
+                  </p>
+                  <Link
+                    href={basePath}
+                    className="mt-4 inline-flex items-center rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
+                  >
+                    Clear filters
+                  </Link>
+                </div>
+              )}
+            </SeoSection>
+          </>
+        ) : products.length > 0 ? (
           <SeoSection id="products" title="Products available at wholesale rates">
             <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {products.map((p) => (
@@ -247,7 +334,28 @@ export default function CollectionShell({
           </SeoSection>
         ) : null}
 
-        <Pagination basePath={basePath} page={page} totalPages={totalPages} />
+        <Pagination
+          basePath={basePath}
+          page={page}
+          totalPages={totalPages}
+          filters={filters}
+        />
+
+        {/*
+          In shopping mode this page IS the catalogue, so the deep link stops
+          being the point of the page and becomes a footnote for the filters
+          this page does not carry (price band, city, free-text search).
+        */}
+        {browseHref && shopping ? (
+          <div className="mx-auto w-full max-w-6xl px-4 pb-2 sm:px-6">
+            <Link
+              href={browseHref}
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-teal-400 hover:text-teal-700"
+            >
+              {browseLabel} →
+            </Link>
+          </div>
+        ) : null}
 
         {body ? (
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">{body}</div>

@@ -21,6 +21,13 @@ import {
   preferOverride,
   type PageTokens,
 } from '@/lib/seo/page-seo';
+import {
+  parseFilters,
+  filterQuery,
+  isFiltered,
+  collectionHref,
+  type CollectionSearchParams,
+} from '@/lib/seo/collection-filters';
 
 /**
  * Dosage-form landing page — e.g. /categories/generic/syrup.
@@ -49,7 +56,7 @@ export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: { categorySlug: string; formSlug: string };
-  searchParams: { page?: string };
+  searchParams: CollectionSearchParams;
 }
 
 async function resolve(categorySlug: string, formSlug: string) {
@@ -87,6 +94,7 @@ export async function generateMetadata({
   }
 
   const page = Math.max(1, Number(searchParams?.page) || 1);
+  const filters = parseFilters(searchParams);
   const { total } = await fetchProducts({
     categoryId: category.id,
     subCategoryId: form.id,
@@ -106,7 +114,9 @@ export async function generateMetadata({
       defaults.description,
       tokens,
     ),
-    path: page > 1 ? `${path}?page=${page}` : path,
+    /** Paginated views self-canonicalise; filtered views also go `noindex`. */
+    path: collectionHref(path, filters, page),
+    index: !isFiltered(filters),
     keywords: defaults.keywords,
   });
 }
@@ -116,24 +126,30 @@ export default async function DosageFormPage({ params, searchParams }: PageProps
   if (!category || !form) notFound();
 
   const page = Math.max(1, Number(searchParams?.page) || 1);
+  const filters = parseFilters(searchParams);
   const { products, total, totalPages } = await fetchProducts({
     categoryId: category.id,
     subCategoryId: form.id,
     page,
     limit: PAGE_SIZE,
+    ...filterQuery(filters),
   });
 
   /**
    * A dosage form with nothing in it is a thin page. Rather than publish it,
    * 404 — this is the guard that keeps the generated surface honest.
+   *
+   * Only the UNFILTERED page can 404 on an empty result. A manufacturer filter
+   * that happens to match nothing is a visitor's dead end, not a missing page,
+   * and 404ing it would tell Google a live URL had disappeared.
    */
-  if (total === 0) notFound();
+  if (total === 0 && !isFiltered(filters)) notFound();
 
   const path = routes.dosageForm(category.slug, form.slug);
   // Matches the canonical: on page 2+ this node describes THAT page, not
   // page 1. They disagreed before, so the schema claimed every paginated
   // view was the first one.
-  const url = absoluteUrl(page > 1 ? `${path}?page=${page}` : path);
+  const url = absoluteUrl(collectionHref(path, filters, page));
 
   const crumbs = [
     { name: 'Home', path: routes.home() },
@@ -142,9 +158,24 @@ export default async function DosageFormPage({ params, searchParams }: PageProps
     { name: form.name, path },
   ];
 
-  const defaults = dosageFormDefaults(category, form, total);
+  /**
+   * Counted unfiltered: the copy is about this dosage form, not about the
+   * subset a visitor has narrowed to. See the note on the category page.
+   */
+  const formTotal = isFiltered(filters)
+    ? (
+        await fetchProducts({
+          categoryId: category.id,
+          subCategoryId: form.id,
+          page: 1,
+          limit: 1,
+        })
+      ).total
+    : total;
+
+  const defaults = dosageFormDefaults(category, form, formTotal);
   const override = await fetchPageOverride(path);
-  const tokens = formTokens(form.name, total);
+  const tokens = formTokens(form.name, formTotal);
   const faqs = override?.faq?.length ? override.faq : defaults.faqs;
 
   const siblings = (category.subCategories ?? []).filter((s) => s.id !== form.id);
@@ -176,8 +207,11 @@ export default async function DosageFormPage({ params, searchParams }: PageProps
         basePath={path}
         page={page}
         totalPages={totalPages}
+        /* Reached from the mega menu, so it has to be able to take an order. */
+        shopping
+        filters={filters}
         browseHref={`${routes.products()}?category=${encodeURIComponent(category.name)}&subCategory=${encodeURIComponent(form.name)}`}
-        browseLabel="Open in catalogue"
+        browseLabel="More filters in the full catalogue"
         faqs={faqs}
         body={
           /*
