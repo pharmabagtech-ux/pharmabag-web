@@ -15,6 +15,8 @@ import {
 import { SITE_NAME, MIN_ORDER_VALUE_INR } from '@/lib/seo/config';
 import { inr } from '@/lib/seo/content';
 import { brandCityDefaults } from '@/lib/seo/defaults/brand';
+import { cityProfile } from '@/lib/seo/data/city-profiles';
+import { SeoSection } from '@/components/seo/SeoContent';
 import {
   applyTokens,
   fetchPageOverride,
@@ -101,7 +103,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const path = routes.brandInCity(params.brandSlug, params.citySlug);
-  const defaults = brandCityDefaults(brand, city, brand.productCount ?? 0);
+  const defaults = brandCityDefaults(brand, city, brand.productCount ?? 0, cityProfile(city.slug));
   const override = await fetchPageOverride(path);
   const tokens = brandCityTokens(brand.name, brand.productCount ?? 0);
 
@@ -146,7 +148,7 @@ export default async function BrandCityPage({ params }: PageProps) {
     { name: city.name, path },
   ];
 
-  const defaults = brandCityDefaults(brand, city, total);
+  const defaults = brandCityDefaults(brand, city, total, cityProfile(city.slug));
   const override = await fetchPageOverride(path);
   const tokens = brandCityTokens(brand.name, total);
   const faqs = override?.faq?.length ? override.faq : defaults.faqs;
@@ -185,6 +187,12 @@ export default async function BrandCityPage({ params }: PageProps) {
         heading={preferOverride(override?.h1, defaults.h1, tokens)}
         intro={preferOverride(override?.intro, defaults.intro, tokens)}
         body={
+          /*
+            An admin-written body wins; otherwise the generated city prose is
+            rendered. Before this the generated body was never shown at all —
+            `defaults.body` was null for these families — which is part of why
+            sibling pages measured 90%+ identical.
+          */
           override?.bodyHtml?.trim() ? (
             <div
               className="prose prose-slate max-w-3xl py-4"
@@ -192,6 +200,14 @@ export default async function BrandCityPage({ params }: PageProps) {
                 __html: applyTokens(override.bodyHtml, tokens),
               }}
             />
+          ) : defaults.body ? (
+            <SeoSection id="local-trade" title={defaults.body.title}>
+              <div className="max-w-3xl space-y-3 text-sm leading-relaxed text-slate-700">
+                {defaults.body.paragraphs.map((para) => (
+                  <p key={para.slice(0, 40)}>{para}</p>
+                ))}
+              </div>
+            </SeoSection>
           ) : undefined
         }
         crumbs={crumbs}
