@@ -17,6 +17,8 @@ import { inr } from '@/lib/seo/content';
 import { ALL_CITIES, findCity } from '@/lib/seo/data/locations';
 import { MOLECULES } from '@/lib/seo/data/molecules';
 import { cityDefaults } from '@/lib/seo/defaults/city';
+import { cityProfile } from '@/lib/seo/data/city-profiles';
+import { SeoSection } from '@/components/seo/SeoContent';
 import {
   applyTokens,
   fetchPageOverride,
@@ -75,7 +77,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { state, city } = found;
   const { total } = await fetchProducts({ page: 1, limit: 1 });
 
-  const defaults = cityDefaults(city, state, total);
+  const profile = cityProfile(city.slug);
+  const defaults = cityDefaults(city, state, total, profile);
   const override = await fetchPageOverride(routes.city(state.slug, city.slug));
   const tokens = cityTokens(city.name, total);
 
@@ -87,6 +90,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       tokens,
     ),
     path: routes.city(state.slug, city.slug),
+    /*
+      A city with no written profile has nothing to say that its 89 siblings do
+      not — measured at 90-92% identical — so it is kept out of the index
+      rather than competing as a near-duplicate. Writing a profile in
+      `data/city-profiles.ts` re-indexes it, with no other change needed.
+    */
+    index: Boolean(profile),
     keywords: defaults.keywords,
   });
 }
@@ -112,7 +122,7 @@ export default async function CityPage({ params }: PageProps) {
     { name: city.name, path },
   ];
 
-  const defaults = cityDefaults(city, state, total);
+  const defaults = cityDefaults(city, state, total, cityProfile(city.slug));
   const override = await fetchPageOverride(path);
   const tokens = cityTokens(city.name, total);
   const faqs = override?.faq?.length ? override.faq : defaults.faqs;
@@ -149,6 +159,12 @@ export default async function CityPage({ params }: PageProps) {
         heading={preferOverride(override?.h1, defaults.h1, tokens)}
         intro={preferOverride(override?.intro, defaults.intro, tokens)}
         body={
+          /*
+            An admin-written body wins; otherwise the generated city prose is
+            rendered. Before this the generated body was never shown at all —
+            `defaults.body` was null for these families — which is part of why
+            sibling pages measured 90%+ identical.
+          */
           override?.bodyHtml?.trim() ? (
             <div
               className="prose prose-slate max-w-3xl py-4"
@@ -156,6 +172,14 @@ export default async function CityPage({ params }: PageProps) {
                 __html: applyTokens(override.bodyHtml, tokens),
               }}
             />
+          ) : defaults.body ? (
+            <SeoSection id="local-trade" title={defaults.body.title}>
+              <div className="max-w-3xl space-y-3 text-sm leading-relaxed text-slate-700">
+                {defaults.body.paragraphs.map((para) => (
+                  <p key={para.slice(0, 40)}>{para}</p>
+                ))}
+              </div>
+            </SeoSection>
           ) : undefined
         }
         crumbs={crumbs}

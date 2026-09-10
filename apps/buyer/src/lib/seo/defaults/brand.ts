@@ -1,5 +1,6 @@
 import { SITE_NAME, MIN_ORDER_VALUE_INR } from '../config';
 import { inr } from '../content';
+import type { CityProfile } from '../data/city-profiles';
 import type { PageDefaults } from './types';
 
 /**
@@ -75,11 +76,46 @@ export interface BrandCityEntity {
   state: { name: string; slug: string };
 }
 
+/**
+ * `/brands/<brand>/<city>` — 560 pages, 40 brands x 14 cities.
+ *
+ * These were measured at **90.8% identical** to their siblings: the only
+ * differences between the Mumbai and the Kolkata page were the city name, the
+ * state name, and one clause. Same product list, same everything else. That is
+ * a doorway page by Google's definition, and it was 520 of the 560.
+ *
+ * The city half of the page is now written from `CITY_PROFILES` — the market
+ * the local trade runs through, the authority that licenses buyers there, and
+ * the territory supplied onward. Those genuinely differ city to city, which
+ * synonyms of "wholesale supplier" never did.
+ *
+ * Note what is NOT claimed: no supplier count, delivery time or price for the
+ * city. The platform holds no city-level data of that kind, so stating any
+ * would be inventing facts to dodge a duplicate-content problem — a worse
+ * outcome than the problem.
+ */
 export function brandCityDefaults(
   brand: BrandEntity,
   city: BrandCityEntity,
   total: number,
+  profile?: CityProfile,
 ): PageDefaults {
+  const listings = total.toLocaleString('en-IN');
+
+  /**
+   * Intro and body carry DIFFERENT facts — market and territory here, role and
+   * local demand below. Using the same fact twice read as repetition; using it
+   * only once, but splitting which half of the profile goes where, is what
+   * separates two cities that share a state and a regulator.
+   */
+  const opening = profile
+    ? `${
+        profile.market
+          ? `The city's wholesale trade runs through ${profile.market}, supplying `
+          : `Buyers here supply `
+      }${profile.serves ?? `${city.name} and the surrounding ${city.state.name} market`}.`
+    : city.note ?? '';
+
   return {
     title: `${brand.name} Distributor in ${city.name} — Wholesale Price`,
     description: `Buy ${brand.name} products at wholesale rates in ${city.name}, ${city.state.name}. ${(brand.productCount ?? 0).toLocaleString('en-IN')} listings from verified distributors on ${SITE_NAME}, with GST invoicing and delivery across ${city.name}.`,
@@ -91,17 +127,41 @@ export function brandCityDefaults(
     ],
     h1: `${brand.name} distributor in ${city.name} — wholesale supply`,
     intro: `Licensed pharmacies, hospitals and distributors in ${city.name}, ${city.state.name} can buy ${brand.name} products in bulk through ${SITE_NAME}. ${
-      city.note ? `${city.note} ` : ''
-    }${total.toLocaleString('en-IN')} ${brand.name} listings are available at wholesale net rates from verified suppliers, invoiced with GST and delivered to your registered business address.`,
+      opening ? `${opening} ` : ''
+    }${listings} ${brand.name} listings are available at wholesale net rates from verified suppliers, invoiced with GST and delivered to your registered business address.`,
+    body: profile
+      ? {
+          title: `Buying ${brand.name} wholesale in ${city.name}`,
+          paragraphs: [
+            `${city.name} is ${profile.role}${
+              profile.demand ? `, and demand for brands like ${brand.name} here is shaped by ${profile.demand}` : ''
+            }.`,
+            `To buy ${brand.name} at wholesale rates in ${city.name} you need a drug licence issued by ${profile.regulator}, together with GST registration or a PAN. ${SITE_NAME} verifies both once during onboarding.`,
+            `Ordering through ${SITE_NAME} does not require a distributorship or a local stockist relationship: ${brand.name} listings are supplied by verified wholesalers anywhere in India and shipped to your registered ${city.name} address with a GST invoice.`,
+          ],
+        }
+      : null,
     faqs: [
       {
         question: `How do I buy ${brand.name} products wholesale in ${city.name}?`,
-        answer: `Register on ${SITE_NAME} as a business buyer with a valid drug licence and GST or PAN details. Once verified, ${total.toLocaleString('en-IN')} ${brand.name} products become available at wholesale net rates, with delivery to your registered address in ${city.name}, ${city.state.name}.`,
+        answer: `Register on ${SITE_NAME} as a business buyer with a valid drug licence${
+          profile ? ` issued by ${profile.regulator}` : ''
+        } and GST or PAN details. Once verified, ${listings} ${brand.name} products become available at wholesale net rates, with delivery to your registered address in ${city.name}, ${city.state.name}.`,
       },
       {
         question: `Is there a ${brand.name} stockist in ${city.name}?`,
-        answer: `${SITE_NAME} is an online B2B marketplace rather than a physical stockist. ${brand.name} products are supplied by verified wholesalers on the platform and shipped to buyers in ${city.name}, so a local stockist relationship is not required to order.`,
+        answer: `${SITE_NAME} is an online B2B marketplace rather than a physical stockist${
+          profile?.market ? `, so you do not need a counter at ${profile.market}` : ''
+        }. ${brand.name} products are supplied by verified wholesalers on the platform and shipped to buyers in ${city.name}, so a local stockist relationship is not required to order.`,
       },
+      ...(profile?.serves
+        ? [
+            {
+              question: `Can I redistribute ${brand.name} stock bought in ${city.name}?`,
+              answer: `Yes, within the scope of your own licence. Buyers ordering into ${city.name} commonly supply ${profile.serves}, and stock is invoiced to your registered business so it can be moved on under your wholesale licence. Onward sale is your responsibility to keep compliant with the conditions ${profile.regulator} sets.`,
+            },
+          ]
+        : []),
       {
         question: `What is the minimum order for ${brand.name} products in ${city.name}?`,
         answer: `Each order line must reach ${inr(MIN_ORDER_VALUE_INR)} including GST. Individual ${brand.name} listings also carry their own minimum order quantity in units, shown on each product page.`,

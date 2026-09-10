@@ -13,6 +13,7 @@ import {
 import { routes, facetSlug } from '@/lib/seo/url';
 import { MOLECULES } from '@/lib/seo/data/molecules';
 import { STATES, ALL_CITIES, TIER_1_CITIES } from '@/lib/seo/data/locations';
+import { cityProfile } from '@/lib/seo/data/city-profiles';
 
 /**
  * All child sitemaps, served from one dynamic route.
@@ -252,7 +253,17 @@ async function handleLocations() {
       priority: 0.7,
     });
   }
+  /**
+   * Only cities that have a written trade profile.
+   *
+   * The rest carry `noindex` (see the city page), and advertising a noindexed
+   * URL in a sitemap is a contradictory signal — it asks Google to crawl a
+   * page whose only instruction is not to index it. Writing a profile in
+   * `data/city-profiles.ts` puts the city back into the sitemap and the index
+   * together, which is the point of keying both off the same data.
+   */
   for (const city of ALL_CITIES) {
+    if (!cityProfile(city.slug)) continue;
     urls.push({
       path: routes.city(city.state.slug, city.slug),
       changeFrequency: 'monthly',
