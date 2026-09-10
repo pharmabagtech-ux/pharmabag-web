@@ -270,16 +270,18 @@ export default function CollectionShell({
    * move below the products.
    */
   /**
-   * One gutter for the whole page.
+   * Only the PRODUCT AREA goes full width.
    *
-   * Shopping mode goes wide: capping a product grid at 1152px left a wide
-   * monitor showing four cards with several hundred empty pixels down each
-   * side, while the catalogue at /products has no cap at all. Every block uses
-   * the same value so the H1, the grid, the FAQ and the link hubs share one
-   * left edge — mixing widths is what makes a page look broken rather than
-   * spacious.
+   * Capping a product grid at 1152px left a wide monitor showing four cards
+   * with several hundred empty pixels down each side. Everything else — the
+   * breadcrumb, the H1 and intro, the buying guide, the FAQs and the link hubs
+   * — stays on the 1152px measure, because it is prose and reads better on a
+   * measure, and because that is how these pages already looked.
+   *
+   * So this is deliberately a mixed-width page: a full-bleed grid under a
+   * centred header. Asked for explicitly, having seen both.
    */
-  const width = shopping ? 'wide' : 'default';
+  const productWidth = shopping ? 'wide' : 'default';
 
   return (
     <>
@@ -299,9 +301,9 @@ export default function CollectionShell({
         <Navbar showUserActions />
       )}
       <main className="w-full pb-28 pt-6 lg:pb-16 lg:pt-28">
-        <Breadcrumbs crumbs={crumbs} width={width} />
+        <Breadcrumbs crumbs={crumbs} />
 
-        <header className={`${CONTENT_WIDTH[width]} pt-4`}>
+        <header className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6">
           {/* Exactly one H1 per page — the primary topical signal. */}
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
             {heading}
@@ -372,7 +374,7 @@ export default function CollectionShell({
           <section
             id="products"
             aria-labelledby="products-heading"
-            className={`${CONTENT_WIDTH[width]} py-8`}
+            className={`${CONTENT_WIDTH[productWidth]} py-8`}
           >
             <div className="flex gap-6 xl:gap-8">
               <CollectionFilters
@@ -433,7 +435,6 @@ export default function CollectionShell({
               <SeoSection
                 id="products"
                 title="Products available at wholesale rates"
-                width={width}
               >
                 <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {products.map((p) => (
@@ -458,7 +459,7 @@ export default function CollectionShell({
           this page does not carry (price band, city, free-text search).
         */}
         {browseHref && shopping ? (
-          <div className={`${CONTENT_WIDTH[width]} pb-2`}>
+          <div className="mx-auto w-full max-w-6xl px-4 pb-2 sm:px-6">
             <Link
               href={browseHref}
               className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-teal-400 hover:text-teal-700"
@@ -469,31 +470,17 @@ export default function CollectionShell({
         ) : null}
 
         {body ? (
-          <div className={CONTENT_WIDTH[width]}>{body}</div>
+          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">{body}</div>
         ) : null}
 
         {faqs.length > 0 ? (
-          <SeoSection id="faq" title="Frequently asked questions" width={width}>
-            {/*
-              The section goes full width so its heading lines up with the
-              grid's, but the answers themselves are prose and get a measure.
-              A question with its answer stretched across 1900px is genuinely
-              hard to read; the link grids below are not prose and do not need
-              this.
-            */}
-            <div className={shopping ? 'max-w-4xl' : undefined}>
-              <FaqList faqs={faqs} />
-            </div>
+          <SeoSection id="faq" title="Frequently asked questions">
+            <FaqList faqs={faqs} />
           </SeoSection>
         ) : null}
 
         {linkSections.map((section) => (
-          <SeoSection
-            key={section.title}
-            title={section.title}
-            headingLevel={2}
-            width={width}
-          >
+          <SeoSection key={section.title} title={section.title} headingLevel={2}>
             <LinkGrid links={section.links} columns={section.columns ?? 4} />
           </SeoSection>
         ))}
