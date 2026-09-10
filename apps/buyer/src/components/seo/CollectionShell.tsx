@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Navbar from '@/components/landing/Navbar';
 import { Breadcrumbs, SeoSection, FaqList, LinkGrid, type SeoLink } from './SeoContent';
+import CollectionChrome from './CollectionChrome';
 import CollectionFilters from './CollectionFilters';
 import CollectionProductGrid from './CollectionProductGrid';
 import type { Faq } from '@/lib/seo/content';
@@ -9,6 +10,7 @@ import { routes } from '@/lib/seo/url';
 import { inr, bestListing } from '@/lib/seo/content';
 import {
   collectionHref,
+  isFiltered,
   NO_FILTERS,
   type CollectionFilters as Filters,
 } from '@/lib/seo/collection-filters';
@@ -251,7 +253,21 @@ export default function CollectionShell({
    */
   return (
     <>
-      <Navbar showUserActions />
+      {/*
+        Shopping mode swaps the bare navbar for one that also carries the
+        mobile filter button and owns the drawer behind it. Facet pages that
+        are not in shopping mode have nothing to filter, so they keep the
+        plain navbar and never ship the drawer's JavaScript.
+      */}
+      {shopping ? (
+        <CollectionChrome
+          filters={filters ?? NO_FILTERS}
+          basePath={basePath}
+          total={totalProducts}
+        />
+      ) : (
+        <Navbar showUserActions />
+      )}
       <main className="w-full pb-28 pt-6 lg:pb-16 lg:pt-28">
         <Breadcrumbs crumbs={crumbs} />
 
@@ -263,17 +279,41 @@ export default function CollectionShell({
           <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-700">
             {intro}
           </p>
-          {totalProducts > 0 ? (
+          {shopping ? (
             <p className="mt-2 text-sm text-slate-500">
-              {/* In shopping mode the live count sits in the filter bar, next
-                  to the controls that change it. */}
-              {shopping
-                ? totalPages > 1
-                  ? `Page ${page} of ${totalPages}`
-                  : ''
-                : `${totalProducts.toLocaleString('en-IN')} products listed${
-                    totalPages > 1 ? ` · page ${page} of ${totalPages}` : ''
-                  }`}
+              {/*
+                On desktop the count lives in the filter bar, beside the
+                controls that change it. On mobile those controls are behind
+                the navbar's filter button, so the count — and, critically,
+                whether a filter is narrowing the list at all — has to be
+                stated here. Without it a filtered phone view is just a
+                shorter page with no explanation.
+              */}
+              <span className="lg:hidden">
+                {totalProducts.toLocaleString('en-IN')}{' '}
+                {totalProducts === 1 ? 'product' : 'products'}
+                {totalPages > 1 ? ' · ' : ''}
+              </span>
+              {totalPages > 1 ? `Page ${page} of ${totalPages}` : ''}
+              {filters && isFiltered(filters) ? (
+                <span className="lg:hidden">
+                  {' · '}
+                  <span className="font-semibold text-teal-700">filtered</span>
+                  {' · '}
+                  <Link
+                    href={basePath}
+                    scroll={false}
+                    className="font-semibold text-teal-700 underline underline-offset-2"
+                  >
+                    clear
+                  </Link>
+                </span>
+              ) : null}
+            </p>
+          ) : totalProducts > 0 ? (
+            <p className="mt-2 text-sm text-slate-500">
+              {totalProducts.toLocaleString('en-IN')} products listed
+              {totalPages > 1 ? ` · page ${page} of ${totalPages}` : ''}
             </p>
           ) : null}
           {browseHref && !shopping ? (
@@ -290,7 +330,9 @@ export default function CollectionShell({
 
         {shopping ? (
           <>
-            <div className="pt-5">
+            {/* `hidden lg:block` here too, or the spacer alone would leave a
+                gap on mobile where the bar used to be. */}
+            <div className="hidden pt-5 lg:block">
               <CollectionFilters
                 filters={filters ?? NO_FILTERS}
                 basePath={basePath}
