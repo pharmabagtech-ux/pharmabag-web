@@ -64,7 +64,16 @@ export default function AdminManagementPage() {
   const openCreate = () => {
     setEditingAdmin(null);
     setForm({ name: "", phone: "", department: "General", permissions: "" });
-    loadGrantsFrom("");
+    // A new admin starts with the overview and nothing else. Reading an empty
+    // string here instead would hand them the legacy grandfathered set —
+    // Blogs and SEO pre-ticked — which is right for an admin who already had
+    // them and wrong for someone being created now.
+    setIsSuper(false);
+    setGrants(
+      Object.fromEntries(
+        ADMIN_AREAS.map((a) => [a, a === "dashboard" ? "read" : "none"]),
+      ) as Record<string, AreaGrant>,
+    );
     setShowModal(true);
   };
 
