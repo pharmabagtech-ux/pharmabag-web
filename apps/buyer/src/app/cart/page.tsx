@@ -13,7 +13,12 @@ import { useCart, useUpdateCartItem, useRemoveCartItem, useClearCart } from '@/h
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { useToast } from '@/components/shared/Toast';
 import { formatCurrency, productSlug } from '@pharmabag/utils';
-import { priceCart } from '@/lib/pricing';
+import {
+  priceCart,
+  effectiveMinQuantity,
+  listingLotSize,
+  stepQuantityByLot,
+} from '@/lib/pricing';
 import { formatSchemeTag } from '@pharmabag/utils';
 
 export default function CartPage() {
@@ -123,6 +128,48 @@ export default function CartPage() {
                     const itemMrp = item.product?.mrp;
                     const itemImage = item.product?.images?.[0] ?? item.imageUrl ?? item.image;
 
+                    /**
+                     * The same three figures every other quantity control on
+                     * the site already honours. This page was the one place
+                     * still stepping by a bare 1 from a floor of 1, so a buyer
+                     * could sit the bag on a quantity the API will not accept
+                     * and only find out when checkout refused the order.
+                     *
+                     * Nothing here changes what may be added to the bag or how
+                     * — only which quantities these two buttons can produce.
+                     */
+                    const itemMinQty = effectiveMinQuantity(item, minOrderAmount);
+                    const itemLot = listingLotSize(item);
+                    const itemStock = Number(item.stock ?? item.product?.stock ?? Infinity) || Infinity;
+
+                    const stepQuantity = (direction: 1 | -1) => {
+                      const next = stepQuantityByLot(
+                        item.quantity,
+                        direction,
+                        itemLot,
+                        itemMinQty,
+                        itemStock,
+                      );
+
+                      // 0 means "a step down would fall below the minimum", and
+                      // the minimum is the smallest orderable amount — so the
+                      // honest outcome is removing the line, which is what the
+                      // steppers on every other surface do.
+                      if (next <= 0) {
+                        removeItem.mutate(item.id, {
+                          onSuccess: () => toast('Item removed', 'info'),
+                        });
+                        return;
+                      }
+
+                      if (next === item.quantity) {
+                        if (direction === 1) toast(`Only ${itemStock} in stock`, 'info');
+                        return;
+                      }
+
+                      updateItem.mutate({ itemId: item.id, quantity: next });
+                    };
+
                     return (
                       <motion.div
                         key={item.id}
@@ -173,16 +220,18 @@ export default function CartPage() {
                               {/* Quantity Controls */}
                               <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-1.5">
                                 <button
-                                  onClick={() => updateItem.mutate({ itemId: item.id, quantity: Math.max(1, item.quantity - 1) })}
-                                  disabled={updateItem.isPending || item.quantity <= 1}
+                                  onClick={() => stepQuantity(-1)}
+                                  disabled={updateItem.isPending || removeItem.isPending}
+                                  aria-label={`Decrease quantity of ${itemName}`}
                                   className="text-gray-400 hover:text-gray-900 disabled:opacity-30 transition-colors"
                                 >
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="text-sm font-bold text-gray-900 min-w-[24px] text-center">{item.quantity}</span>
                                 <button
-                                  onClick={() => updateItem.mutate({ itemId: item.id, quantity: item.quantity + 1 })}
-                                  disabled={updateItem.isPending}
+                                  onClick={() => stepQuantity(1)}
+                                  disabled={updateItem.isPending || item.quantity + itemLot > itemStock}
+                                  aria-label={`Increase quantity of ${itemName}`}
                                   className="text-gray-400 hover:text-gray-900 disabled:opacity-30 transition-colors"
                                 >
                                   <Plus className="w-3.5 h-3.5" />
