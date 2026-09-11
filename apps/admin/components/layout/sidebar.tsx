@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LayoutDashboard, Users, Package, ClipboardList, Settings, LogOut, Shield, ChevronLeft, FolderTree, CreditCard, Banknote, Ticket, Bell, UserCog, FileSpreadsheet, Image, Gift, Layout, MessageSquare, PackagePlus, Newspaper, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminAuth } from "@/store";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { areaForPath, canAccessArea } from "@/lib/admin-areas";
 import { useState } from "react";
 
 const NAV = [
@@ -44,8 +46,16 @@ const NAV = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAdminAuth();
+  const { capabilities } = useAdminPermissions();
   const router = useRouter();
   const [open, setOpen] = useState(true);
+
+  // Only what this admin can actually open. Offering a link that leads to
+  // "Access Denied" is worse than not offering it.
+  const visibleNav = NAV.filter(({ href }) => {
+    const area = areaForPath(href);
+    return area !== null && canAccessArea(capabilities, area);
+  });
 
   return (
     <aside className={cn("fixed top-0 left-0 h-full z-40 flex flex-col glass border-r border-white/30 dark:border-white/10 transition-all duration-300", open ? "w-64" : "w-20")} aria-label="Admin navigation">
@@ -69,7 +79,7 @@ export function AdminSidebar() {
       </div>
 
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto no-sb">
-        {NAV.map(({ icon: Icon, label, href }) => {
+        {visibleNav.map(({ icon: Icon, label, href }) => {
           const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
           return (
             <Link key={href} href={href} aria-current={active ? "page" : undefined}
