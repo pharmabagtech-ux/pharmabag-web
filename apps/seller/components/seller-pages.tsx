@@ -17,7 +17,6 @@ import {
   useSellerCustomOrders,
   useSellerCancelledOrders,
   useSellerDashboard,
-  useSellerAnalytics,
 } from "@/hooks/useSeller";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -400,13 +399,14 @@ function InventoryRow({ item, index }: { item: any, index: number }) {
 }
 
 export function AnalyticsContent() {
-  const { data: dashboardData, isLoading: loadingDashboard } = useSellerDashboard();
-  const { data: analyticsData, isLoading: loadingAnalytics } = useSellerAnalytics();
+  // Was also calling /sellers/analytics, which does not exist on the API — it
+  // 404'd on every render and the fallback it landed on was equally empty.
+  // The dashboard endpoint carries these same figures.
+  const { data: dashboardData, isLoading } = useSellerDashboard();
 
-  const analytics = analyticsData ?? {};
-  const chartData: { month: string; revenue: number; orders: number }[] = dashboardData?.chartData ?? analytics?.chartData ?? [];
-  const stats = dashboardData?.stats ?? analytics?.stats ?? { totalRevenue: 0, totalOrders: 0, activeListings: 0, avgRating: 0 };
-  const isLoading = loadingDashboard || loadingAnalytics;
+  const chartData: any[] = dashboardData?.overview?.revenueTrend ?? dashboardData?.chartData ?? [];
+  const trendKey = chartData.some((p: any) => p?.label != null) ? "label" : "month";
+  const stats = dashboardData?.stats ?? { totalRevenue: 0, totalOrders: 0, activeListings: 0, avgRating: 0 };
 
   if (isLoading) return <div className="p-6 text-center text-muted-foreground">Loading analytics...</div>;
 
@@ -423,14 +423,14 @@ export function AnalyticsContent() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="glass-card rounded-2xl p-6">
-          <h2 className="font-semibold text-foreground mb-4">Monthly Revenue</h2>
+          <h2 className="font-semibold text-foreground mb-4">Revenue</h2>
           <div className="h-56">
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.15} /><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} /></linearGradient></defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                  <XAxis dataKey={trendKey} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} minTickGap={12} />
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}K`} />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} formatter={(v: number) => [formatCurrency(v), "Revenue"]} />
                   <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#sg)" dot={{ r: 3, fill: "hsl(var(--primary))" }} />
@@ -442,13 +442,13 @@ export function AnalyticsContent() {
           </div>
         </div>
         <div className="glass-card rounded-2xl p-6">
-          <h2 className="font-semibold text-foreground mb-4">Orders per Month</h2>
+          <h2 className="font-semibold text-foreground mb-4">Orders</h2>
           <div className="h-56">
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                  <XAxis dataKey={trendKey} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} minTickGap={12} />
                   <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} />
                   <Bar dataKey="orders" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />

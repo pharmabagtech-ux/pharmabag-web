@@ -300,14 +300,6 @@ export async function createProductRequest(payload: { productName: string; manuf
 }
 
 // ─── Analytics ────────────────────────────────────────
-export async function getSellerAnalytics(params: { dateFrom?: string; dateTo?: string } = {}) {
-  const qs = new URLSearchParams();
-  if (params.dateFrom) qs.set("dateFrom", params.dateFrom);
-  if (params.dateTo) qs.set("dateTo", params.dateTo);
-  const { data } = await apiClient.get<any>(`/sellers/analytics?${qs}`);
-  return data.data ?? data;
-}
-
 // ─── Support Tickets ─────────────────────────────────
 const sellerTicketEndpoints = {
   list: "/sellers/tickets",
