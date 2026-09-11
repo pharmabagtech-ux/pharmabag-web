@@ -193,7 +193,8 @@ export function OrdersContent() {
     });
 
   /**
-   * Totals what the BUYER actually paid for this seller's items, GST included.
+   * What the BUYER actually paid for this seller's items on ONE order, GST
+   * included.
    *
    * This used to sum `item.totalPrice`, which is GST-exclusive, so the seller
    * portal reported a smaller number than the buyer was charged for the very
@@ -201,19 +202,51 @@ export function OrdersContent() {
    * the per-item sum is kept only as a fallback for a cached response from
    * before that change.
    */
-  const totalOrderAmount = useMemo(() => {
-    return allOrders.reduce((sum, order) => {
-      if (typeof order.totalAmount === 'number') return sum + order.totalAmount;
-      const items = order.items || order.orderItems || [];
-      const orderSellerSum = items.reduce(
-        (iSum: number, item: any) =>
-          iSum +
-          (item.totalPrice || item.price * (item.quantity || 1)) *
-            (1 + (item.gstPercent ?? 12) / 100),
-        0,
-      );
-      return sum + orderSellerSum;
-    }, 0);
+  const orderAmount = (order: any): number => {
+    if (typeof order.totalAmount === 'number') return order.totalAmount;
+    const items = order.items || order.orderItems || [];
+    return items.reduce(
+      (iSum: number, item: any) =>
+        iSum +
+        (item.totalPrice || item.price * (item.quantity || 1)) *
+          (1 + (item.gstPercent ?? 12) / 100),
+      0,
+    );
+  };
+
+  /**
+   * Cancelled orders are money that never arrives, so they are counted
+   * separately instead of being folded into "Order Amount".
+   *
+   * They used to land in the same total: `allOrders` comes back with no status
+   * filter and only the table's tabs narrowed it, so one cancelled Rs 40,000
+   * order inflated "what buyers paid" permanently — while the page sat right
+   * next to its own "Orders Cancelled" card counting those very orders.
+   *
+   * Pending and Paid are unaffected: those are built from settlements, and a
+   * cancelled order never produces one.
+   */
+  const { liveOrderAmount, cancelledOrderAmount, cancelledCount } = useMemo(() => {
+    let live = 0;
+    let cancelled = 0;
+    let cancelledOrders = 0;
+
+    allOrders.forEach((order) => {
+      const amount = orderAmount(order);
+      const status = (order.orderStatus || order.status || '').toString().toUpperCase();
+      if (status === 'CANCELLED') {
+        cancelled += amount;
+        cancelledOrders += 1;
+      } else {
+        live += amount;
+      }
+    });
+
+    return {
+      liveOrderAmount: live,
+      cancelledOrderAmount: cancelled,
+      cancelledCount: cancelledOrders,
+    };
   }, [allOrders]);
   
   const pendingCount = allOrders.filter(o => { const s = (o.orderStatus || o.status || "").toUpperCase(); return s === "PLACED" || s === "PENDING"; }).length;
@@ -247,15 +280,16 @@ export function OrdersContent() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Orders"
-          value={String(allOrders.length)}
+          value={String(allOrders.length - cancelledCount)}
+          change={cancelledCount > 0 ? `${cancelledCount} cancelled, shown separately` : undefined}
           icon={ShoppingBag}
           iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20"
           delay={0}
         />
         <StatCard
           title="Order Amount"
-          value={formatCurrency(totalOrderAmount)}
-          change="what buyers paid, incl. GST"
+          value={formatCurrency(liveOrderAmount)}
+          change="what buyers paid, incl. GST — excludes cancelled"
           icon={TrendingUp}
           iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20"
           delay={0.05}
@@ -276,9 +310,16 @@ export function OrdersContent() {
           iconClass="bg-green-50 text-green-600 dark:bg-green-900/20"
           delay={0.15}
         />
+        {/*
+          Shows the cancelled VALUE, not just how many. The count alone never
+          answered the question a seller is actually asking — how much business
+          fell through — and leaving that money inside "Order Amount" answered
+          it wrongly.
+        */}
         <StatCard
-          title="Orders Cancelled"
-          value={String(allOrders.filter(o => (o.orderStatus || o.status || "").toString().toUpperCase() === "CANCELLED").length)}
+          title="Cancelled Amount"
+          value={formatCurrency(cancelledOrderAmount)}
+          change={`${cancelledCount} ${cancelledCount === 1 ? 'order' : 'orders'} cancelled`}
           icon={AlertTriangle}
           iconClass="bg-red-50 text-red-600 dark:bg-red-900/20"
           delay={0.2}
