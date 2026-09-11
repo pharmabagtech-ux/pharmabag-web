@@ -68,7 +68,9 @@ export default function ProductCarousel({ reverse = false, slot = 'HOMEPAGE_CARO
             const image = product.images?.[0]?.url || product.image || '/products/pharma_bottle.png';
             const moq = effectiveMinQuantity(product, minOrderAmount);
             const price = listingNetRate(product);
-            const targetId = product.id;
+            // The LISTING id, matching the product page and quick view. Keying
+            // by the master id here put the same product in the bag twice.
+            const targetId = (product as any).bestListingId || product.id;
             const cartItemObj = cartData?.items?.find((i: any) => i.productId === targetId);
 
             const handleCartChange = (quantity: number | null) => {
