@@ -1,5 +1,5 @@
 "use client";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { sendOtp, verifyOtp, getCurrentUser } from "@/api/auth.api";
 import {
   getAdminDashboard, getAdminUsers, getUserById, approveUser, rejectUser, blockUser, unblockUser,
@@ -65,7 +65,13 @@ export function useAdminMe() {
 
 export function useAdminDashboard(params: { dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["admin", "dashboard", params], queryFn: () => getAdminDashboard(params), staleTime: 60_000, retry: 1 }); }
 
-export function useAdminUsers(params: { page?: number; limit?: number; search?: string; role?: string; status?: string; dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["admin", "users", params], queryFn: () => getAdminUsers(params), staleTime: 60_000, retry: 1 }); }
+/**
+ * `placeholderData` keeps the previous page of rows on screen while the next
+ * one loads. Without it every filter change produced a key with no cached
+ * data, `isLoading` went true, and the Users screen replaced ITSELF — filter
+ * chips, search box and all — with a full-screen spinner before coming back.
+ */
+export function useAdminUsers(params: { page?: number; limit?: number; search?: string; role?: string; status?: string; dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["admin", "users", params], queryFn: () => getAdminUsers(params), staleTime: 60_000, retry: 1, placeholderData: keepPreviousData }); }
 
 export function useAdminSellers() { return useQuery({ queryKey: ["admin", "sellers"], queryFn: () => getSellers({ limit: 500 }), staleTime: 60_000, retry: 1 }); }
 

@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Search, UserCheck, UserX, Eye, Ban, Unlock, ChevronDown, ChevronUp, Building2, FileText, MapPin, Palmtree, ExternalLink, Trash2 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
@@ -194,35 +195,104 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
 import { subDays } from "date-fns";
 
-export default function UsersPage() {
-  const [search, setSearch] = useState("");
-  const [role, setRole] = useState<RoleFilter>("all");
-  const [status, setStatus] = useState<StatusFilter>("all");
+const ROLE_VALUES: RoleFilter[] = ["all", "BUYER", "SELLER", "ADMIN"];
+const STATUS_VALUES: StatusFilter[] = ["all", "APPROVED", "PENDING", "BLOCKED", "VACATION"];
+
+function UsersPageContent() {
+  /**
+   * The filters live in the URL, not in component state.
+   *
+   * They used to be plain useState, which meant anything that re-created this
+   * page took them with it — and an admin working through a filtered queue
+   * (SELLER + PENDING) had to re-apply both chips after approving each seller.
+   * Held in the query string they survive a remount, a refresh, and the back
+   * button, and a filtered view can be bookmarked or handed to someone else.
+   */
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const param = (key: string) => searchParams.get(key) ?? undefined;
+
+  const role: RoleFilter = ROLE_VALUES.includes(param("role") as RoleFilter)
+    ? (param("role") as RoleFilter)
+    : "all";
+  const status: StatusFilter = STATUS_VALUES.includes(param("status") as StatusFilter)
+    ? (param("status") as StatusFilter)
+    : "all";
+  const page = Math.max(1, Number(param("page")) || 1);
+  const urlSearch = param("q") ?? "";
+
+  /**
+   * Writes the next set of filters to the URL. `replace` rather than `push` so
+   * the back button leaves the screen instead of walking back through every
+   * chip the admin pressed, and `scroll: false` so the table does not jump to
+   * the top on each change.
+   */
+  const setParams = (next: Record<string, string | number | undefined>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(next)) {
+      if (value === undefined || value === "" || value === "all") params.delete(key);
+      else params.set(key, String(value));
+    }
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
+  // Any narrowing shrinks the result set, so page 3 of the old set may not exist.
+  const setRole = (next: RoleFilter) => setParams({ role: next, page: undefined });
+  const setStatus = (next: StatusFilter) => setParams({ status: next, page: undefined });
+  const setPage = (next: number) => setParams({ page: next === 1 ? undefined : next });
+
+  // The text box stays local so typing is not one router call per keystroke;
+  // the debounce below is what reaches the URL.
+  const [search, setSearch] = useState(urlSearch);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const limit = 20;
 
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30),
-    to: new Date(),
-  });
+  const urlFrom = param("from");
+  const urlTo = param("to");
+  /**
+   * Memoised because DateRangePicker syncs its internal state off `value`'s
+   * identity — handing it a freshly built object on every render would put it
+   * in a set-state loop.
+   */
+  const dateRange: DateRange | undefined = React.useMemo(
+    () => ({
+      from: urlFrom ? new Date(urlFrom) : subDays(new Date(), 30),
+      to: urlTo ? new Date(urlTo) : new Date(),
+    }),
+    [urlFrom, urlTo],
+  );
+  const setDateRange = (next: DateRange | undefined) =>
+    setParams({
+      from: next?.from ? next.from.toISOString() : undefined,
+      to: next?.to ? next.to.toISOString() : undefined,
+      page: undefined,
+    });
 
   // Search and the role/status chips are filters the API already applies, and it
   // counts the filtered set for us. Applying them here instead only ever narrowed
   // the 20 rows already fetched, while the pager went on reporting every page of
   // every user — so searching a phone that belonged to someone on page 2 showed
   // nothing at all on page 1, and the match had to be hunted page by page.
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  // The URL is the source of truth for what was searched; this only pushes the
+  // settled term into it.
+  const debouncedSearch = urlSearch;
   useEffect(() => {
+    if (search === urlSearch) return;
     const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
+      setParams({ q: search || undefined, page: undefined });
     }, 500);
     return () => clearTimeout(handler);
-  }, [search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, urlSearch]);
 
-  // Any narrowing shrinks the result set, so page 3 of the old set may not exist.
-  useEffect(() => { setPage(1); }, [role, status]);
+  // Keeps the box in step when the URL changes from somewhere else — the back
+  // button, or a link into a pre-filtered view.
+  useEffect(() => {
+    setSearch((current) => (current === urlSearch ? current : urlSearch));
+  }, [urlSearch]);
 
   // "VACATION" is ours, not the API's: it is derived from the sellers endpoint and
   // is not a UserStatus, so sending it would fail the enum check. It stays local.
@@ -330,7 +400,10 @@ export default function UsersPage() {
     }
   };
 
-  if (isLoading) {
+  // Only the very first load takes over the screen. Every later fetch keeps
+  // the previous rows up (see `placeholderData` on the hook) so the filters
+  // and the search box stay put instead of being replaced by a spinner.
+  if (isLoading && !usersData) {
     return (
       <AdminLayout>
         <div className="min-h-[60vh] flex items-center justify-center">
@@ -506,5 +579,25 @@ export default function UsersPage() {
         {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
       </div>
     </AdminLayout>
+  );
+}
+
+/**
+ * `useSearchParams` has to sit under a Suspense boundary, or the whole route
+ * opts out of static rendering at build time.
+ */
+export default function UsersPage() {
+  return (
+    <Suspense
+      fallback={
+        <AdminLayout>
+          <div className="min-h-[60vh] flex items-center justify-center">
+            <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        </AdminLayout>
+      }
+    >
+      <UsersPageContent />
+    </Suspense>
   );
 }
