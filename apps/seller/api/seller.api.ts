@@ -132,11 +132,6 @@ export async function getSellerSettlementSummary() {
   return data.data ?? data;
 }
 
-export async function requestSellerPayout() {
-  const { data } = await apiClient.post<{ data: any }>("/settlements/request");
-  return data.data ?? data;
-}
-
 export async function toggleVacationMode(isVacation: boolean) {
   const { data } = await apiClient.patch<any>("/sellers/profile", { isVacation });
   return data.data ?? data.profile ?? data;
@@ -157,12 +152,6 @@ export async function acceptSellerOrder(orderId: string) {
 export async function rejectSellerOrder(orderId: string, reason: string) {
   const { data } = await apiClient.patch<any>(`/orders/${orderId}/status`, { status: "CANCELLED", reason });
   return data.data ?? data.order ?? data;
-}
-
-export async function uploadOrderInvoice(orderId: string, formData: FormData) {
-  const { data } = await apiClient.post<any>(`/orders/${orderId}/invoice`, formData);
-
-  return data.data ?? data;
 }
 
 export async function getSellerCustomOrders() {

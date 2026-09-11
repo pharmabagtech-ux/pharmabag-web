@@ -3,10 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sendOtp, verifyOtp, getCurrentUser } from "@/api/auth.api";
 import {
   getSellerDashboard, getSellerProducts, getSellerOrders, getSellerSettlements,
-  getSellerSettlementSummary, getMasterProductWithListings, requestSellerPayout, createSellerProduct, updateSellerProduct, deleteSellerProduct,
+  getSellerSettlementSummary, getMasterProductWithListings, createSellerProduct, updateSellerProduct, deleteSellerProduct,
   updateSellerOrderStatus, getSellerProfile, updateSellerProfile, getSellerProductById,
   getCategories, toggleVacationMode, getSellerTickets, getSellerTicketById, createSellerTicket, addTicketMessage,
-  getSellerOrderById, acceptSellerOrder, rejectSellerOrder, uploadOrderInvoice,
+  getSellerOrderById, acceptSellerOrder, rejectSellerOrder,
   getSellerCustomOrders, getSellerCancelledOrders,
   getSellerNotifications, markNotificationRead, markAllNotificationsRead,
   getSellerFullProfile, getProductRequests, createProductRequest, getSellerAnalytics,
@@ -113,17 +113,6 @@ export function useSellerSettlements(params: { dateFrom?: string; dateTo?: strin
 
 export function useSellerSettlementSummary() { return useQuery({ queryKey: ["seller", "settlement-summary"], queryFn: getSellerSettlementSummary, staleTime: 60_000, retry: 1, refetchOnWindowFocus: true }); }
 
-export function useRequestPayout() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: requestSellerPayout,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["seller", "settlements"] });
-      void qc.invalidateQueries({ queryKey: ["seller", "settlement-summary"] });
-    },
-  });
-}
-
 export function useToggleVacationMode() {
   const qc = useQueryClient();
   const { user, setUser } = useSellerAuth();
@@ -205,14 +194,6 @@ export function useRejectSellerOrder() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ orderId, reason }: { orderId: string; reason: string }) => rejectSellerOrder(orderId, reason),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: ["seller", "orders"] }); void qc.invalidateQueries({ queryKey: ["seller", "order"] }); },
-  });
-}
-
-export function useUploadOrderInvoice() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ orderId, formData }: { orderId: string; formData: FormData }) => uploadOrderInvoice(orderId, formData),
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ["seller", "orders"] }); void qc.invalidateQueries({ queryKey: ["seller", "order"] }); },
   });
 }

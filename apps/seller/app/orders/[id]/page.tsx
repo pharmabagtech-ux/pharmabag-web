@@ -10,7 +10,7 @@ import {
 import { Button, Badge, OrderStatusBadge } from "@/components/ui";
 import { formatCurrency, formatDate } from "@pharmabag/utils";
 import {
-  useSellerOrder, useAcceptSellerOrder, useRejectSellerOrder, useUploadOrderInvoice, useUpdateSellerOrderStatus,
+  useSellerOrder, useAcceptSellerOrder, useRejectSellerOrder, useUpdateSellerOrderStatus,
 } from "@/hooks/useSeller";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,6 @@ export default function OrderDetailPage() {
   const { data: order, isLoading } = useSellerOrder(id);
   const acceptOrder = useAcceptSellerOrder();
   const rejectOrder = useRejectSellerOrder();
-  const uploadInvoice = useUploadOrderInvoice();
   const updateStatus = useUpdateSellerOrderStatus();
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -60,17 +59,6 @@ export default function OrderDetailPage() {
     });
   };
 
-  const handleInvoiceUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("invoice", file);
-    uploadInvoice.mutate({ orderId: id, formData }, {
-      onSuccess: () => toast.success("Invoice uploaded — stock will be deducted"),
-      onError: () => toast.error("Failed to upload invoice"),
-    });
-  };
-
   const handleMarkAsShipped = () => {
     updateStatus.mutate({ orderId: id, status: "SHIPPED" }, {
       onSuccess: () => toast.success("Order marked as shipped"),
@@ -91,17 +79,7 @@ export default function OrderDetailPage() {
           <h1 className="text-2xl font-semibold text-foreground">Order #{mainOrder.orderNumber || id?.slice(0, 8).toUpperCase()}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Placed {formatDate(mainOrder.createdAt)}</p>
         </div>
-        <div className="flex gap-2">
-          {/* Order Action Buttons hidden as requested */}
-          {(mainOrder.orderStatus === "ACCEPTED" || mainOrder.status === "ACCEPTED" || mainOrder.status === "confirmed" || mainOrder.status === "AWAITING_INVOICE") && (
-            <label>
-              <Button size="sm" variant="outline" leftIcon={<Upload className="h-3.5 w-3.5" />} loading={uploadInvoice.isPending} onClick={() => document.getElementById("invoice-upload")?.click()}>
-                Upload Invoice
-              </Button>
-              <input id="invoice-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={handleInvoiceUpload} />
-            </label>
-          )}
-        </div>
+        {/* Order action buttons hidden as requested */}
       </motion.div>
 
 
