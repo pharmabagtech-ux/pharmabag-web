@@ -137,7 +137,19 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
             // so the panel is inset from whichever edge the navbar occupies -
             // otherwise nav links or the mobile bottom-nav icons underneath it
             // are unreachable while the bag is open.
-            className="fixed top-0 lg:top-28 bottom-24 lg:bottom-0 right-0 w-[92vw] max-w-[400px] sm:w-[380px] md:w-[400px] bg-white shadow-2xl z-[101] flex flex-col overflow-x-hidden"
+            // Presented as a floating sheet rather than a panel pinned to the
+            // edge. It has to clear the navbar either way, and a square-cornered
+            // rectangle starting 112px down with no margin made that clearance
+            // read as a gap someone forgot to close. Matching margins on the
+            // right and bottom, plus the rounding the rest of the site uses,
+            // make the same spacing look deliberate.
+            //
+            // overflow-hidden, not overflow-x-hidden: the list inside scrolls
+            // on its own, and the panel needs to clip it to the corner radius.
+            className="fixed z-[101] flex flex-col overflow-hidden bg-white shadow-2xl
+                       top-0 bottom-24 right-0 w-[92vw] max-w-[400px] rounded-l-3xl
+                       sm:w-[380px] md:w-[400px]
+                       lg:top-24 lg:bottom-4 lg:right-4 lg:rounded-3xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 md:p-8 border-b border-gray-100">
@@ -332,16 +344,21 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                                 aria-expanded={isOpen}
                                 className="w-full flex items-center justify-between gap-2 rounded-lg bg-gray-50 hover:bg-gray-100 px-2.5 py-1.5 text-[11px] transition-colors"
                               >
+                                {/* Rate, then whichever of scheme/saving fits.
+                                    A line with both ran past the 400px panel
+                                    and truncated the saving to "saves ₹9,8…".
+                                    The scheme wins because it is the thing a
+                                    retailer cannot work out for themselves;
+                                    the saving is a row inside the breakup. */}
                                 <span className="flex items-center gap-1.5 min-w-0 truncate">
                                   <span className="font-semibold text-gray-900">{money(x.netRate)}/unit</span>
-                                  {x.scheme && (
+                                  {x.scheme ? (
                                     <span className="text-teal-700 font-semibold">· {x.scheme}</span>
-                                  )}
-                                  {saving > 0 && (
-                                    <span className="text-emerald-600 font-semibold truncate">
+                                  ) : saving > 0 ? (
+                                    <span className="text-emerald-600 font-semibold">
                                       · saves ₹{saving.toLocaleString('en-IN')}
                                     </span>
-                                  )}
+                                  ) : null}
                                 </span>
                                 <span className="flex items-center gap-0.5 text-gray-500 flex-shrink-0">
                                   {isOpen ? 'Hide' : 'Breakup'}
