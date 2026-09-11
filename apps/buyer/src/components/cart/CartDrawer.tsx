@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, X, Plus, Minus, Trash2, Loader2, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, X, Plus, Minus, Trash2, Loader2, ShoppingBag, ChevronDown } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
 import { useCart, useUpdateCartItem, useRemoveCartItem, useClearCart, useSyncCart } from '@/hooks/useCart';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
@@ -69,6 +69,25 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
   const router = useRouter();
 
   const items = cart?.items ?? [];
+
+  /**
+   * Which lines have their price breakup open.
+   *
+   * The breakup is eleven rows — MRP through to "Buyer Pays" — and it used to
+   * render open on every line, which made a single bag row roughly 600px tall.
+   * Three items therefore filled the panel one and a half rows at a time: you
+   * could not see what was in your bag, and Checkout was several scrolls away.
+   * Collapsed by default, with the figures a buyer actually scans (net rate,
+   * scheme, line total) still on the row.
+   */
+  const [openBreakups, setOpenBreakups] = useState<Set<string>>(new Set());
+  const toggleBreakup = (id: string) =>
+    setOpenBreakups((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   // Priced exactly as the server will at checkout — the bag used to omit GST
   // entirely, so it quoted a lower total than the order the buyer received.
@@ -301,8 +320,40 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                           const saving = x.mrp && x.mrp > x.netRate
                             ? Math.round((x.mrp - x.netRate) * x.quantity)
                             : 0;
+                          const isOpen = openBreakups.has(item.id);
                           return (
-                            <div className="mt-2 rounded-lg bg-gray-50 px-2.5 py-2 text-[11px] space-y-1">
+                            <div className="mt-2">
+                              {/* Always on the row: the net rate and the scheme
+                                  are what a retailer actually compares. The
+                                  line total already sits beside the stepper. */}
+                              <button
+                                type="button"
+                                onClick={() => toggleBreakup(item.id)}
+                                aria-expanded={isOpen}
+                                className="w-full flex items-center justify-between gap-2 rounded-lg bg-gray-50 hover:bg-gray-100 px-2.5 py-1.5 text-[11px] transition-colors"
+                              >
+                                <span className="flex items-center gap-1.5 min-w-0 truncate">
+                                  <span className="font-semibold text-gray-900">{money(x.netRate)}/unit</span>
+                                  {x.scheme && (
+                                    <span className="text-teal-700 font-semibold">· {x.scheme}</span>
+                                  )}
+                                  {saving > 0 && (
+                                    <span className="text-emerald-600 font-semibold truncate">
+                                      · saves ₹{saving.toLocaleString('en-IN')}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="flex items-center gap-0.5 text-gray-500 flex-shrink-0">
+                                  {isOpen ? 'Hide' : 'Breakup'}
+                                  <ChevronDown
+                                    className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                                    aria-hidden
+                                  />
+                                </span>
+                              </button>
+
+                              {!isOpen ? null : (
+                            <div className="mt-1 rounded-lg bg-gray-50 px-2.5 py-2 text-[11px] space-y-1">
                               {x.mrp !== null && <BreakupRow label="MRP" value={money(x.mrp)} />}
                               {x.ptr !== null && <BreakupRow label="PTR" value={money(x.ptr)} />}
                               {x.discountPercent > 0 && (
@@ -331,6 +382,8 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                                 </p>
                               )}
                             </div>
+                              )}
+                            </div>
                           );
                         })()}
                       </div>
@@ -344,15 +397,20 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
             {items.length > 0 && (
               <div className="p-4 sm:p-6 md:p-8 bg-gray-50/50 border-t border-gray-100 space-y-4 sm:space-y-6">
                 <div className="space-y-2">
+                  {/* Two decimals, like every line above it. The total was the
+                      one figure in the panel that rounded, so a bag of
+                      ₹20,322.23 + ₹20,114.33 + ₹21,623.44 presented itself as
+                      a flat "₹62,060" and read as though the maths had been
+                      fudged. */}
                   {shipping > 0 && (
                     <div className="flex justify-between text-sm font-medium text-gray-500">
                       <span>Shipping</span>
-                      <span>₹{shipping.toLocaleString('en-IN')}</span>
+                      <span>₹{shipping.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-gray-100">
                     <span>Total</span>
-                    <span>₹{total.toLocaleString('en-IN')}</span>
+                    <span>₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 </div>
                 {!canPurchase && (
