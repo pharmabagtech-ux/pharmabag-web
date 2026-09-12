@@ -518,6 +518,19 @@ export function PayoutsContent() {
 
     allOrders.forEach((order: any) => {
       if (order.status === "DELIVERED" || order.orderStatus === "DELIVERED") {
+        /**
+         * Delivered is not payable. Nothing is owed until the buyer's payment
+         * is confirmed — the API refuses to create a settlement before that,
+         * and "Available Balance" is computed from ledgered settlements only.
+         *
+         * This screen marked every delivered order READY regardless, so a
+         * seller saw "Available Balance ₹0.00" sitting directly above a list
+         * of rows that all said READY. The Orders table and the admin ledger
+         * were both taught this; Payouts was missed.
+         */
+        const paid = (order.paymentStatus || order.payment_status || "")
+          .toString()
+          .toUpperCase() === "SUCCESS";
         const oItems = order.items || order.orderItems || [];
         oItems.forEach((item: any) => {
           const inLedger = recordedPayouts.some(p => p.orderItemId === item.id);
@@ -528,9 +541,9 @@ export function PayoutsContent() {
               // Same basis as the recorded rows beside it (gross − commission),
               // not the bare GST-exclusive totalPrice.
               amount: sellerReceivable(item),
-              status: "READY",
-              reference: "Pending Entry",
-              viewType: "READY"
+              status: paid ? "READY" : "AWAITING PAYMENT",
+              reference: paid ? "Pending Entry" : "Buyer payment not confirmed",
+              viewType: paid ? "READY" : "AWAITING_PAYMENT",
             });
           }
         });
