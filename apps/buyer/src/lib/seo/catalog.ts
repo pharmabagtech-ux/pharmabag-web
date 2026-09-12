@@ -41,6 +41,20 @@ export interface CatalogProduct {
   discountMeta?: Record<string, unknown> | null;
   hasSellers?: boolean;
   sellerCount?: number | null;
+  /**
+   * The cheapest active LISTING for this master product — the id the bag is
+   * actually keyed by.
+   *
+   * `id` above is the MASTER product. Adding that to the bag appears to work
+   * (the API resolves a master to its first listing) but produces a line keyed
+   * differently from the one the product page and quick view create, so the
+   * same product could occupy two lines and checkout rejected the second.
+   *
+   * Optional: it is absent when no seller stocks the product, and absent
+   * everywhere until the paired API fix ships — hence every read of it falls
+   * back to `id`, which is exactly today's behaviour.
+   */
+  bestListingId?: string | null;
   stock?: number | null;
   image?: string | null;
   category?: { id: string; name: string; slug: string } | null;

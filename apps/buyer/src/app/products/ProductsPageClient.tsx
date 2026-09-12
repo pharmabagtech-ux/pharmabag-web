@@ -399,6 +399,25 @@ function ProductsPageContent() {
                     // that collected around half the minimum order value.
                     const minQty = effectiveMinQuantity(product, minOrderAmount);
 
+                    /**
+                     * The id this card's bag line is keyed by. It must match
+                     * what `handleCartChange` writes, or the card shows an
+                     * empty quantity while the item sits in the bag.
+                     *
+                     * Until the API started returning `bestListingId` this
+                     * resolved to the master id everywhere, which is why the
+                     * display happened to line up. It has to track the write.
+                     */
+                    const cartId = product.bestListingId || product.id;
+
+                    // Both keys are tried: a backend line is mapped under its
+                    // master product id, a local line under whichever id the
+                    // card wrote.
+                    const cartQuantity =
+                      cartQuantityMap.get(cartId) ??
+                      cartQuantityMap.get(product.id) ??
+                      null;
+
                     const handleCartChange = (quantity: number | null, activeId?: string) => {
                       const targetId = activeId || product.bestListingId;
                       if (!targetId) {
@@ -499,12 +518,12 @@ function ProductsPageContent() {
                           moq={minQty}
                           ptr={product.ptr}
                           discountTag={computedDiscountTag}
-                          cartQuantity={cartQuantityMap.get(product.id) ?? null}
-                          productId={product.id}
+                          cartQuantity={cartQuantity}
+                          productId={cartId}
                           product={product}
                           isBookmarked={wishlistSet.has(product.id)}
                           onBookmark={handleBookmark}
-                          isLoadingCart={pendingCartProducts.has(product.id)}
+                          isLoadingCart={pendingCartProducts.has(cartId)}
                           onQuickView={() => setQuickViewProduct(product)}
                           onClick={() => router.push(`/products/${productSlug(product)}`)}
                           onCartChange={handleCartChange}

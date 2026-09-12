@@ -82,17 +82,24 @@ export default function CollectionProductGrid({
             (i: { productId?: string; id: string }) => i.productId === id,
           );
 
-        /** What the card displays. Keyed by product id, as the catalogue is. */
-        const cartLine = lineFor(product.id);
+        /**
+         * The one id this card uses for everything: the line it reads, the
+         * pending state it shows, and the line it writes.
+         *
+         * It has to be the LISTING id. The product page and quick view key
+         * their lines by listing, so a grid keying by MASTER put the same
+         * product in the bag twice and checkout then rejected the second line.
+         * Falls back to the master id — both the previous behaviour and the
+         * only option for a product no seller stocks.
+         */
+        const cartId = product.bestListingId || product.id;
+
+        /** What the card displays. */
+        const cartLine = lineFor(cartId);
 
         const handleCartChange = (quantity: number | null, activeId?: string) => {
-          /**
-           * `activeId` comes from the card, which resolves it as
-           * `bestListingId || productId` — the id the cart's lines are keyed
-           * by. Hardcoding `product.id` here would be right today and wrong
-           * the moment a product gains a second seller.
-           */
-          const targetId = activeId || product.id;
+          // `activeId` comes from the card, which resolves it the same way.
+          const targetId = activeId || cartId;
           const line = lineFor(targetId);
 
           if (quantity === null || quantity <= 0) {
@@ -177,9 +184,9 @@ export default function CollectionProductGrid({
                 product.discountMeta as never,
               )}
               cartQuantity={cartLine?.quantity ?? null}
-              productId={product.id}
+              productId={cartId}
               product={product}
-              isLoadingCart={pending.has(product.id)}
+              isLoadingCart={pending.has(cartId)}
               onCartChange={handleCartChange}
               onClick={() => router.push(routes.product(slug))}
             />
