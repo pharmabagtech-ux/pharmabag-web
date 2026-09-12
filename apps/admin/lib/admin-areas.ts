@@ -89,7 +89,8 @@ export const ROUTE_AREAS: { prefix: string; area: AdminArea }[] = [
   { prefix: '/payments', area: 'payments' },
   { prefix: '/settlements', area: 'settlements' },
   { prefix: '/marketing', area: 'marketing' },
-  { prefix: '/banners', area: 'marketing' },
+  // /banners is gone — the screen was wired to four endpoints that never
+  // existed, so nothing on it ever loaded, saved or deleted.
   { prefix: '/blogs', area: 'blogs' },
   { prefix: '/seo', area: 'seo' },
   { prefix: '/tickets', area: 'tickets' },

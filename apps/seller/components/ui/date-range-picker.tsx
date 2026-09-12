@@ -41,7 +41,21 @@ export function DateRangePicker({
   }, []);
 
   const handleApply = () => {
-    onChange?.(range);
+    /**
+     * DayPicker hands back midnight for the day that was clicked, so a
+     * hand-picked "1 Sep – 10 Sep" asked the API for createdAt <= 10 Sep
+     * 00:00 and everything placed ON the 10th silently disappeared. The quick
+     * presets already applied endOfDay; only the calendar did not, which is
+     * the case where the gap is hardest to notice.
+     *
+     * Normalised here rather than at each screen: five of them sent
+     * `to.toISOString()` straight through, and two had been patched
+     * individually. Applying endOfDay twice is harmless, so the patched ones
+     * keep working unchanged.
+     */
+    onChange?.(
+      range?.to ? { from: range.from, to: endOfDay(range.to) } : range,
+    );
     setOpen(false);
   };
 

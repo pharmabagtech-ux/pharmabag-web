@@ -9,7 +9,8 @@ import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button, Badge, Modal, Input, Skeleton } from "@/components/ui";
 import { formatCurrency } from "@pharmabag/utils";
 import { cn } from "@/lib/utils";
-import { useOrderById, useUpdateAdminOrderStatus, useCancelOrder } from "@/hooks/useAdmin";
+import { paymentBadge } from "@/lib/payment-status";
+import { useOrderById, useUpdateAdminOrderStatus } from "@/hooks/useAdmin";
 import { SellerHoverCard } from "@/components/orders/SellerHoverCard";
 import toast from "react-hot-toast";
 
@@ -30,9 +31,6 @@ export default function OrderDetailPage() {
   const router = useRouter();
   const { data: order, isLoading } = useOrderById(id);
   const updateStatus = useUpdateAdminOrderStatus();
-  const cancelOrder = useCancelOrder();
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
 
   const handleStatusUpdate = async (status: string) => {
     try {
@@ -40,16 +38,6 @@ export default function OrderDetailPage() {
       toast.success(`Order updated to ${status}`);
     } catch {
       toast.error("Failed to update order status");
-    }
-  };
-
-  const handleCancel = async () => {
-    try {
-      await cancelOrder.mutateAsync({ orderId: id, reason: cancelReason });
-      toast.success("Order cancelled");
-      setShowCancelModal(false);
-    } catch {
-      toast.error("Failed to cancel order");
     }
   };
 
@@ -106,11 +94,12 @@ export default function OrderDetailPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {!isCancelled && order.orderStatus !== "DELIVERED" && (
-              <Button size="sm" variant="danger" onClick={() => setShowCancelModal(true)} leftIcon={<XCircle className="h-4 w-4" />}>Cancel Order</Button>
-            )}
-          </div>
+          {/* "Cancel Order" lived here and posted to
+              PATCH /admin/orders/:id/cancel — a route that has never existed.
+              Every attempt failed with "Failed to cancel order", the stock was
+              never returned and the order stayed stuck. Removed rather than
+              left as a trap. The API does expose PATCH /orders/:id/cancel to
+              admins, so wiring this up for real is a separate job. */}
         </div>
 
         {/* Status Timeline */}
@@ -371,7 +360,7 @@ export default function OrderDetailPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Status</span>
-                  <Badge variant={order.paymentStatus === "PAID" ? "success" : order.paymentStatus === "PENDING" ? "warning" : "error"}>{order.paymentStatus ?? "—"}</Badge>
+                  {(() => { const b = paymentBadge(order.paymentStatus); return <Badge variant={b.variant}>{b.label}</Badge>; })()}
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Method</span>
@@ -405,16 +394,6 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Cancel Modal */}
-      <Modal open={showCancelModal} onClose={() => setShowCancelModal(false)} title="Cancel Order">
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Are you sure you want to cancel this order? This action cannot be undone.</p>
-          <Input label="Reason (optional)" value={cancelReason} onChange={e => setCancelReason(e.target.value)} placeholder="e.g. Customer requested cancellation" />
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="ghost" onClick={() => setShowCancelModal(false)}>Keep Order</Button>
-            <Button variant="danger" onClick={handleCancel} loading={cancelOrder.isPending}>Cancel Order</Button>
-          </div>
-        </div>
-      </Modal>
     </AdminLayout>
   );
 }

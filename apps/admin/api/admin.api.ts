@@ -398,28 +398,9 @@ export async function importSuggestionsCsv(file: File) {
   return data;
 }
 
-// ─── Banners ─────────────────────────────────────────
-export async function getBanners() {
-  const { data } = await apiClient.get<{ data: any }>("/admin/banners");
-  return data.data;
-}
 
-export async function createBanner(payload: FormData) {
-  const { data } = await apiClient.post<{ data: any }>("/admin/banners", payload);
 
-  return data.data;
-}
 
-export async function updateBanner(id: string, payload: FormData) {
-  const { data } = await apiClient.patch<{ data: any }>(`/admin/banners/${id}`, payload);
-
-  return data.data;
-}
-
-export async function deleteBanner(id: string) {
-  const { data } = await apiClient.delete<{ data: any }>(`/admin/banners/${id}`);
-  return data.data;
-}
 
 // ─── Referral Codes ──────────────────────────────────
 export async function getReferralCodes(params: { page?: number; limit?: number; dateFrom?: string; dateTo?: string } = {}) {

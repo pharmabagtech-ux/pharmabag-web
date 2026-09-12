@@ -119,14 +119,45 @@ export default function AdminSettlementsPage() {
   // (PENDING_ENTRY). Both render in the table as "PENDING" with a Paid
   // button, so the card must count both or it reads ₹0.00 above a visible
   // pending row.
-  const pendingAmount = displayItems
-    .filter((s: any) => s.payoutStatus === "PENDING" || s.payoutStatus === "PENDING_ENTRY")
+  //
+  // These cards used to sum ONLY the twenty rows on screen, so "Pending
+  // Payouts" showed a fraction of what sellers were owed and the figure moved
+  // as the admin paged. The API now aggregates over the whole filtered set;
+  // the page-local sums stay as a fallback for builds that predate it.
+  const serverSummary = (settlementsData as any)?.summary;
+
+  // PENDING_ENTRY rows are derived here from delivered orders and do not exist
+  // in the ledger the server counts, so they are added on top of its figure.
+  const pendingEntryAmount = displayItems
+    .filter((s: any) => s.payoutStatus === "PENDING_ENTRY")
     .reduce((sum: number, s: any) => sum + (s.amount ?? 0), 0);
+
+  const pendingAmount = serverSummary
+    ? (serverSummary.pendingAmount ?? 0) + pendingEntryAmount
+    : displayItems
+        .filter((s: any) => s.payoutStatus === "PENDING" || s.payoutStatus === "PENDING_ENTRY")
+        .reduce((sum: number, s: any) => sum + (s.amount ?? 0), 0);
+
+  const settledAmount = serverSummary
+    ? (serverSummary.paidAmount ?? 0)
+    : settlements
+        .filter((s: any) => s.payoutStatus === "PAID")
+        .reduce((sum: number, s: any) => sum + (s.amount ?? 0), 0);
+
+  /**
+   * Search and the status chips filter the CURRENT PAGE only, while the pager
+   * still offers every page. Searching an order that sits on page 3 therefore
+   * returned "No settlements found" beside a pager showing 3 pages, and the
+   * admin concluded the settlement did not exist. Until the endpoint accepts a
+   * search term, say so rather than letting an empty result read as an answer.
+   */
+  const isNarrowedLocally = Boolean(search) || filter !== "ALL";
+  const hasMorePages = totalPages > 1;
 
   const filtered = displayItems.filter((s: any) =>
     (filter === "ALL" || (filter === "PENDING" && s.payoutStatus !== "PAID") || s.payoutStatus === filter) &&
-    (!search || 
-      (s.orderItem?.orderId || "").toLowerCase().includes(search.toLowerCase()) || 
+    (!search ||
+      (s.orderItem?.orderId || "").toLowerCase().includes(search.toLowerCase()) ||
       (s.seller?.companyName || s.seller?.businessName || "").toLowerCase().includes(search.toLowerCase())
     )
   );
@@ -270,10 +301,10 @@ export default function AdminSettlementsPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Transactions" value={String(displayItems.length)} icon={CreditCard} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0} />
+          <StatCard title="Total Transactions" value={String(totalSettlements)} icon={CreditCard} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0} />
           <StatCard title="Awaiting Payment" value={formatCurrency(awaitingAmount)} icon={Clock} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0.05} />
           <StatCard title="Pending Payouts" value={formatCurrency(pendingAmount)} icon={TrendingUp} iconClass="bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20" delay={0.1} />
-          <StatCard title="Total Settled" value={formatCurrency(settlements.filter((s: any) => s.payoutStatus === "PAID").reduce((sum: number, s: any) => sum + (s.amount ?? 0), 0))} icon={CheckCircle2} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0.15} />
+          <StatCard title="Total Settled" value={formatCurrency(settledAmount)} icon={CheckCircle2} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0.15} />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border/40">
@@ -311,7 +342,21 @@ export default function AdminSettlementsPage() {
               </thead>
               <tbody className="divide-y divide-border/30">
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={6} className="py-12 text-center text-sm text-muted-foreground">No orders or settlements found</td></tr>
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
+                      {isNarrowedLocally && hasMorePages ? (
+                        <>
+                          <p className="font-medium text-foreground">No match on this page</p>
+                          <p className="mt-1">
+                            Search and the status filter only look at page {page} of {totalPages}.
+                            Try another page, or narrow the date range instead.
+                          </p>
+                        </>
+                      ) : (
+                        "No orders or settlements found"
+                      )}
+                    </td>
+                  </tr>
                 ) : filtered.map((s: any, i: number) => (
                   <motion.tr key={s.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }} className="hover:bg-accent/30 transition-colors">
                     <td className="px-5 py-4 whitespace-nowrap">

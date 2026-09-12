@@ -13,7 +13,6 @@ import {
   getSubCategories, createSubCategory, updateSubCategory, deleteSubCategory as deleteSubCategoryApi,
   getAdmins, createAdmin, updateAdmin, deleteAdmin,
   getSuggestions, createSuggestion, updateSuggestion, deleteSuggestion, importSuggestionsCsv,
-  getBanners, createBanner, updateBanner, deleteBanner,
   getReferralCodes, createReferralCode, deleteReferralCode,
   broadcastNotification, getNotificationHistory, getMyBroadcastHistory, sendUserNotification,
   getPlatformSettings, updatePlatformSettings,
@@ -418,27 +417,9 @@ export function useImportSuggestionsCsv() {
   return useMutation({ mutationFn: importSuggestionsCsv, onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "suggestions"] }) });
 }
 
-// ─── Banners ─────────────────────────────────────────
 
-export function useBanners() { return useQuery({ queryKey: ["admin", "banners"], queryFn: getBanners, staleTime: 60_000, retry: 1 }); }
 
-export function useCreateBanner() {
-  const qc = useQueryClient();
-  return useMutation({ mutationFn: createBanner, onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "banners"] }) });
-}
 
-export function useUpdateBanner() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: FormData }) => updateBanner(id, payload),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "banners"] }),
-  });
-}
-
-export function useDeleteBanner() {
-  const qc = useQueryClient();
-  return useMutation({ mutationFn: deleteBanner, onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "banners"] }) });
-}
 
 // ─── Referral Codes ──────────────────────────────────
 

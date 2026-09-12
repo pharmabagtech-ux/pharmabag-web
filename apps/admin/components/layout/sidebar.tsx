@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, Users, Package, ClipboardList, Settings, LogOut, Shield, ChevronLeft, FolderTree, CreditCard, Banknote, Ticket, Bell, UserCog, FileSpreadsheet, Image, Gift, Layout, MessageSquare, PackagePlus, Newspaper, Globe } from "lucide-react";
+import { LayoutDashboard, Users, Package, ClipboardList, Settings, LogOut, Shield, ChevronLeft, FolderTree, CreditCard, Banknote, Ticket, Bell, UserCog, FileSpreadsheet, Image, Gift, Layout, MessageSquare, PackagePlus, Newspaper, Globe, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminAuth } from "@/store";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
@@ -16,6 +16,10 @@ const NAV = [
   // with the visitor views (Traffic, Audience, Real-Time) as sibling tabs.
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Users, label: "Users", href: "/users" },
+  // A complete, working KYC screen (legal name, GST/PAN, credit tier) that was
+  // never in this nav, so the only way in was to type the URL. It reads the
+  // same endpoint the rest of the console uses — it was simply invisible.
+  { icon: Building2, label: "Buyers", href: "/buyers" },
   { icon: FileSpreadsheet, label: "Upload CSV File", href: "/csv-upload" },
   { icon: Package, label: "Products", href: "/products" },
   // Categories is a complete screen (list, search, create with a parent picker,
