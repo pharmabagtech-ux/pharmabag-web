@@ -3,7 +3,7 @@ import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus, Search, Edit, Trash2, Eye, Upload, RefreshCw } from "lucide-react";
 import { Button, Input, Badge, ApprovalBadge, Skeleton, Pagination } from "@/components/ui";
-import { formatCurrency } from "@pharmabag/utils";
+import { formatCurrency, calculatePricing, VALID_GST_PERCENTAGES } from "@pharmabag/utils";
 import { cn } from "@/lib/utils";
 import { useSellerProducts, useDeleteSellerProduct } from "@/hooks/useSeller";
 import Link from "next/link";
@@ -11,6 +11,50 @@ import { FileText } from "lucide-react";
 
 const EMOJI: Record<string,string> = {"eye-drops":"👁️",capsules:"🔴",tablets:"💊",syrups:"🧪",vitamins:"🌟",default:"💊"};
 const PAGE_SIZE = 20;
+
+/** The stored discount enum, in the shape the pricing helper expects. */
+const BACKEND_TO_FORM_TYPE: Record<string, string> = {
+  PTR_DISCOUNT: "ptr_discount",
+  SAME_PRODUCT_BONUS: "same_product_bonus",
+  PTR_PLUS_SAME_PRODUCT_BONUS: "ptr_discount_and_same_product_bonus",
+  DIFFERENT_PRODUCT_BONUS: "different_product_bonus",
+  PTR_PLUS_DIFFERENT_PRODUCT_BONUS: "ptr_discount_and_different_product_bonus",
+  SPECIAL_PRICE: "special_price",
+};
+
+/**
+ * What the seller actually sells at, per unit.
+ *
+ * This column read `p.sellingPrice`, which the API has never sent — the row is
+ * a `Product`, and that table has no price column at all, only `mrp`,
+ * `gstPercent`, `discountType` and `discountMeta`. The line therefore never
+ * rendered, and a seller reviewing their catalogue under a heading marked
+ * "Price" was reading the printed MRP rather than their own rate.
+ *
+ * Derived with the same helper the product form previews with, so the list and
+ * the edit screen cannot disagree. Returns null when the inputs cannot support
+ * a calculation, rather than inventing a number.
+ */
+function netRateFor(p: any): number | null {
+  const mrp = Number(p?.mrp);
+  const gst = Number(p?.gstPercent ?? p?.gst);
+  if (!mrp || mrp <= 0) return null;
+  if (!VALID_GST_PERCENTAGES.includes(gst as never)) return null;
+
+  const meta = p?.discountMeta ?? {};
+  try {
+    return calculatePricing(mrp, gst as never, {
+      type: (BACKEND_TO_FORM_TYPE[p?.discountType ?? ""] ?? "ptr_discount") as never,
+      discountPercent: meta?.discountPercent,
+      buy: meta?.buy,
+      get: meta?.get,
+      bonusProductName: meta?.bonusProductName,
+      specialPrice: meta?.specialPrice,
+    }).finalPtr;
+  } catch {
+    return null;
+  }
+}
 
 export default function ProductsPage() {
   const [page, setPage] = useState(1);
@@ -84,7 +128,7 @@ export default function ProductsPage() {
                 <table className="w-full" aria-label="Products">
                   <thead>
                     <tr className="border-b border-border/50 bg-muted/20">
-                      {["Product","Category","Price","Stock","GST","SKU","Actions"].map(h=>(
+                      {["Product","Category","Your rate / MRP","Stock","GST","SKU","Actions"].map(h=>(
                         <th key={h} scope="col" className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
@@ -109,8 +153,19 @@ export default function ProductsPage() {
                         </td>
                         <td className="px-5 py-4"><Badge className="capitalize">{p.category}</Badge></td>
                         <td className="px-5 py-4">
-                          <div className="text-sm font-semibold text-foreground">{formatCurrency(p.mrp ?? p.price ?? 0)}</div>
-                          {p.sellingPrice != null && p.sellingPrice !== p.mrp && <div className="text-xs text-muted-foreground">Sell: {formatCurrency(p.sellingPrice)}</div>}
+                          {(() => {
+                            const net = netRateFor(p);
+                            return (
+                              <>
+                                <div className="text-sm font-semibold text-foreground">
+                                  {net != null ? formatCurrency(net) : formatCurrency(p.mrp ?? 0)}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {net != null ? `MRP ${formatCurrency(p.mrp ?? 0)}` : "MRP — rate unavailable"}
+                                </div>
+                              </>
+                            );
+                          })()}
                         </td>
                         <td className="px-5 py-4">
                           <span className={`text-sm font-medium ${(p.stock ?? 0)>100?"text-green-600":(p.stock ?? 0)>0?"text-yellow-600":"text-red-500"}`}>
