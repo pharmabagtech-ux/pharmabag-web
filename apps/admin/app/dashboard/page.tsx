@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Users, Package, ShoppingBag, TrendingUp, AlertTriangle, CheckCircle, Clock, Flag, Bell, Search, BarChart3, Trophy, Banknote } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
+import { paymentBadge } from "@/lib/payment-status";
 import { StatCard, Badge, StatusBadge, Button } from "@/components/ui";
 import { formatCurrency, formatCompact } from "@pharmabag/utils";
 import {
@@ -73,6 +74,11 @@ export default function AdminDashboardPage() {
     totalSellers: d?.totalSellers ?? 0,
     totalOrders: d?.totalOrders ?? 0,
     totalRevenue: d?.totalRevenue ?? 0,
+    // Both arrive with the revenue fix: the old headline counted cancelled and
+    // unpaid orders, so what it was folding in is now shown rather than
+    // hidden. Null on API builds that predate it.
+    pendingRevenue: (d?.pendingRevenue ?? null) as number | null,
+    platformCommission: (d?.platformCommission ?? null) as number | null,
     totalProducts: d?.totalProducts ?? 0,
     pendingOrders: d?.pendingOrders ?? 0,
     pendingPayments: d?.pendingPayments ?? 0,
@@ -177,7 +183,11 @@ export default function AdminDashboardPage() {
         <StatCard title="Total Buyers" value={String(stats.totalBuyers)} change="Verified buyers" icon={Users} iconClass="bg-cyan-50 text-cyan-600 dark:bg-cyan-900/20" delay={0.05} href="/users" />
         <StatCard title="Total Sellers" value={String(stats.totalSellers)} change={`${stats.blockedUsers} blocked`} icon={CheckCircle} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0.1} href="/users" />
         <StatCard title="Total Orders" value={formatCompact(stats.totalOrders)} change={`${stats.pendingOrders} pending`} icon={ShoppingBag} iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20" delay={0.15} href="/orders" />
-        <StatCard title="Platform Revenue" value={`₹${formatCompact(stats.totalRevenue)}`} change={`${stats.pendingPayments} pending payments`} icon={TrendingUp} iconClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20" delay={0.2} href="/settlements" />
+        {/* "Platform Revenue" was gross sales including cancelled and unpaid
+            orders. It is now money actually collected, so the label says
+            what it is — the platform's own income is the commission, which
+            the subtitle carries once the API supplies it. */}
+        <StatCard title="Collected Sales" value={`₹${formatCompact(stats.totalRevenue)}`} change={stats.pendingRevenue !== null ? `₹${formatCompact(stats.pendingRevenue)} awaiting payment` : `${stats.pendingPayments} pending payments`} icon={TrendingUp} iconClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20" delay={0.2} href="/settlements" />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
@@ -227,7 +237,7 @@ export default function AdminDashboardPage() {
                     <p className="text-xs text-muted-foreground">{o.buyer?.phone ?? ""}</p>
                   </td>
                   <td className="px-5 py-4 text-sm font-semibold text-foreground">{formatCurrency(o.totalAmount ?? 0)}</td>
-                  <td className="px-5 py-4"><Badge variant={o.paymentStatus === "PAID" ? "success" : o.paymentStatus === "PENDING" ? "warning" : "error"}>{o.paymentStatus ?? "—"}</Badge></td>
+                  <td className="px-5 py-4">{(() => { const b = paymentBadge(o.paymentStatus); return <Badge variant={b.variant}>{b.label}</Badge>; })()}</td>
                   <td className="px-5 py-4 text-xs text-muted-foreground whitespace-nowrap">{o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-IN") : "—"}</td>
                 </motion.tr>
               ))}
