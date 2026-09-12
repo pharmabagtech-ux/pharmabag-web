@@ -25,6 +25,13 @@ export default function SellerDashboard() {
     dateTo: dateRange?.to?.toISOString(),
   });
   const dashboardData = dashboardDataRaw as any;
+  // `label` is what the API sends now; `month` is the shape an older build of
+  // the API used, and the two repos deploy separately.
+  const revenueTrend: any[] = dashboardData?.overview?.revenueTrend ?? dashboardData?.chartData ?? [];
+  const trendKey = revenueTrend.some((p: any) => p?.label != null) ? "label" : "month";
+  const rangeLabel = dateRange?.from && dateRange?.to
+    ? `${formatDate(dateRange.from.toISOString())} – ${formatDate(dateRange.to.toISOString())}`
+    : "All time";
   const { user } = useSellerAuth();
   const { data: profile } = useSellerProfile();
   const toggleVacation = useToggleVacationMode();
@@ -95,10 +102,10 @@ export default function SellerDashboard() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard title="Total Revenue" value={formatCurrency(stats.totalRevenue)} change="+0% this month" up icon={TrendingUp} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0} href="/payouts" />
-        <StatCard title="Active Listings" value={`${stats.activeListings}`} change="0 pending approval" icon={Package} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0.07} href="/products" />
-        <StatCard title="Orders" value={String(stats.totalOrders)} change={`${stats.pendingOrders} pending`} icon={ShoppingBag} iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20" delay={0.14} href="/orders" />
-        <StatCard title="Pending Payouts" value={formatCurrency(stats.pendingPayouts)} change="Scheduled" up={false} icon={CreditCard} iconClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20" delay={0.21} href="/payouts" />
+        <StatCard title="Delivered Revenue" value={formatCurrency(stats.totalRevenue)} change={rangeLabel} up icon={TrendingUp} iconClass="bg-green-50 text-green-600 dark:bg-green-900/20" delay={0} href="/payouts" />
+        <StatCard title="Active Listings" value={`${stats.activeListings}`} change="Live on the store" icon={Package} iconClass="bg-blue-50 text-blue-600 dark:bg-blue-900/20" delay={0.07} href="/products" />
+        <StatCard title="Orders" value={String(stats.totalOrders)} change={`${stats.pendingOrders} pending overall`} icon={ShoppingBag} iconClass="bg-purple-50 text-purple-600 dark:bg-purple-900/20" delay={0.14} href="/orders" />
+        <StatCard title="Pending Payouts" value={formatCurrency(stats.pendingPayouts)} change="Awaiting settlement" up={false} icon={CreditCard} iconClass="bg-orange-50 text-orange-600 dark:bg-orange-900/20" delay={0.21} href="/payouts" />
       </div>
 
       {/* Low stock alert */}
@@ -117,19 +124,27 @@ export default function SellerDashboard() {
           {/* Revenue chart */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <div><h2 className="font-semibold text-foreground">Revenue</h2><p className="text-xs text-muted-foreground mt-0.5">Monthly revenue this year</p></div>
+              <div><h2 className="font-semibold text-foreground">Revenue</h2><p className="text-xs text-muted-foreground mt-0.5">Delivered orders · {rangeLabel}</p></div>
               <BarChart3 className="h-5 w-5 text-muted-foreground" aria-hidden />
             </div>
             <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dashboardData?.chartData || []} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={v => `${(v / 100000).toFixed(0)}L`} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} formatter={(v: number) => [formatCurrency(v), "Revenue"]} />
-                  <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {revenueTrend.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={revenueTrend} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey={trendKey} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} minTickGap={12} />
+                    {/* Rupees, not lakhs: a seller doing ₹40,000 used to see every
+                        bar labelled "0L" on the axis. */}
+                    <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={v => v >= 100000 ? `${(v / 100000).toFixed(1)}L` : v >= 1000 ? `${Math.round(v / 1000)}K` : String(v)} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} formatter={(v: number) => [formatCurrency(v), "Revenue"]} />
+                    <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-center text-muted-foreground text-sm border border-dashed border-border rounded-xl px-6">
+                  No delivered orders in this period yet.
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -153,7 +168,10 @@ export default function SellerDashboard() {
                     <tr key={o.orderId || o.id} className="hover:bg-accent/30 transition-colors">
                       <td className="px-5 py-4"><span className="font-mono text-xs font-medium text-foreground">{(o.orderId || o.id || "").slice(0, 8).toUpperCase() || "—"}</span></td>
 
-                      <td className="px-5 py-4 text-sm font-semibold text-foreground">{formatCurrency(o.totalAmount ?? o.sellerTotal ?? o.total ?? 0)}</td>
+                      {/* `amount`/`totalPrice` are what this endpoint actually
+                          sends. Reading `totalAmount` first is why every row in
+                          this table showed ₹0.00. */}
+                      <td className="px-5 py-4 text-sm font-semibold text-foreground">{formatCurrency(o.amount ?? o.totalPrice ?? o.totalAmount ?? o.sellerTotal ?? o.total ?? 0)}</td>
                       <td className="px-5 py-4"><OrderStatusBadge status={o.orderStatus || o.status} /></td>
                       <td className="px-5 py-4">
                         <Link href={`/orders/${o.orderId || o.id}`} title="Manage Order">
@@ -175,7 +193,7 @@ export default function SellerDashboard() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card rounded-2xl p-5">
             <h3 className="font-semibold text-sm text-foreground mb-4">Quick Actions</h3>
             <div className="space-y-2">
-              {[{ icon: Package, label: "Add New Product", href: "/products/new", c: "text-primary bg-primary/10" }, { icon: ShoppingBag, label: "Manage Orders", href: "/orders", c: "text-blue-600 bg-blue-50 dark:bg-blue-900/20" }, { icon: CreditCard, label: "Request Payout", href: "/payouts", c: "text-green-600 bg-green-50 dark:bg-green-900/20" }, { icon: Bell, label: "Notifications", href: "/notifications", c: "text-orange-600 bg-orange-50 dark:bg-orange-900/20" }].map(({ icon: Icon, label, href, c }) => (
+              {[{ icon: Package, label: "Add New Product", href: "/products/new", c: "text-primary bg-primary/10" }, { icon: ShoppingBag, label: "Manage Orders", href: "/orders", c: "text-blue-600 bg-blue-50 dark:bg-blue-900/20" }, { icon: CreditCard, label: "View Payouts", href: "/payouts", c: "text-green-600 bg-green-50 dark:bg-green-900/20" }, { icon: Bell, label: "Notifications", href: "/notifications", c: "text-orange-600 bg-orange-50 dark:bg-orange-900/20" }].map(({ icon: Icon, label, href, c }) => (
                 <Link key={label} href={href} className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/60 transition-colors fr">
                   <div className={`h-8 w-8 rounded-xl flex items-center justify-center ${c}`}><Icon className="h-4 w-4" aria-hidden /></div>
                   <span className="text-sm font-medium text-foreground">{label}</span>

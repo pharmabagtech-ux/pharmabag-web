@@ -9,7 +9,7 @@ import {
   getSellerOrderById, acceptSellerOrder, rejectSellerOrder,
   getSellerCustomOrders, getSellerCancelledOrders,
   getSellerNotifications, markNotificationRead, markAllNotificationsRead,
-  getSellerFullProfile, getProductRequests, createProductRequest, getSellerAnalytics,
+  getSellerFullProfile, getProductRequests, createProductRequest,
   searchSuggestions, getCategoriesWithSubs,
   verifyGstOrPan, uploadKycDocument, uploadDrugLicense,
 } from "@/api/seller.api";
@@ -244,9 +244,6 @@ export function useCreateProductRequest() {
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["seller", "product-requests"] }),
   });
 }
-
-// ─── Analytics ────────────────────────────────────────
-export function useSellerAnalytics(params: { dateFrom?: string; dateTo?: string } = {}) { return useQuery({ queryKey: ["seller", "analytics", params], queryFn: () => getSellerAnalytics(params), staleTime: 120_000, retry: 1 }); }
 
 // ─── Ticket by ID ─────────────────────────────────────
 export function useSellerTicketById(ticketId: string) {
