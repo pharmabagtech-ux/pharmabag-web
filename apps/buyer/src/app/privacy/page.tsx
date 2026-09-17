@@ -97,6 +97,17 @@ export default function PrivacyPage() {
             browser sends a Do Not Track signal. This data is never sold or
             shared with third parties.
           </p>
+          <p>
+            When {SITE_NAME} runs advertising on Facebook or Instagram, the
+            site also loads the Meta Pixel. It records that a page was viewed
+            and nothing else — no product names, medicine details, prices,
+            basket contents or order information are ever sent to Meta. Meta
+            may use this to measure how its ads perform and to show{' '}
+            {SITE_NAME} ads to people who have visited the site. The pixel is
+            also disabled when your browser sends a Do Not Track signal, and
+            you can limit ad personalisation in your Meta account&apos;s Ad
+            Preferences.
+          </p>
         </SeoSection>
 
         <SeoSection id="share" title="Who it is shared with">
@@ -106,8 +117,10 @@ export default function PrivacyPage() {
             record and need them to fulfil and invoice the order — and with
             logistics providers to the extent needed for delivery. Verification
             documents are used for onboarding checks. {SITE_NAME} does not sell
-            personal or business data to third parties, and does not run
-            third-party advertising trackers on the site.
+            personal or business data to third parties. The only third-party
+            advertising tracker on the site is the Meta Pixel described above,
+            and it receives page views only — never order, product or
+            medicine data.
           </p>
         </SeoSection>
 

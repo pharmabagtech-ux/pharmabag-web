@@ -15,6 +15,7 @@ export interface SiteSettings {
   gscVerification?: string;
   bingVerification?: string;
   ga4MeasurementId?: string;
+  metaPixelId?: string;
   socialProfiles?: string[];
   supportEmail?: string;
   addressLocality?: string;

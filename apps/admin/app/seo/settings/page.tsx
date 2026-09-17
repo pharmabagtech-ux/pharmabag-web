@@ -12,6 +12,7 @@ const EMPTY = {
   gscVerification: "",
   bingVerification: "",
   ga4MeasurementId: "",
+  metaPixelId: "",
   socialProfiles: [] as string[],
   supportEmail: "",
   addressLocality: "",
@@ -53,11 +54,19 @@ export default function SeoSettingsPage() {
       toast.error("GA4 ID must look like G-XXXXXXXXXX");
       return;
     }
+    // Digits only. The two things people actually paste are the ad-account id
+    // (act_…) and the whole Events Manager URL; either one installs a pixel
+    // that looks fine and never fires, so it's worth blocking the save.
+    if (form.metaPixelId && !/^\d{15,16}$/.test(form.metaPixelId)) {
+      toast.error("Meta Pixel ID is the 15–16 digit number from Events Manager — digits only");
+      return;
+    }
     // Send only non-empty values; the API treats absent keys as "unset".
     const payload: SiteSettings = {};
     if (form.gscVerification.trim()) payload.gscVerification = form.gscVerification.trim();
     if (form.bingVerification.trim()) payload.bingVerification = form.bingVerification.trim();
     if (form.ga4MeasurementId.trim()) payload.ga4MeasurementId = form.ga4MeasurementId.trim();
+    if (form.metaPixelId.trim()) payload.metaPixelId = form.metaPixelId.trim();
     if (form.socialProfiles.length) payload.socialProfiles = form.socialProfiles;
     if (form.supportEmail.trim()) payload.supportEmail = form.supportEmail.trim();
     if (form.addressLocality.trim()) payload.addressLocality = form.addressLocality.trim();
@@ -99,9 +108,9 @@ export default function SeoSettingsPage() {
           </p>
         </div>
 
-        {/* Search engine codes */}
+        {/* Search engine & tracking codes */}
         <div className="glass-card space-y-4 rounded-2xl border border-border p-5">
-          <h2 className="text-sm font-bold text-foreground">Search engine codes</h2>
+          <h2 className="text-sm font-bold text-foreground">Search engine &amp; tracking codes</h2>
           <Input
             label="Google Search Console verification token"
             value={form.gscVerification}
@@ -120,6 +129,19 @@ export default function SeoSettingsPage() {
             onChange={(e) => set({ ga4MeasurementId: e.target.value.toUpperCase().trim() })}
             placeholder="G-XXXXXXXXXX"
           />
+          <div>
+            <Input
+              label="Meta Pixel ID"
+              value={form.metaPixelId}
+              onChange={(e) => set({ metaPixelId: e.target.value.replace(/\s/g, "") })}
+              placeholder="1234567890123456"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Facebook/Instagram ads. Find it in Meta Events Manager → Data sources → your pixel.
+              Counts page views only — no product, price or order data is sent. Leave blank to
+              remove the pixel.
+            </p>
+          </div>
         </div>
 
         {/* Brand profiles */}

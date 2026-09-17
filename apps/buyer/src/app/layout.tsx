@@ -6,6 +6,7 @@ import { Providers } from './providers';
 import Footer from '@/components/landing/Footer';
 import SiteLinkHub from '@/components/seo/SiteLinkHub';
 import JsonLd from '@/components/seo/JsonLd';
+import { MetaPixel } from '@/components/analytics/MetaPixel';
 import { graph, organizationSchema, websiteSchema } from '@/lib/seo/schema';
 import {
   SITE_URL,
@@ -162,6 +163,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   /** GA4: panel-configured id first, env var as the legacy fallback. */
   const ga4Id = settings.ga4MeasurementId || process.env.NEXT_PUBLIC_GA4_ID;
 
+  /**
+   * Meta Pixel: panel-configured only. There is no env-var fallback on
+   * purpose — this app's Docker build drops .env files, so an env var here
+   * would be silently ignored and look like a broken pixel.
+   */
+  const metaPixelId = settings.metaPixelId;
+
   return (
     <html
       lang={SITE_LANG}
@@ -205,6 +213,12 @@ gtag('config', '${ga4Id}');`}
             </Script>
           </>
         )}
+        {/*
+          Meta Pixel, gated on an id saved in the admin panel. Page views
+          only — no product, price or order data is ever sent. Ships inert
+          until someone pastes an id.
+        */}
+        {metaPixelId && <MetaPixel pixelId={metaPixelId} />}
         <Providers>
           <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             {/*
