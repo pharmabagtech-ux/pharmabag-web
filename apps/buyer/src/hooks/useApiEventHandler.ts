@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { onApiEvent } from '@pharmabag/api-client';
 import { useToast } from '@/components/shared/Toast';
-import { localCart } from '@/lib/local-cart';
 import { useQueryClient } from '@tanstack/react-query';
 
 /**
@@ -18,14 +17,32 @@ export function useApiEventHandler() {
 
   useEffect(() => {
     const unsubs = [
-      onApiEvent('auth:expired', (detail) => {
-        // Clear cart, token and redirect
-        localCart.clear();
-        queryClient.invalidateQueries({ queryKey: ['cart'] });
-        
+      onApiEvent('auth:expired', () => {
+        /**
+         * The session ended — sign the buyer out, but do NOT touch their bag.
+         *
+         * This used to call `localCart.clear()`. A pharmacy that had spent an
+         * hour assembling a ₹20,000 order came back from a break — or hit one
+         * flaky moment during a token refresh — to an empty bag, with no
+         * message, no warning and no prompt to sign in again. Every other
+         * handler in this file tells the buyer what happened; the one that
+         * destroyed their work was the only silent one.
+         *
+         * The bag lives in localStorage and belongs to the browser, not the
+         * session. It is the buyer's own list until checkout, and nothing
+         * about an expired token makes it wrong.
+         */
         if (typeof window !== 'undefined') {
           localStorage.removeItem('pb_access_token');
           localStorage.removeItem('pb_refresh_token');
+        }
+
+        // The bag survives; anything fetched as that user does not.
+        queryClient.invalidateQueries({ queryKey: ['cart'] });
+
+        toast('Your session expired. Please sign in again — your bag is safe.', 'info');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('open-login'));
         }
       }),
       onApiEvent('error:forbidden', (detail) => {
