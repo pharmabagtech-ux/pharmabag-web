@@ -187,7 +187,7 @@ export default function PremiumProductCard({
       {/* Discount Tag - overlapping the top-left corner */}
       {discountTag && (
         <div
-          className={`absolute -top-[16px] left-[4px] sm:left-[8px] bg-white border border-gray-400 font-normal text-gray-900 rounded-full z-20 whitespace-nowrap shadow-none w-fit px-2 h-[20px] sm:h-[22px] flex items-center justify-center ${discountTag.length > 12 ? 'text-[8px] xs:text-[9px] sm:text-[9.5px]' : 'text-[9px] xs:text-[10px] sm:text-[11.5px]'
+          className={`absolute -top-[16px] left-[4px] sm:left-[8px] bg-emerald-600 border border-emerald-700 font-bold text-white rounded-full z-20 whitespace-nowrap shadow-md w-fit px-2.5 h-[22px] sm:h-[24px] flex items-center justify-center ${discountTag.length > 12 ? 'text-[9px] xs:text-[10px] sm:text-[10.5px]' : 'text-[10px] xs:text-[11px] sm:text-[12.5px]'
             }`}
         >
           {discountTag}
