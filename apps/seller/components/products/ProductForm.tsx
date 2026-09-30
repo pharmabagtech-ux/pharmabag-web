@@ -2,7 +2,8 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2, ArrowLeft, Search } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Search, PackagePlus, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -31,18 +32,44 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
   const updateProduct = useUpdateSellerProduct();
   const isEditing = !!productId;
 
-  // Suggestion autocomplete state
+  // Catalogue search state.
+  //
+  // A new listing is a listing OF a catalogue product, so the search is not a
+  // convenience — it is step one, and nothing else renders until it has been
+  // answered. Sellers stocking something we do not carry go to
+  // /products/requests instead, which admin reviews.
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedMasterId, setSelectedMasterId] = useState<string | null>(null);
+  const [selectedMaster, setSelectedMaster] = useState<Suggestion | null>(null);
   // The catalogue entry this listing is tied to.
   // Adding: whatever was picked from Quick Search. Editing: the listing's own master.
-  const linkedMasterId = selectedMasterId ?? masterProductId ?? null;
+  const linkedMasterId = selectedMaster?.id ?? masterProductId ?? null;
+  // Editing never shows the picker — the listing already has its master, and
+  // legacy listings created before this rule must stay editable. Derived from
+  // linkedMasterId (not selectedMaster alone) so a form rendered with a
+  // masterProductId prop but no productId - which the component's signature
+  // allows - doesn't show the picker while identityLocked and the submit
+  // guard both treat it as already linked.
+  const needsCatalogueChoice = !isEditing && !linkedMasterId;
+  // Identity comes from the catalogue, so these are never the seller's to type:
+  // locked once a master is picked, and locked on every edit — including legacy
+  // listings with no master, whose fields would otherwise look editable and then
+  // be rejected by the API.
+  const identityLocked = !!linkedMasterId || isEditing;
   const [activeIndex, setActiveIndex] = useState(-1);
   const suggestionRef = useRef<HTMLDivElement>(null);
-  const { data: suggestions = [] } = useSuggestionSearch(searchQuery, "master");
+  const { data: suggestionData, isFetching: isSearching, isError: searchFailed } = useSuggestionSearch(searchQuery, "master");
+  // Stable identity across renders - suggestionData ?? [] alone made a fresh
+  // [] on every render, which re-ran the effect below that resets activeIndex.
+  const suggestions = useMemo(() => suggestionData ?? [], [suggestionData]);
+  // "Not in the catalogue" is only true once a response has actually come back
+  // successfully. Keying it off an empty array alone made it flash between the
+  // keystroke and the request starting, telling the seller their product does
+  // not exist while we were still looking for it - and searchFailed excludes
+  // the case where we never got an answer at all (see the error panel below).
+  const noMatches = !isSearching && !searchFailed && Array.isArray(suggestionData) && suggestionData.length === 0;
 
-  const { register, control, handleSubmit, setValue, getValues, formState: { errors, isSubmitting, isDirty }, watch } = useForm<FormValues>({
+  const { register, control, handleSubmit, setValue, resetField, getValues, formState: { errors, isSubmitting, isDirty }, watch } = useForm<FormValues>({
     mode: "onChange",
     resolver: zodResolver(productFormSchema) as any,
     defaultValues: defaultValues || {
@@ -184,15 +211,29 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
+  // Which fields the CURRENT catalogue selection actually wrote. autofill is
+  // conditional per-field (see below), so this is not "every field the form
+  // has" - it's only the ones this specific suggestion carried a value for.
+  // handleClearSelection reads this to undo exactly what was done, which is
+  // also what keeps the two functions from drifting apart as fields are
+  // added or removed here.
+  const autofilledRef = useRef<Set<keyof FormValues>>(new Set());
+
   const handleSuggestionSelect = useCallback((suggestion: Suggestion) => {
-    setSelectedMasterId(suggestion.id);
+    setSelectedMaster(suggestion);
+    const autofilled = new Set<keyof FormValues>();
+
     setValue("product_name", suggestion.productName, { shouldDirty: true });
+    autofilled.add("product_name");
     setValue("company_name", suggestion.companyName, { shouldDirty: true });
+    autofilled.add("company_name");
     if (suggestion.sku) {
       setValue("sku", suggestion.sku, { shouldDirty: true });
+      autofilled.add("sku");
     }
     if (suggestion.chemicalCombination) {
       setValue("chemical_combination", suggestion.chemicalCombination, { shouldDirty: true });
+      autofilled.add("chemical_combination");
     }
     // The catalogue returns null for both of these on most master products, and
     // `!== undefined` let null through: GST became null, the select fell back to
@@ -201,28 +242,76 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
     // Only overwrite the form when the suggestion carries a usable value.
     if (VALID_GST_PERCENTAGES.includes(suggestion.gstPercent as any)) {
       setValue("gst_percent", suggestion.gstPercent as number, { shouldDirty: true });
+      autofilled.add("gst_percent");
     }
     if (typeof suggestion.mrp === "number" && suggestion.mrp > 0) {
       setValue("product_price", suggestion.mrp, { shouldDirty: true });
+      autofilled.add("product_price");
     }
     if (suggestion.categoryId) {
       setValue("categories", [suggestion.categoryId], { shouldDirty: true });
+      autofilled.add("categories");
     }
     if (suggestion.subCategoryId) {
       setValue("sub_categories", [suggestion.subCategoryId], { shouldDirty: true });
+      autofilled.add("sub_categories");
     }
     if (suggestion.description) {
       // If we had a description field in the form, we'd set it here
     }
     if (suggestion.images && Array.isArray(suggestion.images)) {
       setValue("image_list", suggestion.images.map((img: any) => typeof img === 'string' ? img : img.url), { shouldDirty: true });
+      autofilled.add("image_list");
     }
-    
+
+    autofilledRef.current = autofilled;
     setShowSuggestions(false);
     setSearchQuery("");
   }, [setValue]);
 
+  // Clearing is not what keeps a stale name off a submission - product_name
+  // is unconditionally overwritten by the very next handleSuggestionSelect
+  // call, and there is no submit button on screen while the picker (not this
+  // form) is showing. What clearing IS for: handleSuggestionSelect only
+  // writes a field when the new suggestion actually carries a value for it,
+  // so switching from a master that had e.g. its own MRP to one that doesn't
+  // would otherwise leave the first master's price sitting in the form to be
+  // submitted as the second master's own value. autofilledRef records
+  // exactly which fields the current selection wrote, so only those are
+  // cleared here - seller-owned values that were never autofilled are left
+  // alone.
+  const handleClearSelection = useCallback(() => {
+    setSelectedMaster(null);
+    const arrayFields = new Set<keyof FormValues>(["categories", "sub_categories", "image_list"]);
+    autofilledRef.current.forEach((field) => {
+      if (field === "product_price") {
+        // Required `number` in ProductFormValues - setValue(undefined) doesn't
+        // typecheck, so resetField is the typesafe way back to the unset state.
+        resetField("product_price");
+      } else if (field === "gst_percent") {
+        // Unlike product_price, gst_percent has a sensible non-blank fallback:
+        // 5% is a valid slab, so the pricing preview keeps working.
+        setValue("gst_percent", 5, { shouldDirty: true });
+      } else if (arrayFields.has(field)) {
+        setValue(field as any, [], { shouldDirty: true });
+      } else {
+        setValue(field as any, "", { shouldDirty: true });
+      }
+    });
+    autofilledRef.current = new Set();
+    setSearchQuery("");
+    setShowSuggestions(false);
+  }, [setValue, resetField]);
+
   const onSubmit = async (data: FormValues) => {
+    // The form is not rendered without a selection, so this only catches a
+    // state we should never reach. Reuses the exact render condition rather
+    // than re-deriving "has no master" here, so the two can't drift apart.
+    // The API enforces the same rule regardless.
+    if (needsCatalogueChoice) {
+      toast.error("Pick your product from the catalogue search first");
+      return;
+    }
     try {
       const extra_fields = data.custom_extra_fields.reduce<Record<string, string>>((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
 
@@ -311,7 +400,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         ...(Object.keys(extra_fields).length > 0 && { extraFields: extra_fields }),
         ...(mappedDiscountType && { discountType: mappedDiscountType }),
         ...(Object.keys(discountMeta).length > 0 && { discountMeta }),
-        ...(selectedMasterId && { masterProductId: selectedMasterId }),
+        ...(linkedMasterId && { masterProductId: linkedMasterId }),
       };
 
       if (isEditing) {
@@ -339,7 +428,11 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         </Button>
         <div>
           <h1 className="font-semibold text-2xl text-foreground">{isEditing ? "Edit Product" : "Add New Product"}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Please fill in the product details carefully.</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {needsCatalogueChoice
+              ? "Find your product in the PharmaBag catalogue to start listing it."
+              : "Please fill in the product details carefully."}
+          </p>
         </div>
       </div>
 
@@ -349,10 +442,10 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         const msg = (firstError as any)?.message || "Please fix the form errors";
         toast.error(String(msg));
       })} className="space-y-6">
-        {/* Suggestion Search */}
-        {!isEditing && (
+        {/* Step one: pick the catalogue product this listing is for. */}
+        {needsCatalogueChoice && (
           <div className="glass-card rounded-2xl p-6 space-y-4 relative z-50" ref={suggestionRef}>
-            <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Quick Search (Autocomplete)</h2>
+            <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Find your product</h2>
             <div className="relative">
               <Input
                 label="Search product catalog"
@@ -362,6 +455,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
                 onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                 onKeyDown={handleKeyDown}
                 leftIcon={<Search className="h-4 w-4" />}
+                autoFocus
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border border-primary/20 rounded-xl shadow-2xl max-h-64 overflow-y-auto backdrop-blur-xl">
@@ -385,7 +479,65 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
                 </div>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Select from suggestions to auto-fill product details, or enter manually below.</p>
+
+            {searchFailed ? (
+              <div className="rounded-xl border border-dashed border-red-300 dark:border-red-800/50 bg-red-50/50 dark:bg-red-900/10 p-4 space-y-2">
+                <p className="text-sm font-medium text-foreground">
+                  Couldn&rsquo;t reach the catalogue
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Something went wrong searching the PharmaBag catalogue. This is not the same as
+                  the product not existing — please check your connection and try again.
+                </p>
+              </div>
+            ) : noMatches ? (
+              <div className="rounded-xl border border-dashed border-border bg-muted/20 p-4 space-y-2">
+                <p className="text-sm font-medium text-foreground">
+                  No catalogue match for &ldquo;{searchQuery.trim()}&rdquo;
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  You can only list products that are already in the PharmaBag catalogue.
+                  Try a shorter search — the brand name alone usually works — or ask us to add it.
+                </p>
+                <Link
+                  href="/products/requests"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                >
+                  <PackagePlus className="h-3.5 w-3.5" />
+                  Request this product
+                </Link>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Pick your product from the suggestions to continue.{" "}
+                <Link href="/products/requests" className="font-medium text-primary hover:underline">
+                  Not in the catalogue?
+                </Link>
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Everything below is the seller's own commercial terms, and only
+            applies once the catalogue product is settled. */}
+        {!needsCatalogueChoice && (
+        <>
+        {/* The chosen catalogue entry, with the way back to the picker. */}
+        {!isEditing && selectedMaster && (
+          <div className="glass-card rounded-2xl p-4 flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="font-semibold text-sm text-foreground truncate">{selectedMaster.productName}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {selectedMaster.companyName}
+                  {selectedMaster.chemicalCombination ? ` | ${selectedMaster.chemicalCombination}` : ""}
+                </p>
+              </div>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={handleClearSelection}>
+              Change
+            </Button>
           </div>
         )}
 
@@ -400,11 +552,11 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[45] transition-opacity duration-300">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="SKU (Optional)" error={errors.sku?.message} {...register("sku")} disabled={!!linkedMasterId} />
-            <Input label="Product Name *" error={errors.product_name?.message} {...register("product_name")} disabled={!!linkedMasterId} />
-            <Input label="Company / Manufacturer *" error={errors.company_name?.message} {...register("company_name")} disabled={!!linkedMasterId} />
+            <Input label="SKU (Optional)" error={errors.sku?.message} {...register("sku")} disabled={identityLocked} />
+            <Input label="Product Name *" error={errors.product_name?.message} {...register("product_name")} disabled={identityLocked} />
+            <Input label="Company / Manufacturer *" error={errors.company_name?.message} {...register("company_name")} disabled={identityLocked} />
             <div className="md:col-span-1">
-              <Textarea label="Chemical Combination" error={errors.chemical_combination?.message} {...register("chemical_combination")} disabled={!!linkedMasterId} />
+              <Textarea label="Chemical Combination" error={errors.chemical_combination?.message} {...register("chemical_combination")} disabled={identityLocked} />
             </div>
           </div>
         </div>
@@ -412,7 +564,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         {/* Categories */}
         <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[44] transition-opacity duration-300">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Categorization</h2>
-          <div>
+          <div className="space-y-3">
             <Controller
               control={control}
               name="categories"
@@ -421,13 +573,29 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
                   control={control}
                   name="sub_categories"
                   render={({ field: { value: subcats, onChange: setSubcats } }: any) => (
-                    <CategorySelector
-                      selectedCategoryIds={cats}
-                      onChangeCategories={setCats}
-                      selectedSubcategoryIds={subcats || []}
-                      onChangeSubcategories={setSubcats}
-                      error={errors.categories?.message}
-                    />
+                    <>
+                      {/* identityLocked alone would grey out the selector even
+                          when the catalogue product has no category recorded,
+                          leaving a required field permanently unsatisfiable -
+                          lock only once locking actually has something to show. */}
+                      {identityLocked && (cats?.length ?? 0) === 0 && (
+                        <p className="text-xs text-muted-foreground border border-orange-200 dark:border-orange-800/40 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg px-3 py-2">
+                          This catalogue product has no category recorded. Pick one below, or{" "}
+                          <Link href="/products/requests" className="font-medium text-primary hover:underline">
+                            report it
+                          </Link>.
+                        </p>
+                      )}
+                      <CategorySelector
+                        selectedCategoryIds={cats}
+                        onChangeCategories={setCats}
+                        selectedSubcategoryIds={subcats || []}
+                        onChangeSubcategories={setSubcats}
+                        error={errors.categories?.message}
+                        disabled={identityLocked && (cats?.length ?? 0) > 0}
+                        subcategoriesDisabled={identityLocked && (subcats?.length ?? 0) > 0}
+                      />
+                    </>
                   )}
                 />
               )}
@@ -533,6 +701,8 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
           <Button type="button" variant="outline" onClick={() => router.push("/products")} disabled={isSubmitting}>Cancel</Button>
           <Button type="submit" loading={isSubmitting}>{isEditing ? "Update Product" : "Add Product"}</Button>
         </div>
+        </>
+        )}
       </form>
     </div>
   );

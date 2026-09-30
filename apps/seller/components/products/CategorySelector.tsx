@@ -10,9 +10,20 @@ interface Props {
   selectedSubcategoryIds: string[];
   onChangeSubcategories: (ids: string[]) => void;
   error?: string;
+  // Category and sub-category are catalogue identity, not seller data - the
+  // same rule that locks the identity fields next to this component in
+  // ProductForm. Without this, the only thing stopping an edit was the
+  // toggles' incidental early-return once a selection already existed, so a
+  // chip could look clickable and silently do nothing, and a legacy row with
+  // an empty category array would have been wide open.
+  disabled?: boolean;
+  // Sub-category locks independently of category: ProductForm only sets this
+  // once a sub-category value actually exists, for the same reason `disabled`
+  // is conditioned on having a category value - see the note there.
+  subcategoriesDisabled?: boolean;
 }
 
-export function CategorySelector({ selectedCategoryIds, onChangeCategories, selectedSubcategoryIds, onChangeSubcategories, error }: Props) {
+export function CategorySelector({ selectedCategoryIds, onChangeCategories, selectedSubcategoryIds, onChangeSubcategories, error, disabled = false, subcategoriesDisabled = false }: Props) {
   const { data: categories, isLoading } = useCategories();
 
   // Safe default: assuming data is array of { id: string, name: string, subcategories?: ... }
@@ -21,12 +32,14 @@ export function CategorySelector({ selectedCategoryIds, onChangeCategories, sele
     : [];
 
   const toggleCategory = (id: string) => {
+    if (disabled) return;
     // If something is already selected, don't allow clicking anything else or toggling
     if (selectedCategoryIds.length > 0) return;
     onChangeCategories([...selectedCategoryIds, id]);
   };
 
   const toggleSubcategory = (id: string) => {
+    if (subcategoriesDisabled) return;
     // If something is already selected, don't allow clicking anything else or toggling
     if (selectedSubcategoryIds.length > 0) return;
     onChangeSubcategories([...selectedSubcategoryIds, id]);
@@ -85,10 +98,19 @@ export function CategorySelector({ selectedCategoryIds, onChangeCategories, sele
               <button
                 key={c.id}
                 type="button"
+                disabled={disabled}
                 onClick={() => { toggleCategory(c.id); }}
                 className={cn(
                   "px-3 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1.5",
-                  isSelected ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:bg-accent hover:text-foreground"
+                  // Branch, don't cancel: the disabled look is its own outcome,
+                  // not the enabled styles with hover cancelled out chip by
+                  // chip - that pattern is exactly what missed hover:opacity-100
+                  // below and let a disabled chip brighten on hover anyway.
+                  disabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : isSelected
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-muted-foreground border-border hover:bg-accent hover:text-foreground"
                 )}
               >
                 {isSelected && <Check className="h-3.5 w-3.5" />}
@@ -100,7 +122,11 @@ export function CategorySelector({ selectedCategoryIds, onChangeCategories, sele
         {error && <p className="text-xs text-red-500" role="alert">{error}</p>}
       </div>
 
-      {availableSubcats.length > 0 && (
+      {/* Hidden rather than shown greyed-out: a locked section with nothing
+          selected has no chip a seller could ever interact with, so showing
+          it as a wall of disabled chips communicated nothing a category with
+          a real selection wouldn't communicate better. */}
+      {availableSubcats.length > 0 && !(subcategoriesDisabled && selectedSubcategoryIds.length === 0) && (
         <div className="space-y-3 pt-3 border-t border-border/50">
           <div className="flex items-center justify-between">
              <div className="flex items-center gap-2">
@@ -115,12 +141,16 @@ export function CategorySelector({ selectedCategoryIds, onChangeCategories, sele
                 <button
                   key={subId}
                   type="button"
+                  disabled={subcategoriesDisabled}
                   onClick={() => toggleSubcategory(subId)}
                   className={cn(
                     "px-3 py-1.5 rounded-full text-xs font-medium border transition-all flex items-center gap-1.5",
-                    isSelected 
-                      ? "bg-secondary text-secondary-foreground border-secondary shadow-sm scale-[1.02]" 
-                      : "bg-background text-muted-foreground border-border hover:bg-accent hover:text-foreground opacity-80 hover:opacity-100"
+                    // Same branch-not-cancel structure as the category chips above.
+                    subcategoriesDisabled
+                      ? "opacity-50 cursor-not-allowed"
+                      : isSelected
+                        ? "bg-secondary text-secondary-foreground border-secondary shadow-sm scale-[1.02]"
+                        : "bg-background text-muted-foreground border-border hover:bg-accent hover:text-foreground opacity-80 hover:opacity-100"
                   )}
                 >
                   {isSelected && <Check className="h-3 w-3" />}

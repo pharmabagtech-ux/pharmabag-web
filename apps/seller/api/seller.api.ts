@@ -189,6 +189,22 @@ const MOCK_SUGGESTIONS: Suggestion[] = [
 
 
 export async function searchSuggestions(query: string, type: 'product' | 'master' = 'master'): Promise<Suggestion[]> {
+  // Master-catalogue search backs the mandatory catalogue picker: a seller
+  // can only list a product that is in the catalogue, so a failed lookup
+  // here must surface as an error, not as "nothing matched" or as invented
+  // mock rows the seller could submit as a real masterProductId. Let it
+  // propagate so React Query's isError is meaningful.
+  //
+  // There is currently no live caller of type 'product' (both call sites
+  // search 'master'), but the mock fallback is kept for that branch in case
+  // local development of a product-level suggestion feature needs data
+  // without a backend - it was never the branch this bug lives in.
+  if (type === 'master') {
+    const { data } = await apiClient.get<{ data: Suggestion[] }>("/products/suggestions", {
+      params: { search: query, type },
+    });
+    return data.data ?? [];
+  }
   try {
     const { data } = await apiClient.get<{ data: Suggestion[] }>("/products/suggestions", {
       params: { search: query, type },

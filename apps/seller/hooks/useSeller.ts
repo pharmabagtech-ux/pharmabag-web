@@ -255,7 +255,10 @@ export function useSuggestionSearch(query: string, type: 'product' | 'master' = 
   return useQuery({
     queryKey: ["suggestions", query, type],
     queryFn: () => searchSuggestions(query, type),
-    enabled: query.length >= 2,
+    // Trimmed length: an untrimmed gate let whitespace-only input through,
+    // which then rendered as `No catalogue match for ""` once the query
+    // resolved to an empty array.
+    enabled: query.trim().length >= 2,
     staleTime: 30_000,
     retry: 1,
   });
