@@ -2,7 +2,8 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2, ArrowLeft, Search } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Search, PackagePlus, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -31,16 +32,36 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
   const updateProduct = useUpdateSellerProduct();
   const isEditing = !!productId;
 
-  // Suggestion autocomplete state
+  // Catalogue search state.
+  //
+  // A new listing is a listing OF a catalogue product, so the search is not a
+  // convenience — it is step one, and nothing else renders until it has been
+  // answered. Sellers stocking something we do not carry go to
+  // /products/requests instead, which admin reviews.
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedMasterId, setSelectedMasterId] = useState<string | null>(null);
+  const [selectedMaster, setSelectedMaster] = useState<Suggestion | null>(null);
+  const selectedMasterId = selectedMaster?.id ?? null;
   // The catalogue entry this listing is tied to.
   // Adding: whatever was picked from Quick Search. Editing: the listing's own master.
   const linkedMasterId = selectedMasterId ?? masterProductId ?? null;
+  // Editing never shows the picker — the listing already has its master, and
+  // legacy listings created before this rule must stay editable.
+  const needsCatalogueChoice = !isEditing && !selectedMaster;
+  // Identity comes from the catalogue, so these are never the seller's to type:
+  // locked once a master is picked, and locked on every edit — including legacy
+  // listings with no master, whose fields would otherwise look editable and then
+  // be rejected by the API.
+  const identityLocked = !!linkedMasterId || isEditing;
   const [activeIndex, setActiveIndex] = useState(-1);
   const suggestionRef = useRef<HTMLDivElement>(null);
-  const { data: suggestions = [] } = useSuggestionSearch(searchQuery, "master");
+  const { data: suggestionData, isFetching: isSearching } = useSuggestionSearch(searchQuery, "master");
+  const suggestions = suggestionData ?? [];
+  // "Not in the catalogue" is only true once a response has actually come back.
+  // Keying it off an empty array alone made it flash between the keystroke and
+  // the request starting, telling the seller their product does not exist while
+  // we were still looking for it.
+  const noMatches = !isSearching && Array.isArray(suggestionData) && suggestionData.length === 0;
 
   const { register, control, handleSubmit, setValue, getValues, formState: { errors, isSubmitting, isDirty }, watch } = useForm<FormValues>({
     mode: "onChange",
@@ -185,7 +206,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
   }, [isDirty]);
 
   const handleSuggestionSelect = useCallback((suggestion: Suggestion) => {
-    setSelectedMasterId(suggestion.id);
+    setSelectedMaster(suggestion);
     setValue("product_name", suggestion.productName, { shouldDirty: true });
     setValue("company_name", suggestion.companyName, { shouldDirty: true });
     if (suggestion.sku) {
@@ -222,7 +243,29 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
     setSearchQuery("");
   }, [setValue]);
 
+  // "Change product" goes back to step one. The autofilled identity fields are
+  // cleared with it, so a half-swapped listing can never be submitted carrying
+  // the previous product's name against the new master.
+  const handleClearSelection = useCallback(() => {
+    setSelectedMaster(null);
+    setValue("product_name", "", { shouldDirty: true });
+    setValue("company_name", "", { shouldDirty: true });
+    setValue("sku", "", { shouldDirty: true });
+    setValue("chemical_combination", "", { shouldDirty: true });
+    setValue("categories", [], { shouldDirty: true });
+    setValue("sub_categories", [], { shouldDirty: true });
+    setValue("image_list", [], { shouldDirty: true });
+    setSearchQuery("");
+    setShowSuggestions(false);
+  }, [setValue]);
+
   const onSubmit = async (data: FormValues) => {
+    // The form is not rendered without a selection, so this only catches a
+    // state we should never reach. The API enforces the same rule.
+    if (!isEditing && !selectedMasterId) {
+      toast.error("Pick your product from the catalogue search first");
+      return;
+    }
     try {
       const extra_fields = data.custom_extra_fields.reduce<Record<string, string>>((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
 
@@ -311,7 +354,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         ...(Object.keys(extra_fields).length > 0 && { extraFields: extra_fields }),
         ...(mappedDiscountType && { discountType: mappedDiscountType }),
         ...(Object.keys(discountMeta).length > 0 && { discountMeta }),
-        ...(selectedMasterId && { masterProductId: selectedMasterId }),
+        ...(linkedMasterId && { masterProductId: linkedMasterId }),
       };
 
       if (isEditing) {
@@ -339,7 +382,11 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         </Button>
         <div>
           <h1 className="font-semibold text-2xl text-foreground">{isEditing ? "Edit Product" : "Add New Product"}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Please fill in the product details carefully.</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {needsCatalogueChoice
+              ? "Find your product in the PharmaBag catalogue to start listing it."
+              : "Please fill in the product details carefully."}
+          </p>
         </div>
       </div>
 
@@ -349,10 +396,10 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         const msg = (firstError as any)?.message || "Please fix the form errors";
         toast.error(String(msg));
       })} className="space-y-6">
-        {/* Suggestion Search */}
-        {!isEditing && (
+        {/* Step one: pick the catalogue product this listing is for. */}
+        {needsCatalogueChoice && (
           <div className="glass-card rounded-2xl p-6 space-y-4 relative z-50" ref={suggestionRef}>
-            <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Quick Search (Autocomplete)</h2>
+            <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Find your product</h2>
             <div className="relative">
               <Input
                 label="Search product catalog"
@@ -362,6 +409,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
                 onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                 onKeyDown={handleKeyDown}
                 leftIcon={<Search className="h-4 w-4" />}
+                autoFocus
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border border-primary/20 rounded-xl shadow-2xl max-h-64 overflow-y-auto backdrop-blur-xl">
@@ -385,7 +433,55 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
                 </div>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Select from suggestions to auto-fill product details, or enter manually below.</p>
+
+            {noMatches ? (
+              <div className="rounded-xl border border-dashed border-border bg-muted/20 p-4 space-y-2">
+                <p className="text-sm font-medium text-foreground">
+                  No catalogue match for &ldquo;{searchQuery.trim()}&rdquo;
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  You can only list products that are already in the PharmaBag catalogue.
+                  Try a shorter search — the brand name alone usually works — or ask us to add it.
+                </p>
+                <Link
+                  href="/products/requests"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                >
+                  <PackagePlus className="h-3.5 w-3.5" />
+                  Request this product
+                </Link>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Pick your product from the suggestions to continue.{" "}
+                <Link href="/products/requests" className="font-medium text-primary hover:underline">
+                  Not in the catalogue?
+                </Link>
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Everything below is the seller's own commercial terms, and only
+            applies once the catalogue product is settled. */}
+        {!needsCatalogueChoice && (
+        <>
+        {/* The chosen catalogue entry, with the way back to the picker. */}
+        {!isEditing && selectedMaster && (
+          <div className="glass-card rounded-2xl p-4 flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="font-semibold text-sm text-foreground truncate">{selectedMaster.productName}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {selectedMaster.companyName}
+                  {selectedMaster.chemicalCombination ? ` | ${selectedMaster.chemicalCombination}` : ""}
+                </p>
+              </div>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={handleClearSelection}>
+              Change
+            </Button>
           </div>
         )}
 
@@ -400,11 +496,11 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         <div className="glass-card rounded-2xl p-6 space-y-4 relative z-[45] transition-opacity duration-300">
           <h2 className="font-semibold text-lg text-foreground border-b border-border/50 pb-2">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="SKU (Optional)" error={errors.sku?.message} {...register("sku")} disabled={!!linkedMasterId} />
-            <Input label="Product Name *" error={errors.product_name?.message} {...register("product_name")} disabled={!!linkedMasterId} />
-            <Input label="Company / Manufacturer *" error={errors.company_name?.message} {...register("company_name")} disabled={!!linkedMasterId} />
+            <Input label="SKU (Optional)" error={errors.sku?.message} {...register("sku")} disabled={identityLocked} />
+            <Input label="Product Name *" error={errors.product_name?.message} {...register("product_name")} disabled={identityLocked} />
+            <Input label="Company / Manufacturer *" error={errors.company_name?.message} {...register("company_name")} disabled={identityLocked} />
             <div className="md:col-span-1">
-              <Textarea label="Chemical Combination" error={errors.chemical_combination?.message} {...register("chemical_combination")} disabled={!!linkedMasterId} />
+              <Textarea label="Chemical Combination" error={errors.chemical_combination?.message} {...register("chemical_combination")} disabled={identityLocked} />
             </div>
           </div>
         </div>
@@ -533,6 +629,8 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
           <Button type="button" variant="outline" onClick={() => router.push("/products")} disabled={isSubmitting}>Cancel</Button>
           <Button type="submit" loading={isSubmitting}>{isEditing ? "Update Product" : "Add Product"}</Button>
         </div>
+        </>
+        )}
       </form>
     </div>
   );
