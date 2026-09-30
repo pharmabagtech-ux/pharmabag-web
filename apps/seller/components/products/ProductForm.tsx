@@ -63,7 +63,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
   // we were still looking for it.
   const noMatches = !isSearching && Array.isArray(suggestionData) && suggestionData.length === 0;
 
-  const { register, control, handleSubmit, setValue, getValues, formState: { errors, isSubmitting, isDirty }, watch } = useForm<FormValues>({
+  const { register, control, handleSubmit, setValue, resetField, getValues, formState: { errors, isSubmitting, isDirty }, watch } = useForm<FormValues>({
     mode: "onChange",
     resolver: zodResolver(productFormSchema) as any,
     defaultValues: defaultValues || {
@@ -255,9 +255,23 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
     setValue("categories", [], { shouldDirty: true });
     setValue("sub_categories", [], { shouldDirty: true });
     setValue("image_list", [], { shouldDirty: true });
+    // gst_percent and product_price are autofilled by handleSuggestionSelect
+    // whenever the suggestion carries them. Leaving them behind here meant a
+    // switch from a product that had them to one that does not kept the first
+    // product's MRP and GST in the form to be submitted as the second
+    // product's own values - exactly the carryover this button exists to
+    // prevent. Reset to the same initial defaults as a fresh form rather than
+    // to blank: 5% because it is a valid slab and the pricing preview needs
+    // one to keep working, and product_price back to the empty state the
+    // defaultValues above start it in (not 0, for the same reason given there).
+    // product_price is a required `number` in ProductFormValues, so
+    // setValue("product_price", undefined) does not typecheck - resetField
+    // is the typesafe way back to that unset starting value.
+    setValue("gst_percent", 5, { shouldDirty: true });
+    resetField("product_price", { keepDirty: false });
     setSearchQuery("");
     setShowSuggestions(false);
-  }, [setValue]);
+  }, [setValue, resetField]);
 
   const onSubmit = async (data: FormValues) => {
     // The form is not rendered without a selection, so this only catches a

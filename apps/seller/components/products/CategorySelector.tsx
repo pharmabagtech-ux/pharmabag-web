@@ -133,7 +133,11 @@ export function CategorySelector({ selectedCategoryIds, onChangeCategories, sele
                     isSelected
                       ? "bg-secondary text-secondary-foreground border-secondary shadow-sm scale-[1.02]"
                       : "bg-background text-muted-foreground border-border hover:bg-accent hover:text-foreground opacity-80 hover:opacity-100",
-                    disabled && !isSelected && "opacity-50 cursor-not-allowed hover:bg-background hover:text-muted-foreground"
+                    // twMerge resolves the hover:bg-*/hover:text-* conflicts against the
+                    // unselected branch above, but hover:opacity-100 is its own group and
+                    // nothing here overrode it, so a disabled chip still brightened to full
+                    // opacity on hover even though clicking it was already blocked.
+                    disabled && !isSelected && "opacity-50 cursor-not-allowed hover:opacity-50 hover:bg-background hover:text-muted-foreground"
                   )}
                 >
                   {isSelected && <Check className="h-3 w-3" />}
