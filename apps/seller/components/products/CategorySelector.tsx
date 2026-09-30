@@ -10,9 +10,16 @@ interface Props {
   selectedSubcategoryIds: string[];
   onChangeSubcategories: (ids: string[]) => void;
   error?: string;
+  // Category and sub-category are catalogue identity, not seller data - the
+  // same rule that locks the four text fields next to this component in
+  // ProductForm. Without this, the only thing stopping an edit was the
+  // toggles' incidental early-return once a selection already existed, so a
+  // chip could look clickable and silently do nothing, and a legacy row with
+  // an empty category array would have been wide open.
+  disabled?: boolean;
 }
 
-export function CategorySelector({ selectedCategoryIds, onChangeCategories, selectedSubcategoryIds, onChangeSubcategories, error }: Props) {
+export function CategorySelector({ selectedCategoryIds, onChangeCategories, selectedSubcategoryIds, onChangeSubcategories, error, disabled = false }: Props) {
   const { data: categories, isLoading } = useCategories();
 
   // Safe default: assuming data is array of { id: string, name: string, subcategories?: ... }
@@ -21,12 +28,14 @@ export function CategorySelector({ selectedCategoryIds, onChangeCategories, sele
     : [];
 
   const toggleCategory = (id: string) => {
+    if (disabled) return;
     // If something is already selected, don't allow clicking anything else or toggling
     if (selectedCategoryIds.length > 0) return;
     onChangeCategories([...selectedCategoryIds, id]);
   };
 
   const toggleSubcategory = (id: string) => {
+    if (disabled) return;
     // If something is already selected, don't allow clicking anything else or toggling
     if (selectedSubcategoryIds.length > 0) return;
     onChangeSubcategories([...selectedSubcategoryIds, id]);
@@ -85,10 +94,12 @@ export function CategorySelector({ selectedCategoryIds, onChangeCategories, sele
               <button
                 key={c.id}
                 type="button"
+                disabled={disabled}
                 onClick={() => { toggleCategory(c.id); }}
                 className={cn(
                   "px-3 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1.5",
-                  isSelected ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:bg-accent hover:text-foreground"
+                  isSelected ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:bg-accent hover:text-foreground",
+                  disabled && !isSelected && "opacity-50 cursor-not-allowed hover:bg-background hover:text-muted-foreground"
                 )}
               >
                 {isSelected && <Check className="h-3.5 w-3.5" />}
@@ -115,12 +126,14 @@ export function CategorySelector({ selectedCategoryIds, onChangeCategories, sele
                 <button
                   key={subId}
                   type="button"
+                  disabled={disabled}
                   onClick={() => toggleSubcategory(subId)}
                   className={cn(
                     "px-3 py-1.5 rounded-full text-xs font-medium border transition-all flex items-center gap-1.5",
-                    isSelected 
-                      ? "bg-secondary text-secondary-foreground border-secondary shadow-sm scale-[1.02]" 
-                      : "bg-background text-muted-foreground border-border hover:bg-accent hover:text-foreground opacity-80 hover:opacity-100"
+                    isSelected
+                      ? "bg-secondary text-secondary-foreground border-secondary shadow-sm scale-[1.02]"
+                      : "bg-background text-muted-foreground border-border hover:bg-accent hover:text-foreground opacity-80 hover:opacity-100",
+                    disabled && !isSelected && "opacity-50 cursor-not-allowed hover:bg-background hover:text-muted-foreground"
                   )}
                 >
                   {isSelected && <Check className="h-3 w-3" />}

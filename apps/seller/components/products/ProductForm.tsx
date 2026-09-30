@@ -523,6 +523,7 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
                       selectedSubcategoryIds={subcats || []}
                       onChangeSubcategories={setSubcats}
                       error={errors.categories?.message}
+                      disabled={identityLocked}
                     />
                   )}
                 />
