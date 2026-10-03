@@ -400,7 +400,13 @@ export function ProductForm({ defaultValues, productId, masterProductId }: { def
         ...(Object.keys(extra_fields).length > 0 && { extraFields: extra_fields }),
         ...(mappedDiscountType && { discountType: mappedDiscountType }),
         ...(Object.keys(discountMeta).length > 0 && { discountMeta }),
-        ...(linkedMasterId && { masterProductId: linkedMasterId }),
+        // Create only. Editing never shows the catalogue picker (see
+        // needsCatalogueChoice above), so on an edit linkedMasterId can only be
+        // the listing's own master coming back unchanged — nothing the seller
+        // can change, and nothing the server needs told. Sending it anyway is
+        // what broke every edit: the API rejected the whole PATCH with
+        // "property masterProductId should not exist".
+        ...(!isEditing && linkedMasterId && { masterProductId: linkedMasterId }),
       };
 
       if (isEditing) {
