@@ -4,6 +4,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import CollectionShell from '@/components/seo/CollectionShell';
 import { SeoSection } from '@/components/seo/SeoContent';
 import { fetchCategories, fetchProducts } from '@/lib/seo/catalog';
+import { fetchBanners } from '@/lib/seo/banners';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { routes, absoluteUrl } from '@/lib/seo/url';
 import {
@@ -186,6 +187,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
    * missing override never blanks anything.
    */
   const override = await fetchPageOverride(basePath);
+  const banners = await fetchBanners('category', params.categorySlug);
   // Admin copy interpolates `{{product_count}}`; same reasoning as `defaults`
   // above — it is a sentence about the category, not about the active filter.
   const tokens = categoryTokens(category.name, categoryTotal);
@@ -210,6 +212,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     <>
       <JsonLd json={jsonLd} />
       <CollectionShell
+        banners={banners}
         heading={preferOverride(override?.h1, defaults.h1, tokens)}
         intro={preferOverride(override?.intro, defaults.intro, tokens)}
         body={
