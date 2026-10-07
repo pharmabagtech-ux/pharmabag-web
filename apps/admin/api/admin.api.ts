@@ -507,6 +507,79 @@ export async function removeMarketingProduct(id: string) {
   return data.data;
 }
 
+// ─── Promo banners ────────────────────────────────────
+export interface AdminBannerPlacement {
+  id: string;
+  scope: "HOMEPAGE" | "ALL_CATEGORIES" | "CATEGORY";
+  categoryId: string | null;
+  category?: { id: string; name: string; slug: string } | null;
+}
+
+export interface AdminBanner {
+  id: string;
+  title: string;
+  imageUrl: string;
+  mobileImageUrl: string | null;
+  altText: string;
+  linkUrl: string | null;
+  active: boolean;
+  position: number;
+  placements: AdminBannerPlacement[];
+}
+
+export interface BannerPayload {
+  title: string;
+  imageUrl: string;
+  mobileImageUrl?: string;
+  altText: string;
+  linkUrl?: string;
+  active: boolean;
+  placements: { scope: AdminBannerPlacement["scope"]; categoryId?: string }[];
+}
+
+export async function getBanners() {
+  const { data } = await apiClient.get<{ data: AdminBanner[] }>("/admin/banners");
+  return data.data;
+}
+
+export async function createBanner(payload: BannerPayload) {
+  const { data } = await apiClient.post<{ data: AdminBanner }>("/admin/banners", payload);
+  return data.data;
+}
+
+export async function updateBanner({ id, ...payload }: BannerPayload & { id: string }) {
+  const { data } = await apiClient.patch<{ data: AdminBanner }>(`/admin/banners/${id}`, payload);
+  return data.data;
+}
+
+export async function deleteBanner(id: string) {
+  const { data } = await apiClient.delete<{ data: any }>(`/admin/banners/${id}`);
+  return data.data;
+}
+
+/** The COMPLETE ordered id list — the API rejects a partial one. */
+export async function reorderBanners(ids: string[]) {
+  const { data } = await apiClient.patch<{ data: any }>("/admin/banners/reorder", { ids });
+  return data.data;
+}
+
+export async function getBannerSettings() {
+  const { data } = await apiClient.get<{ data: { rotationSeconds: number } }>("/admin/banners/settings");
+  return data.data;
+}
+
+export async function updateBannerSettings(rotationSeconds: number) {
+  const { data } = await apiClient.patch<{ data: { rotationSeconds: number } }>("/admin/banners/settings", { rotationSeconds });
+  return data.data;
+}
+
+export async function uploadBannerImage(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await apiClient.post<{ data: { url: string } }>("/storage/banner-image", formData);
+  return data.data.url;
+}
+
 // ─── Storage ──────────────────────────────────────────
 export async function getPresignedUrl(key: string) {
   const { data } = await apiClient.post<{ data: { url: string } }>("/storage/view", { key });

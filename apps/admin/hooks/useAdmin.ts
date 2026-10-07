@@ -18,6 +18,8 @@ import {
   getPlatformSettings, updatePlatformSettings,
   getRevenueChart, getOrdersChart, getTopProducts, getTopSellers, getPresignedUrl,
   getMarketingProducts, addMarketingProduct, removeMarketingProduct, uploadSettlementProof, uploadKycDocument,
+  getBanners, createBanner, updateBanner, deleteBanner, reorderBanners,
+  getBannerSettings, updateBannerSettings,
   getAdminCustomOrders, updateCustomOrderStatus, deleteCustomOrder,
   getProductRequests, updateProductRequestStatus,
 } from "@/api/admin.api";
@@ -490,6 +492,30 @@ export function useRemoveMarketingProduct() {
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "marketing"] }),
   });
 }
+
+// ─── Promo banners ────────────────────────────────────
+export function useBanners() {
+  return useQuery({ queryKey: ["admin", "banners"], queryFn: getBanners, staleTime: 30_000, retry: 1 });
+}
+
+export function useBannerSettings() {
+  return useQuery({ queryKey: ["admin", "banners", "settings"], queryFn: getBannerSettings, staleTime: 60_000, retry: 1 });
+}
+
+/** Every banner mutation invalidates the same key, so the list stays truthful. */
+function useBannerMutation<TArgs, TResult>(mutationFn: (args: TArgs) => Promise<TResult>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["admin", "banners"] }),
+  });
+}
+
+export const useCreateBanner = () => useBannerMutation(createBanner);
+export const useUpdateBanner = () => useBannerMutation(updateBanner);
+export const useDeleteBanner = () => useBannerMutation(deleteBanner);
+export const useReorderBanners = () => useBannerMutation(reorderBanners);
+export const useUpdateBannerSettings = () => useBannerMutation(updateBannerSettings);
 
 // ─── Storage ──────────────────────────────────────────
 export function usePresignedUrl(key: string | null | undefined) {

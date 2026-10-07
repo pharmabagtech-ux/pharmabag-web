@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus, Trash2, Layout, Star, ArrowUp } from "lucide-react";
+import Link from "next/link";
+import { Search, Plus, Trash2, Layout, Star, ArrowUp, Image as ImageIcon } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button, Input, Badge, Pagination } from "@/components/ui";
 import { formatCurrency } from "@pharmabag/utils";
@@ -68,9 +69,16 @@ export default function MarketingPage() {
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5"> Manage featured products for carousels</p>
           </div>
-          <Button onClick={() => setShowAddModal(true)} leftIcon={<Plus className="h-4 w-4" />}>
-            Add Featured Product
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/marketing/banners">
+              <Button variant="secondary" leftIcon={<ImageIcon className="h-4 w-4" />}>
+                Banners
+              </Button>
+            </Link>
+            <Button onClick={() => setShowAddModal(true)} leftIcon={<Plus className="h-4 w-4" />}>
+              Add Featured Product
+            </Button>
+          </div>
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto no-sb pb-1" role="group">

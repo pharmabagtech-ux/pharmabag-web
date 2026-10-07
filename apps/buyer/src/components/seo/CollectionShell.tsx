@@ -9,6 +9,8 @@ import {
   type SeoLink,
 } from './SeoContent';
 import CollectionChrome from './CollectionChrome';
+import PromoBannerStrip from '@/components/promo/PromoBannerStrip';
+import type { PromoBannerPayload } from '@/lib/seo/banners';
 import CollectionFilters from './CollectionFilters';
 import CollectionProductGrid from './CollectionProductGrid';
 import type { Faq } from '@/lib/seo/content';
@@ -69,6 +71,15 @@ export interface CollectionShellProps {
   shopping?: boolean;
   /** Active filter state. Required when `shopping`; drives every page link. */
   filters?: Filters;
+  /**
+   * Admin-managed promo strip, rendered directly under the navigation.
+   *
+   * Optional, and fetched by the page rather than here: this shell backs
+   * eleven facet routes and only the category and dosage-form ones opt in.
+   * The rest pass nothing and render no strip, which is a one-line change per
+   * page if that is ever wanted.
+   */
+  banners?: PromoBannerPayload;
 }
 
 /**
@@ -258,6 +269,7 @@ export default function CollectionShell({
   browseLabel = 'Open in catalogue',
   shopping = false,
   filters,
+  banners,
 }: CollectionShellProps) {
   /**
    * Shopping mode still leads with the H1 and the intro.
@@ -301,6 +313,17 @@ export default function CollectionShell({
         <Navbar showUserActions />
       )}
       <main className="w-full pb-28 pt-6 lg:pb-16 lg:pt-28">
+        {/*
+          Inside <main>, not between it and <Navbar>. The navbar is
+          `fixed lg:top-4`, so anything rendered above main's `lg:pt-28`
+          offset sits underneath it on desktop.
+        */}
+        {banners && banners.banners.length > 0 && (
+          <PromoBannerStrip
+            banners={banners.banners}
+            rotationSeconds={banners.rotationSeconds}
+          />
+        )}
         <Breadcrumbs crumbs={crumbs} width={productWidth} />
 
         <header className={`${CONTENT_WIDTH[productWidth]} pt-4`}>

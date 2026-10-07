@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import CollectionShell from '@/components/seo/CollectionShell';
 import { fetchCategories, fetchProducts } from '@/lib/seo/catalog';
+import { fetchBanners } from '@/lib/seo/banners';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { routes, absoluteUrl } from '@/lib/seo/url';
 import {
@@ -180,6 +181,13 @@ export default async function DosageFormPage({ params, searchParams }: PageProps
 
   const siblings = (category.subCategories ?? []).filter((s) => s.id !== form.id);
 
+  /*
+   * The PARENT category's slug, not formSlug. A dosage-form page is part of
+   * its category's collection and inherits that category's banners; targeting
+   * a single dosage form is not supported.
+   */
+  const banners = await fetchBanners('category', params.categorySlug);
+
   const jsonLd = graph(
     breadcrumbSchema(crumbs),
     collectionPageSchema({
@@ -199,6 +207,7 @@ export default async function DosageFormPage({ params, searchParams }: PageProps
     <>
       <JsonLd json={jsonLd} />
       <CollectionShell
+        banners={banners}
         heading={preferOverride(override?.h1, defaults.h1, tokens)}
         intro={preferOverride(override?.intro, defaults.intro, tokens)}
         crumbs={crumbs}

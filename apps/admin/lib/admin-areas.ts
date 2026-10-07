@@ -89,8 +89,11 @@ export const ROUTE_AREAS: { prefix: string; area: AdminArea }[] = [
   { prefix: '/payments', area: 'payments' },
   { prefix: '/settlements', area: 'settlements' },
   { prefix: '/marketing', area: 'marketing' },
-  // /banners is gone — the screen was wired to four endpoints that never
-  // existed, so nothing on it ever loaded, saved or deleted.
+  // The old top-level /banners screen was removed because it was wired to four
+  // endpoints that never existed, so nothing on it ever loaded, saved or
+  // deleted. Banners now live at /marketing/banners, backed by real endpoints,
+  // and need no rule of their own: areaForPath matches on a prefix, so
+  // '/marketing' already covers them.
   { prefix: '/blogs', area: 'blogs' },
   { prefix: '/seo', area: 'seo' },
   { prefix: '/tickets', area: 'tickets' },
