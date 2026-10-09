@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Save, Package, Trash2 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button, Badge, Input, Textarea, Select, Skeleton, Modal } from "@/components/ui";
-import { formatCurrency } from "@pharmabag/utils";
+import { formatCurrency, productSlug } from "@pharmabag/utils";
+import { ProductGeographyCard } from "@/components/analytics/product-geography-card";
 import { cn } from "@/lib/utils";
 import { useProductById, useUpdateProduct, useDeleteProduct, useCategories } from "@/hooks/useAdmin";
 import toast from "react-hot-toast";
@@ -272,6 +273,17 @@ export default function ProductDetailPage() {
             </div>
           </motion.div>
         )}
+
+        {/*
+          Visitor locations for this product. Passed both the id and the
+          product's storefront path, because the API matches either — the path
+          is what surfaces views recorded before events carried a product id.
+        */}
+        <ProductGeographyCard
+          productId={id}
+          path={`/products/${productSlug(product)}`}
+          productName={product.name}
+        />
       </div>
 
       {/* Delete Modal */}

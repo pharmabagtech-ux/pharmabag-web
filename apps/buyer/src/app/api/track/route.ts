@@ -4,16 +4,54 @@ import { NextRequest, NextResponse } from 'next/server';
 /**
  * First-party analytics ingest proxy.
  *
- * Same-origin path — invisible to ad-blockers' third-party filters. Reads
- * the raw User-Agent server-side and attaches it (no geo lookup: PharmaBag
- * deploys to its own EC2 boxes via rsync, not Vercel, so there's no free
- * geo-header equivalent — deferred to a later phase).
+ * Same-origin path — invisible to ad-blockers' third-party filters. Reads the
+ * raw User-Agent and the client IP server-side and attaches both.
+ *
+ * The IP is forwarded so the API can resolve country/state/city from its local
+ * GeoLite2 database; it is used for that lookup and then discarded, never
+ * stored. It must be read here rather than in the API because the API only
+ * ever sees this proxy as its peer.
  *
  * Always answers 204 no matter what: the storefront must behave identically
  * whether analytics works or not.
  */
 
 const MAX_BODY_BYTES = 32 * 1024;
+
+/** Loopback, private and link-local ranges — never geo-locatable. */
+function isPrivateIp(ip: string): boolean {
+  if (ip === '::1' || ip.startsWith('127.')) return true;
+  if (ip.startsWith('10.') || ip.startsWith('192.168.')) return true;
+  if (ip.startsWith('169.254.') || ip.startsWith('fe80:')) return true;
+  if (/^f[cd][0-9a-f]{2}:/i.test(ip)) return true;
+  const m = /^172\.(\d{1,3})\./.exec(ip);
+  return !!m && Number(m[1]) >= 16 && Number(m[1]) <= 31;
+}
+
+/**
+ * The visitor's address, taken from the left-most PUBLIC entry of the
+ * forwarding chain.
+ *
+ * `x-forwarded-for` is appended to by each hop, so position 0 is normally the
+ * client — but a request that passed through nginx on the same box arrives as
+ * "127.0.0.1, <real ip>", and taking position 0 blindly would geo-locate our
+ * own server for every single visitor. Private entries are therefore skipped.
+ */
+function clientIp(req: NextRequest): string | undefined {
+  const candidates = [
+    ...(req.headers.get('x-forwarded-for')?.split(',') ?? []),
+    req.headers.get('x-real-ip') ?? '',
+  ];
+  for (const raw of candidates) {
+    let ip = raw.trim().replace(/^\[|\]$/g, '');
+    if (!ip) continue;
+    const withPort = /^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/.exec(ip);
+    if (withPort) ip = withPort[1];
+    if (isPrivateIp(ip)) continue;
+    return ip.slice(0, 64);
+  }
+  return undefined;
+}
 
 function apiBase(): string | null {
   const base = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -39,6 +77,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     body.ua = req.headers.get('user-agent') ?? undefined;
+    body.ip = clientIp(req);
 
     await fetch(`${base}/analytics/collect`, {
       method: 'POST',
