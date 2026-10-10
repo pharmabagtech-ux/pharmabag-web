@@ -21,11 +21,36 @@ const getFullUrl = (url: string) => {
 };
 
 function SecureDocViewer({ url, label, number, expiry }: { url: string; label: string; number?: string; expiry?: string }) {
-  const { data: presignedUrl, isLoading } = usePresignedUrl(url);
-  const displayUrl = presignedUrl || getFullUrl(url);
+  const { data: presignedUrl, isLoading, isError, refetch } = usePresignedUrl(url);
+  /*
+   * A stored document is an S3 KEY (e.g. drug-licenses/<uuid>.pdf), not a
+   * URL. Only a presigned URL from /storage/view can open it. This used to
+   * fall back to `getFullUrl(url)` when presigning failed — gluing the key
+   * onto the API origin — which produced api.pharmabag.in/drug-licenses/...,
+   * a guaranteed 404 that read as "the document is missing". Scoped admins
+   * hit it on every document until the API made /storage/view available to
+   * every admin. Presign failure now says so instead of fabricating a link
+   * that cannot work.
+   */
+  const displayUrl = url.startsWith("http") || url.startsWith("data:") ? getFullUrl(url) : presignedUrl;
   const isImage = /\.(jpe?g|png|webp)$/i.test(url);
 
   if (isLoading) return <div className="h-20 w-32 bg-muted/50 animate-pulse rounded-lg" />;
+
+  if (!displayUrl) {
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase">
+          <FileText className="h-3 w-3" /> {label}
+        </div>
+        {number && <p className="text-sm font-mono font-bold text-foreground">{number}</p>}
+        <p className="text-xs text-red-500">
+          Document couldn&apos;t be loaded{isError ? " (access or network error)" : ""}.{" "}
+          <button onClick={() => refetch()} className="underline font-semibold">Retry</button>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">

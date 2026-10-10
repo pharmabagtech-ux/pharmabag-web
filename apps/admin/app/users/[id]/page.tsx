@@ -17,11 +17,31 @@ const getFullUrl = (url: string) => {
 };
 
 function SecureDocViewer({ url, label, number, expiry, onEdit, onEditNumber, onEditExpiry }: { url: string; label: string; number?: string; expiry?: string; onEdit?: () => void; onEditNumber?: () => void; onEditExpiry?: () => void; }) {
-  const { data: presignedUrl, isLoading } = usePresignedUrl(url);
-  const displayUrl = presignedUrl || getFullUrl(url);
+  const { data: presignedUrl, isLoading, isError, refetch } = usePresignedUrl(url);
+  /*
+   * A stored document is an S3 KEY, not a URL — see the note on the same
+   * component in users/page.tsx. Falling back to getFullUrl(key) fabricated
+   * api.pharmabag.in/drug-licenses/... links that always 404'd.
+   */
+  const displayUrl = url.startsWith("http") || url.startsWith("data:") ? getFullUrl(url) : presignedUrl;
   const isImage = /\.(jpe?g|png|webp)$/i.test(url);
 
   if (isLoading) return <div className="space-y-1"><div className="h-4 w-32 bg-muted/50 animate-pulse rounded" /><div className="h-20 w-32 bg-muted/50 animate-pulse rounded-lg" /></div>;
+
+  if (!displayUrl) {
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase">
+          <FileText className="h-3 w-3" /> {label}
+        </div>
+        {number && <p className="text-sm font-mono font-bold text-foreground">{number}</p>}
+        <p className="text-xs text-red-500">
+          Document couldn&apos;t be loaded{isError ? " (access or network error)" : ""}.{" "}
+          <button onClick={() => refetch()} className="underline font-semibold">Retry</button>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">
