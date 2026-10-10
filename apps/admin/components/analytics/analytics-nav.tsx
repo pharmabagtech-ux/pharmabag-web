@@ -18,6 +18,7 @@ const SECTIONS = [
   { label: "Business", href: "/dashboard" },
   { label: "Traffic", href: "/analytics/traffic" },
   { label: "Audience", href: "/analytics/audience" },
+  { label: "Geography", href: "/analytics/geography" },
   { label: "Real-Time", href: "/analytics/realtime" },
 ];
 

@@ -1,29 +1,16 @@
 "use client";
 import { useMemo, useState } from "react";
+import type { DateRange } from "react-day-picker";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Badge, Skeleton } from "@/components/ui";
 import { AnalyticsNav } from "@/components/analytics/analytics-nav";
+import { AnalyticsRangePicker, lastNDays, toApiRange } from "@/components/analytics/analytics-range";
 import { BarList, SectionCard } from "@/components/analytics/charts";
 import { useWebAnalyticsAudience } from "@/hooks/useWebAnalytics";
 
-const PERIODS = [
-  { k: "7d", l: "7 Days", days: 7 },
-  { k: "30d", l: "30 Days", days: 30 },
-  { k: "90d", l: "90 Days", days: 90 },
-];
-
-function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
 export default function AudienceAnalyticsPage() {
-  const [period, setPeriod] = useState("30d");
-  const { from, to } = useMemo(() => {
-    const days = PERIODS.find((p) => p.k === period)?.days ?? 30;
-    const toDate = new Date();
-    const fromDate = new Date(toDate.getTime() - days * 24 * 60 * 60 * 1000);
-    return { from: isoDate(fromDate), to: isoDate(toDate) };
-  }, [period]);
+  const [range, setRange] = useState<DateRange | undefined>(() => lastNDays(30));
+  const { from, to } = useMemo(() => toApiRange(range), [range]);
 
   const audience = useWebAnalyticsAudience(from, to);
   const quality = audience.data?.quality;
@@ -44,20 +31,7 @@ export default function AudienceAnalyticsPage() {
           </p>
         )}
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Period:</span>
-          {PERIODS.map(({ k, l }) => (
-            <button
-              key={k}
-              onClick={() => setPeriod(k)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
-                period === k ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:bg-accent/60"
-              }`}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
+        <AnalyticsRangePicker value={range} onChange={setRange} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <SectionCard title="Devices">

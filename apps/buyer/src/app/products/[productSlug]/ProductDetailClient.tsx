@@ -18,6 +18,7 @@ import { CustomOrderModal } from '@/components/shared/CustomOrderModal';
 import { calculatePricing, getSellingPrice, getEffectiveDiscountPercent, parseProductIdFromSlug, productSlug as toProductSlug } from '@pharmabag/utils';
 import { usePlatformConfig } from '@/hooks/usePlatformConfig';
 import { formatSchemeTag } from '@pharmabag/utils';
+import { track } from '@/lib/analytics/tracker';
 import { effectiveMinQuantity, listingLotSize, stepQuantityByLot, snapQuantityToLot } from '@/lib/pricing';
 
 /**
@@ -47,6 +48,24 @@ export default function ProductDetailClient({ params }: { params: { productSlug:
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [showCustomOrder, setShowCustomOrder] = useState(false);
+
+  /**
+   * Tag one analytics event per product actually viewed.
+   *
+   * The tracker has always accepted a productId but nothing ever passed one,
+   * so `analytics_events.productId` was universally null and no per-product
+   * report was possible. Emitted once per resolved product (not per render,
+   * and not while loading or errored) so admin "where are this product's
+   * viewers" counts are not inflated by re-renders.
+   *
+   * Fire-and-forget by contract: `track` swallows its own failures and is a
+   * no-op when analytics is disabled or the visitor sends DNT.
+   */
+  const trackedProductId = product?.id as string | undefined;
+  useEffect(() => {
+    if (!trackedProductId) return;
+    track('product_view', undefined, trackedProductId);
+  }, [trackedProductId]);
 
   // Sync quantity with cart only ONCE when product loads
   const [initialSyncDone, setInitialSyncDone] = useState(false);

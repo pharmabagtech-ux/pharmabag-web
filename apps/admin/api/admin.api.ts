@@ -673,3 +673,66 @@ export async function getWebAnalyticsAudience(from: string, to: string): Promise
   );
   return data.data;
 }
+
+export interface WebAnalyticsGeoRow {
+  name: string;
+  code?: string | null;
+  region?: string | null;
+  visitors: number;
+  sessions: number;
+}
+
+export interface WebAnalyticsGeography {
+  countries: WebAnalyticsGeoRow[];
+  /** Indian states only — see the API's geography report for why. */
+  states: WebAnalyticsGeoRow[];
+  /** Indian cities only. */
+  cities: WebAnalyticsGeoRow[];
+  /**
+   * Share of sessions that got a location. Shown in the UI so a sparse report
+   * reads as "geo database missing", not "no visitors".
+   */
+  coverage: { resolvedSessions: number; unresolvedSessions: number; resolvedPct: number };
+}
+
+export async function getWebAnalyticsGeography(from: string, to: string): Promise<WebAnalyticsGeography> {
+  const { data } = await apiClient.get<{ data: WebAnalyticsGeography }>(
+    `/admin/analytics/geography?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+  );
+  return data.data;
+}
+
+export interface WebAnalyticsProductGeoRow {
+  name: string;
+  region?: string | null;
+  visitors: number;
+  views: number;
+}
+
+export interface WebAnalyticsProductGeography {
+  totals: { views: number; visitors: number };
+  countries: WebAnalyticsProductGeoRow[];
+  states: WebAnalyticsProductGeoRow[];
+  cities: WebAnalyticsProductGeoRow[];
+}
+
+/**
+ * Where the visitors who viewed one product came from.
+ *
+ * `path` is the product's own detail-page path. It is sent alongside the id
+ * because the API matches either — which is what makes views recorded before
+ * events carried a product id visible.
+ */
+export async function getWebAnalyticsProductGeography(
+  productId: string,
+  from: string,
+  to: string,
+  path?: string,
+): Promise<WebAnalyticsProductGeography> {
+  const query = new URLSearchParams({ from, to });
+  if (path) query.set("path", path);
+  const { data } = await apiClient.get<{ data: WebAnalyticsProductGeography }>(
+    `/admin/analytics/products/${encodeURIComponent(productId)}/geography?${query.toString()}`,
+  );
+  return data.data;
+}
