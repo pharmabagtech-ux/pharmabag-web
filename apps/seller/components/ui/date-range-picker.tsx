@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { format, subDays, startOfMonth, endOfMonth, startOfYesterday, endOfYesterday, startOfDay, endOfDay } from "date-fns";
+import { format, subDays, subMonths, startOfMonth, endOfMonth, startOfYesterday, endOfYesterday, startOfDay, endOfDay } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, X } from "lucide-react";
 import { DateRange, DayPicker } from "react-day-picker";
 import { cn } from "@/lib/utils";
@@ -64,12 +64,27 @@ export function DateRangePicker({
     setOpen(false);
   };
 
-  const quickRanges = [
+  /**
+   * "All Time" clears the range rather than reaching for an arbitrary early
+   * date: both screens send `dateRange?.from?.toISOString()`, so an undefined
+   * range omits dateFrom/dateTo entirely, and the API's `if (dateFrom ||
+   * dateTo)` then applies no date filter at all. The dashboard already labels
+   * that state "All time" — it was simply unreachable from the UI.
+   */
+  const quickRanges: { label: string; getValue: () => DateRange | undefined }[] = [
     { label: "Today", getValue: () => ({ from: startOfDay(new Date()), to: endOfDay(new Date()) }) },
     { label: "Yesterday", getValue: () => ({ from: startOfYesterday(), to: endOfYesterday() }) },
     { label: "Last 7 Days", getValue: () => ({ from: startOfDay(subDays(new Date(), 6)), to: endOfDay(new Date()) }) },
     { label: "Last 30 Days", getValue: () => ({ from: startOfDay(subDays(new Date(), 29)), to: endOfDay(new Date()) }) },
     { label: "This Month", getValue: () => ({ from: startOfMonth(new Date()), to: endOfMonth(new Date()) }) },
+    {
+      label: "Previous Month",
+      getValue: () => {
+        const lastMonth = subMonths(new Date(), 1);
+        return { from: startOfMonth(lastMonth), to: endOfMonth(lastMonth) };
+      },
+    },
+    { label: "All Time", getValue: () => undefined },
   ];
 
   return (
@@ -93,7 +108,9 @@ export function DateRangePicker({
             format(range.from, "LLL dd, y")
           )
         ) : (
-          <span>Pick a date range</span>
+          // No range means no dateFrom/dateTo goes to the API, which is
+          // precisely "all time" — not an empty prompt.
+          <span>All time</span>
         )}
       </Button>
 
