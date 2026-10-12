@@ -420,8 +420,18 @@ function UsersPageContent() {
     try {
       await deleteUserMut.mutateAsync(id);
       toast.success(`User ${phone} deleted successfully`);
-    } catch {
-      toast.error(`Failed to delete user ${phone}`);
+    } catch (err: any) {
+      /*
+       * The API refuses to hard-delete an account that has traded, because
+       * doing so strips order lines and settlements out of the COUNTERPARTY'S
+       * history, and it says exactly which records are in the way and that
+       * blocking is the right tool instead. Swallowing that into a bare
+       * "Failed to delete user <phone>" turned a deliberate, explained refusal
+       * into what looked like a broken button.
+       */
+      toast.error(err?.response?.data?.message || `Failed to delete user ${phone}`, {
+        duration: 8000,
+      });
     }
   };
 
