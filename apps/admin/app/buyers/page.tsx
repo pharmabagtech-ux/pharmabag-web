@@ -24,9 +24,13 @@ interface BuyerProfile {
   legalName: string;
   gstNumber?: string;
   panNumber?: string;
-  city: string;
-  state: string;
-  pincode: string;
+  // Nullable in schema.prisma, and plenty of rows are: a buyer who signs up
+  // but never finishes onboarding has no address at all. Declaring these
+  // required is what let `buyer.state.substring(...)` type-check below and
+  // take the whole page down with "Something went wrong".
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
   address?: any;
   verificationStatus: "UNVERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
   creditTier: "PREPAID" | "EMI" | "FULLCREDIT" | null;
@@ -267,7 +271,9 @@ export default function BuyersPage() {
                             <div className="flex items-center gap-1 text-foreground">
                               <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
                               <span>
-                                {buyer.city}, {buyer.state.substring(0, 2).toUpperCase()}
+                                {[buyer.city, buyer.state?.substring(0, 2).toUpperCase()]
+                                  .filter(Boolean)
+                                  .join(", ") || "—"}
                               </span>
                             </div>
                           </td>
@@ -343,7 +349,7 @@ export default function BuyersPage() {
                                     )}
                                     <div className="space-y-1">
                                       <p className="text-xs font-semibold text-muted-foreground uppercase">Location</p>
-                                      <p className="text-sm text-foreground">{buyer.city}, {buyer.state}</p>
+                                      <p className="text-sm text-foreground">{[buyer.city, buyer.state].filter(Boolean).join(", ") || "—"}</p>
                                     </div>
                                   </div>
                                 </div>
