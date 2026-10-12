@@ -10,9 +10,62 @@ import { Button, Badge, Modal, Input, Skeleton } from "@/components/ui";
 import { formatCurrency } from "@pharmabag/utils";
 import { cn } from "@/lib/utils";
 import { paymentBadge } from "@/lib/payment-status";
-import { useOrderById, useUpdateAdminOrderStatus } from "@/hooks/useAdmin";
+import { useOrderById, useUpdateAdminOrderStatus, usePresignedUrl } from "@/hooks/useAdmin";
 import { SellerHoverCard } from "@/components/orders/SellerHoverCard";
 import toast from "react-hot-toast";
+
+const DOC_CHIP =
+  "flex items-center gap-1.5 px-2.5 py-1.5 border rounded-lg text-[10px] font-bold transition-colors";
+
+/**
+ * A stored document is an S3 KEY ("drug-licenses/<uuid>.jpg"), not a URL —
+ * only a presigned link from POST /storage/view can open it.
+ *
+ * These four chips put the key straight into href, so the browser resolved it
+ * against the page it was on and sent the admin to
+ * admin.pharmabag.in/orders/drug-licenses/<uuid>.jpg — a Next.js 404 that read
+ * as "the buyer never uploaded a licence". The same bug was fixed on the two
+ * users screens (SecureDocViewer); this screen was missed because it builds
+ * its own links.
+ *
+ * On failure this shows a retry rather than a link that cannot work.
+ */
+function SecureDocChip({ docKey, label }: { docKey: string; label: string }) {
+  const { data: presignedUrl, isLoading, refetch } = usePresignedUrl(docKey);
+  const isDirectUrl = docKey.startsWith("http") || docKey.startsWith("data:");
+  const displayUrl = isDirectUrl ? docKey : presignedUrl;
+
+  if (isLoading) {
+    return (
+      <span className={cn(DOC_CHIP, "bg-muted/30 border-border/40 text-muted-foreground animate-pulse")}>
+        {label}
+      </span>
+    );
+  }
+
+  if (!displayUrl) {
+    return (
+      <button
+        onClick={() => void refetch()}
+        title="Could not open this document. Click to retry."
+        className={cn(DOC_CHIP, "bg-red-500/5 hover:bg-red-500/10 border-red-500/20 text-red-600")}
+      >
+        {label} — retry
+      </button>
+    );
+  }
+
+  return (
+    <a
+      href={displayUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(DOC_CHIP, "bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary")}
+    >
+      {label} <ExternalLink className="h-3 w-3" />
+    </a>
+  );
+}
 
 const ORDER_STATUSES = [
   { key: "PLACED", label: "Placed", icon: Clock, color: "bg-yellow-500" },
@@ -302,28 +355,16 @@ export default function OrderDetailPage() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {order.buyer?.buyerProfile?.document && (
-                        <a href={order.buyer.buyerProfile.document} target="_blank" rel="noopener noreferrer" 
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg text-[10px] font-bold text-primary transition-colors">
-                          GST/PAN <ExternalLink className="h-3 w-3" />
-                        </a>
+                        <SecureDocChip docKey={order.buyer.buyerProfile.document} label="GST/PAN" />
                       )}
                       {order.buyer?.buyerProfile?.drugLicenseUrl && (
-                        <a href={order.buyer.buyerProfile.drugLicenseUrl} target="_blank" rel="noopener noreferrer" 
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg text-[10px] font-bold text-primary transition-colors">
-                          DL 1 <ExternalLink className="h-3 w-3" />
-                        </a>
+                        <SecureDocChip docKey={order.buyer.buyerProfile.drugLicenseUrl} label="DL 1" />
                       )}
                       {order.buyer?.buyerProfile?.drugLicenseUrl2 && (
-                        <a href={order.buyer.buyerProfile.drugLicenseUrl2} target="_blank" rel="noopener noreferrer" 
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg text-[10px] font-bold text-primary transition-colors">
-                          DL 2 <ExternalLink className="h-3 w-3" />
-                        </a>
+                        <SecureDocChip docKey={order.buyer.buyerProfile.drugLicenseUrl2} label="DL 2" />
                       )}
                       {order.buyer?.buyerProfile?.cancelCheck && (
-                        <a href={order.buyer.buyerProfile.cancelCheck} target="_blank" rel="noopener noreferrer" 
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg text-[10px] font-bold text-primary transition-colors">
-                          Cheque <ExternalLink className="h-3 w-3" />
-                        </a>
+                        <SecureDocChip docKey={order.buyer.buyerProfile.cancelCheck} label="Cheque" />
                       )}
                     </div>
                   </div>
