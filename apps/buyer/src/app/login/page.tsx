@@ -90,7 +90,12 @@ export default function LoginPage() {
                     {step === 'phone' ? (
                       <div className="space-y-2 w-full flex flex-col items-center px-6">
                         <label className="block text-[11px] md:text-xs font-bold text-[#999999] md:text-gray-400 uppercase tracking-[0.2em] text-center mb-0">PHONE NUMBER</label>
-                        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="00000 00000" autoFocus className="w-full h-[72px] md:h-16 bg-white md:bg-white/80 rounded-full md:rounded-2xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] md:shadow-none text-[22px] md:text-2xl px-6 text-center focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none border border-white/50 font-black" />
+                        {/* The +91 is rendered beside the field, never inside the
+                            value: sanitizePhone still sends the bare 10 digits. */}
+                        <div className="relative w-full">
+                          <span className="pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-[22px] md:text-2xl font-black text-gray-400 select-none">+91</span>
+                          <input type="tel" inputMode="numeric" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="00000 00000" autoFocus className="w-full h-[72px] md:h-16 bg-white md:bg-white/80 rounded-full md:rounded-2xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] md:shadow-none text-[22px] md:text-2xl pl-[5.5rem] pr-[5.5rem] text-center focus:ring-4 focus:ring-lime-300 focus:bg-white outline-none border border-white/50 font-black" />
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-2 w-full flex flex-col items-center px-6">
