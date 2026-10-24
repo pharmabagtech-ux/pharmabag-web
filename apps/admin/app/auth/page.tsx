@@ -143,8 +143,18 @@ export default function AdminAuthPage() {
               </div>
               {step === "phone" ? (
                 <form onSubmit={sendOTP} className="space-y-4">
-                  <Input label="Phone Number" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Enter your phone number" leftIcon={<Phone className="h-4 w-4" />} required maxLength={15} />
+                  {/* The +91 is shown, not typed: sendOTP still submits the bare
+                      10-digit number and the API adds the country code before
+                      handing it to the SMS gateway. */}
+                  <Input label="Phone Number" type="tel" inputMode="numeric" value={phone} onChange={(e) => setPhone(e.target.value)}
+                    placeholder="98765 43210"
+                    leftIcon={
+                      <span className="flex items-center gap-1.5">
+                        <Phone className="h-4 w-4" />
+                        <span className="text-sm font-medium text-foreground">+91</span>
+                      </span>
+                    }
+                    className="pl-[4.75rem]" required maxLength={15} />
                   <Button type="submit" className="w-full" size="lg" loading={loading} rightIcon={<ArrowRight className="h-4 w-4" />}>
                     Send OTP
                   </Button>
