@@ -118,7 +118,21 @@ export default function BannerFormModal({ open, onClose, banner, onSubmit, savin
     }
   }
 
-  const canSave = title.trim() !== "" && imageUrl !== "" && altText.trim() !== "" && !uploading && !saving;
+  /*
+   * A banner with nothing ticked under SHOW ON is shown on no page at all, and
+   * used to save without complaint — it then sat in the list looking Active
+   * while the storefront ignored it, which is exactly how a homepage banner
+   * went missing without anyone noticing. The API refuses it now; the button
+   * refuses it here so the admin is told before they lose the upload.
+   */
+  const placementCount = (homepage ? 1 : 0) + (allCategories ? 1 : 0) + categoryIds.length;
+  const canSave =
+    title.trim() !== "" &&
+    imageUrl !== "" &&
+    altText.trim() !== "" &&
+    placementCount > 0 &&
+    !uploading &&
+    !saving;
 
   async function handleSubmit() {
     // ONE payload for both create and update — the API's UpdateBannerDto is
@@ -144,7 +158,7 @@ export default function BannerFormModal({ open, onClose, banner, onSubmit, savin
     await onSubmit(payload);
   }
 
-  const noPlacements = !homepage && !allCategories && categoryIds.length === 0;
+  const noPlacements = placementCount === 0;
 
   return (
     <Modal open={open} onClose={onClose} title={banner ? "Edit banner" : "Add banner"} maxWidth="max-w-2xl">
@@ -222,7 +236,8 @@ export default function BannerFormModal({ open, onClose, banner, onSubmit, savin
           {noPlacements && (
             <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-600">
               <AlertTriangle className="h-3.5 w-3.5" />
-              With nothing ticked this banner is saved but shown nowhere.
+              Tick at least one place to show this banner. Nothing ticked means it would be
+              shown nowhere, so it cannot be saved.
             </p>
           )}
           <p className="mt-2 text-xs text-muted-foreground">

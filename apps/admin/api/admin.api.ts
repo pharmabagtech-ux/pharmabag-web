@@ -547,7 +547,14 @@ export async function createBanner(payload: BannerPayload) {
   return data.data;
 }
 
-export async function updateBanner({ id, ...payload }: BannerPayload & { id: string }) {
+/**
+ * Partial by design, mirroring the API's UpdateBannerDto (PartialType of the
+ * create DTO). It matters for `placements`: an absent one means "leave them
+ * alone", while an explicit empty array is now rejected, because a banner with
+ * no placement is shown on no page at all. The Active toggle in the banner
+ * list depends on being able to omit it. Create stays strict.
+ */
+export async function updateBanner({ id, ...payload }: Partial<BannerPayload> & { id: string }) {
   const { data } = await apiClient.patch<{ data: AdminBanner }>(`/admin/banners/${id}`, payload);
   return data.data;
 }
