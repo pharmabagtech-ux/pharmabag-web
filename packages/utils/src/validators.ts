@@ -92,7 +92,7 @@ export const discountFormDetailsSchema = z.object({
   specialPrice: z.number().min(0).optional(),
 });
 
-export const MIN_ORDER_VALUE = 20000;
+export const MIN_ORDER_VALUE = 10000;
 
 /**
  * The rate the API actually bills for one unit received, GST included.
@@ -106,7 +106,8 @@ export const MIN_ORDER_VALUE = 20000;
  * the amount billed, so a minimum priced off it collects slightly less than it
  * promises. On Budecort 0.5mg Respule (MRP 25.58 @5%, 15% off, 3+1) the
  * estimate is 13.05 against 13.041 billed, which asks for 1,533 units where
- * 1,536 are needed and collects 19,992.
+ * 1,536 are needed and collects 19,992 (measured against the old Rs 20,000
+ * floor; the divergence itself does not depend on where the floor sits).
  *
  * Mirrors calculateNetUnitPrice in pharmabag-api/src/common/pricing/ptr.util.ts
  * — keep the two in step.
@@ -140,7 +141,7 @@ function billedPerUnitWithGst(
 }
 
 /**
- * The smallest order the 20,000 rule allows, in units.
+ * The smallest order the 10,000 rule allows, in units.
  *
  * Must agree with the seller product form to the unit, or the form offers a
  * quantity its own validator then rejects. Two things it has to honour: the
@@ -265,7 +266,7 @@ export const productFormSchema = z.object({
   message: `Special price must be lower than the MRP of ₹${data.product_price}.`,
   path: ['discount_form_details', 'specialPrice'],
 })).refine((data) => {
-  // 20,000 minimum order VALUE, priced off what the buyer actually pays.
+  // 10,000 minimum order VALUE, priced off what the buyer actually pays.
   const minRequiredMoq = minimumOrderQuantity(data.product_price, data.gst_percent, data.discount_form_details);
   return minRequiredMoq === 0 || data.min_order_qty >= minRequiredMoq;
 }, (data) => ({

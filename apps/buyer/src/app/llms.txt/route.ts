@@ -5,6 +5,7 @@ import {
   SITE_DESCRIPTION,
   SITE_LEGAL_NAME,
   CONTACT,
+  MIN_ORDER_VALUE_INR,
 } from '@/lib/seo/config';
 import { routes, facetSlug } from '@/lib/seo/url';
 import { MOLECULES } from '@/lib/seo/data/molecules';
@@ -68,7 +69,7 @@ ${SITE_NAME} (operated by ${SITE_LEGAL_NAME}, based in ${CONTACT.addressLocality
 - PTR (price to retailer): the pre-scheme, pre-GST price a retailer pays, derived from the MRP by removing the standard retail margin for the product's GST slab.
 - Net rate: the effective per-unit price after scheme and discount, exclusive of GST — what a buyer is actually charged per unit received.
 - Scheme: a bonus-quantity offer such as 10+1 or 20+2; free units lower the effective per-unit rate.
-- MOV: minimum order value — every order line must reach Rs 20,000 including GST.
+- MOV: minimum order value — every order line must reach Rs ${MIN_ORDER_VALUE_INR.toLocaleString('en-IN')} including GST.
 
 ## Categories
 ${categoryLines}

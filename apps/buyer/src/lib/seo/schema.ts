@@ -242,12 +242,12 @@ export interface ProductSchemaInput {
 }
 
 /**
- * The ₹20,000 order floor, expressed as schema.org means it.
+ * The ₹10,000 order floor, expressed as schema.org means it.
  *
  * This used to be emitted as `priceSpecification.minPrice`, which states "the
  * lowest price for this item" — so a product priced at ₹178.16 also declared a
- * minimum price of ₹20,000, a node contradicting itself 112-fold and readable
- * as the product costing ₹20,000. `eligibleTransactionVolume` is the field for
+ * minimum price of ₹10,000, a node contradicting itself 56-fold and readable
+ * as the product costing ₹10,000. `eligibleTransactionVolume` is the field for
  * a minimum spend that qualifies an offer, which is what this actually is.
  *
  * VAT-inclusive because the minimum is assessed on the GST-inclusive line

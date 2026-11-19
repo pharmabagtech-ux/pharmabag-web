@@ -30,7 +30,7 @@ export default function CartPage() {
   const clearCart = useClearCart();
   const { toast } = useToast();
 
-  const minOrderAmount = config?.min_order_amount ?? 20000;
+  const minOrderAmount = config?.min_order_amount ?? 10000;
 
   const items = cart?.items ?? [];
   // Priced the way the server will at checkout. This page previously applied a

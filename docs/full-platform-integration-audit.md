@@ -235,7 +235,7 @@ These flows function correctly end-to-end (within their app):
 | 12 | Admin suggestion catalog | Admin | CRUD + CSV import for product suggestions. |
 | 13 | Admin platform settings | Admin | Edit platform config, feature flags, notification emails. |
 | 14 | Buyer product browsing | Buyer | Search, category filter, manufacturer filter, pagination. |
-| 15 | Buyer cart management | Buyer | API-backed cart. Add/remove/update quantity. ₹20K minimum. |
+| 15 | Buyer cart management | Buyer | API-backed cart. Add/remove/update quantity. ₹10K minimum. |
 | 16 | Buyer wishlist | Buyer | Add/remove products, add-to-cart from wishlist. |
 | 17 | Buyer order tracking | Buyer | Timeline view, cancel pre-shipment orders. |
 | 18 | Buyer onboarding wizard | Buyer | 3-step KYC with GST/PAN verification. |
