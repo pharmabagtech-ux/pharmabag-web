@@ -25,7 +25,7 @@ export default function WishlistPage() {
   const { toast } = useToast();
   const router = useRouter();
   const { data: config } = usePlatformConfig();
-  const minOrderAmount = config?.min_order_amount ?? 20000;
+  const minOrderAmount = config?.min_order_amount ?? 10000;
 
   const items = wishlist?.items ?? [];
 

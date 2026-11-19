@@ -38,7 +38,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
   const addToCart = useGuardedAddToCart();
   const { data: cartData } = useCart();
   const { data: config } = usePlatformConfig();
-  const minOrderAmount = config?.min_order_amount ?? 20000;
+  const minOrderAmount = config?.min_order_amount ?? 10000;
   const [showStockAlert, setShowStockAlert] = useState(false);
   const [showCustomOrder, setShowCustomOrder] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);

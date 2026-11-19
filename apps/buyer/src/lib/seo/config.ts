@@ -136,6 +136,6 @@ export const SITE_LOGO_URL = `${SITE_URL}/pharmabag_logo.png`;
  * qualifying question for wholesale buyers, and answer engines like a
  * concrete number they can lift into a response.
  */
-export const MIN_ORDER_VALUE_INR = 20000;
+export const MIN_ORDER_VALUE_INR = 10000;
 
 export const CATALOGUE_SIZE_APPROX = 26000;

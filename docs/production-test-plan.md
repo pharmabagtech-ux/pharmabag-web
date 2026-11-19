@@ -150,7 +150,7 @@
 | # | Test Case | Expected Result |
 |---|-----------|----------------|
 | 10.1 | GET /config/platform returns valid response | Config values used across cart, checkout, CartDrawer |
-| 10.2 | GET /config/platform is down | Fallback defaults used (GST 12%, min order 20000, etc.) |
+| 10.2 | GET /config/platform is down | Fallback defaults used (GST 12%, min order 10000, etc.) |
 | 10.3 | Config values change on backend | Reflected in UI after 5-minute cache expiry |
 
 ---

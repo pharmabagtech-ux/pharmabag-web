@@ -100,7 +100,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
   // whatever was captured at add time. Bag items carry mrp, GST and the scheme,
   // so the figure matches the one the offer row shows.
   const minQtyFor = (item: any) =>
-    effectiveMinQuantity(item, config?.min_order_amount ?? 20000);
+    effectiveMinQuantity(item, config?.min_order_amount ?? 10000);
 
   return (
     <AnimatePresence>

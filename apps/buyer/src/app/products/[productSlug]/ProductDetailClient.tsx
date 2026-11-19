@@ -41,7 +41,7 @@ export default function ProductDetailClient({ params }: { params: { productSlug:
   const { data: cartData } = useCart();
   const { data: wishlistData } = useWishlist();
   const { data: config } = usePlatformConfig();
-  const minOrderAmount = config?.min_order_amount ?? 20000;
+  const minOrderAmount = config?.min_order_amount ?? 10000;
   const addToWishlist = useAddToWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
   const { toast } = useToast();

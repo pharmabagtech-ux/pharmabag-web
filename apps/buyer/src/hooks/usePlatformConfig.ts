@@ -5,7 +5,7 @@ import { getPlatformConfig, type PlatformConfig } from '@pharmabag/api-client';
 
 const DEFAULTS: PlatformConfig = {
   gst_rate: 12,
-  min_order_amount: 20000,
+  min_order_amount: 10000,
   shipping_threshold: 5000,
   shipping_fee: 250,
   default_moq: 1,

@@ -24,7 +24,7 @@ export default function ProductCarousel({ reverse = false, slot = 'HOMEPAGE_CARO
   const { toast } = useToast();
 
   const { data: config } = usePlatformConfig();
-  const minOrderAmount = config?.min_order_amount ?? 20000;
+  const minOrderAmount = config?.min_order_amount ?? 10000;
 
   const { data: cartData } = useCart();
   const addToCart = useAddToCart();

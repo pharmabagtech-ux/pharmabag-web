@@ -18,7 +18,7 @@ export type PlatformConfig = z.infer<typeof PlatformConfigSchema>;
 
 const DEFAULT_CONFIG: PlatformConfig = {
   gst_rate: 12,
-  min_order_amount: 20000,
+  min_order_amount: 10000,
   shipping_threshold: 5000,
   shipping_fee: 250,
   default_moq: 1,
