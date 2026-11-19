@@ -269,10 +269,19 @@ export default function BannersPage() {
                         active: !banner.active,
                         ...(banner.mobileImageUrl ? { mobileImageUrl: banner.mobileImageUrl } : {}),
                         ...(banner.linkUrl ? { linkUrl: banner.linkUrl } : {}),
-                        placements: banner.placements.map((p) => ({
-                          scope: p.scope,
-                          ...(p.categoryId ? { categoryId: p.categoryId } : {}),
-                        })),
+                        // Omit rather than send empty. The API rejects an
+                        // explicit empty placement set (a banner must be shown
+                        // somewhere) but reads an absent one as "leave alone",
+                        // which is the only thing that lets this toggle work on
+                        // a banner saved unplaced before that rule existed.
+                        ...(banner.placements.length
+                          ? {
+                              placements: banner.placements.map((p) => ({
+                                scope: p.scope,
+                                ...(p.categoryId ? { categoryId: p.categoryId } : {}),
+                              })),
+                            }
+                          : {}),
                       })
                     }
                   >

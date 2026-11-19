@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ImagePlus, Loader2, AlertTriangle } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
 import { useCategories } from "@/hooks/useAdmin";
@@ -11,6 +11,16 @@ import toast from "react-hot-toast";
 const DESKTOP_RATIO = 1920 / 180;
 const MOBILE_RATIO = 800 / 240;
 const RATIO_TOLERANCE = 0.15;
+
+/**
+ * Exactly what POST /storage/banner-image accepts (its ALLOWED_IMAGE_TYPES and
+ * a 5 MB multer limit). The picker used to offer `image/*`, which also lets
+ * through GIF, HEIC and SVG — all of which the server then rejects with a bare
+ * "Upload failed" — and on macOS Chrome `image/*` is also slow to open.
+ */
+const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/avif"];
+const ACCEPT_ATTR = ACCEPTED_TYPES.join(",");
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 interface Props {
   open: boolean;
@@ -76,9 +86,6 @@ export default function BannerFormModal({ open, onClose, banner, onSubmit, savin
   const [desktopWarning, setDesktopWarning] = useState("");
   const [mobileWarning, setMobileWarning] = useState("");
 
-  const desktopInput = useRef<HTMLInputElement>(null);
-  const mobileInput = useRef<HTMLInputElement>(null);
-
   // Reset from the banner being edited every time the modal opens, so a
   // cancelled edit does not leak its half-typed values into the next one.
   useEffect(() => {
@@ -100,6 +107,18 @@ export default function BannerFormModal({ open, onClose, banner, onSubmit, savin
 
   async function handleFile(file: File | undefined, which: "desktop" | "mobile") {
     if (!file) return;
+
+    // Say what is wrong before spending an upload on it. This also covers a
+    // file dropped onto the box, which never went through the picker's filter.
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast.error("Use a PNG, JPG, WebP or AVIF image.");
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast.error(`That file is ${(file.size / 1024 / 1024).toFixed(1)} MB; the limit is 5 MB.`);
+      return;
+    }
+
     setUploading(which);
     try {
       const ratio = await readRatio(file);
@@ -111,14 +130,32 @@ export default function BannerFormModal({ open, onClose, banner, onSubmit, savin
         setMobileImageUrl(url);
         setMobileWarning(ratioWarning(ratio, MOBILE_RATIO, "mobile"));
       }
-    } catch {
-      toast.error("Upload failed");
+    } catch (err) {
+      // Keep the server's reason (auth, size, type) instead of hiding it; "Upload
+      // failed" alone gives no way to tell a permissions problem from a bad file.
+      const raw = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
+      const reason = Array.isArray(raw) ? raw.join("; ") : raw;
+      toast.error(reason ? `Upload failed: ${reason}` : "Upload failed");
     } finally {
       setUploading(null);
     }
   }
 
-  const canSave = title.trim() !== "" && imageUrl !== "" && altText.trim() !== "" && !uploading && !saving;
+  /*
+   * A banner with nothing ticked under SHOW ON is shown on no page at all, and
+   * used to save without complaint — it then sat in the list looking Active
+   * while the storefront ignored it, which is exactly how a homepage banner
+   * went missing without anyone noticing. The API refuses it now; the button
+   * refuses it here so the admin is told before they lose the upload.
+   */
+  const placementCount = (homepage ? 1 : 0) + (allCategories ? 1 : 0) + categoryIds.length;
+  const canSave =
+    title.trim() !== "" &&
+    imageUrl !== "" &&
+    altText.trim() !== "" &&
+    placementCount > 0 &&
+    !uploading &&
+    !saving;
 
   async function handleSubmit() {
     // ONE payload for both create and update — the API's UpdateBannerDto is
@@ -144,7 +181,7 @@ export default function BannerFormModal({ open, onClose, banner, onSubmit, savin
     await onSubmit(payload);
   }
 
-  const noPlacements = !homepage && !allCategories && categoryIds.length === 0;
+  const noPlacements = placementCount === 0;
 
   return (
     <Modal open={open} onClose={onClose} title={banner ? "Edit banner" : "Add banner"} maxWidth="max-w-2xl">
@@ -165,7 +202,6 @@ export default function BannerFormModal({ open, onClose, banner, onSubmit, savin
             url={imageUrl}
             busy={uploading === "desktop"}
             warning={desktopWarning}
-            inputRef={desktopInput}
             onPick={(f) => handleFile(f, "desktop")}
           />
           <ImageField
@@ -174,7 +210,6 @@ export default function BannerFormModal({ open, onClose, banner, onSubmit, savin
             url={mobileImageUrl}
             busy={uploading === "mobile"}
             warning={mobileWarning}
-            inputRef={mobileInput}
             onPick={(f) => handleFile(f, "mobile")}
             onClear={() => {
               setMobileImageUrl("");
@@ -222,7 +257,8 @@ export default function BannerFormModal({ open, onClose, banner, onSubmit, savin
           {noPlacements && (
             <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-600">
               <AlertTriangle className="h-3.5 w-3.5" />
-              With nothing ticked this banner is saved but shown nowhere.
+              Tick at least one place to show this banner. Nothing ticked means it would be
+              shown nowhere, so it cannot be saved.
             </p>
           )}
           <p className="mt-2 text-xs text-muted-foreground">
@@ -288,7 +324,6 @@ function ImageField({
   url,
   busy,
   warning,
-  inputRef,
   onPick,
   onClear,
 }: {
@@ -297,14 +332,41 @@ function ImageField({
   url: string;
   busy: boolean;
   warning: string;
-  inputRef: React.RefObject<HTMLInputElement>;
   onPick: (file: File | undefined) => void;
   onClear?: () => void;
 }) {
+  const [dragging, setDragging] = useState(false);
+
+  /*
+   * The whole dashed box is a <label> around the file input, so a click anywhere
+   * in it opens the picker NATIVELY. The previous version hid the input with
+   * `display:none` and opened it from a button via ref.click(), which depends on
+   * JavaScript running, the ref resolving, and the browser honouring a
+   * programmatic click on a hidden input — and made the control unreachable by
+   * keyboard. The blog and SEO uploaders already use this label pattern.
+   *
+   * The input is `sr-only`, not `hidden`, so it stays focusable; the ring on the
+   * label shows when it is. Dropping a file on the box is a second route in, for
+   * anyone whose browser or OS will not show the picker.
+   */
   return (
     <div>
       <p className="mb-1 text-sm font-medium text-foreground">{label}</p>
-      <div className="rounded-xl border border-dashed border-border/70 p-3">
+      <label
+        className={`block cursor-pointer rounded-xl border border-dashed p-3 transition-colors focus-within:ring-2 focus-within:ring-primary/40 ${
+          dragging ? "border-primary bg-primary/5" : "border-border/70"
+        } ${busy ? "pointer-events-none opacity-70" : ""}`}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          onPick(e.dataTransfer.files?.[0]);
+        }}
+      >
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={url} alt="" className="h-16 w-full rounded-lg object-cover" />
@@ -314,23 +376,27 @@ function ImageField({
           </div>
         )}
         <input
-          ref={inputRef}
           type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => onPick(e.target.files?.[0])}
+          accept={ACCEPT_ATTR}
+          className="sr-only"
+          disabled={busy}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            // Reset so choosing the SAME file again still fires onChange —
+            // otherwise a retry after a failed upload does nothing at all.
+            e.target.value = "";
+            onPick(file);
+          }}
         />
-        <div className="mt-2 flex items-center gap-2">
-          <Button size="sm" variant="secondary" onClick={() => inputRef.current?.click()} disabled={busy}>
-            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : url ? "Replace" : "Upload"}
-          </Button>
-          {url && onClear && (
-            <Button size="sm" variant="ghost" onClick={onClear}>
-              Remove
-            </Button>
-          )}
-        </div>
-      </div>
+        <span className="mt-2 inline-flex h-8 items-center justify-center rounded-xl bg-primary/10 px-3 text-sm font-medium text-primary">
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : url ? "Replace" : "Upload"}
+        </span>
+      </label>
+      {url && onClear && (
+        <Button size="sm" variant="ghost" className="mt-1" onClick={onClear}>
+          Remove
+        </Button>
+      )}
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
       {warning && (
         <p className="mt-1 flex items-start gap-1.5 text-xs text-amber-600">
